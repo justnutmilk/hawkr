@@ -1,0 +1,172 @@
+@font-face {
+    font-family: "Aptos";
+    src: url("../../fonts/Aptos.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Source Serif";
+    src: url("../../fonts/SourceSerif4-Italic-VariableFont_opsz\,wght.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Source Serif";
+    src: url("../../fonts/SourceSerif4-VariableFont_opsz\,wght.ttf") format("truetype");
+}
+
+body {
+    display: flex;
+
+}
+
+.userProfile {
+    display: flex;
+    padding: 8px 16px;
+    align-items: center;
+    gap: 8px;
+    border-radius: 8px;
+    background: #F4F1F6;
+    margin-left: 16px;
+}
+
+.userName {
+    color: #341539;
+    font-family: Aptos;
+    font-size: 19px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    margin: 0px;
+}
+
+.navOutside {
+    display: flex;
+    max-width: 200px;
+    height: 100vh;
+    padding: 35px 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 48px;
+}
+
+.navInside {
+    display: flex;
+    width: 200px;
+    max-width: 200px;
+    flex-direction: column;
+    align-items: flex-start;
+    flex: 1 0 0;
+}
+
+.navButton {
+    display: flex;
+    padding: 16px 24px;
+    align-items: center;
+    gap: 16px;
+    align-self: stretch;
+
+    color: #913B9F;
+    text-align: center;
+    font-family: Aptos;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    letter-spacing: 0.64px;
+}
+
+.navContainer {
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: fixed;
+    width: 200px;
+
+    border-right: 1px solid #F0F0F0;
+    background: #FFFFFF;
+}
+
+.rightSide {
+    margin-left: 200px;
+    padding: 32px;
+    flex: 1 1 auto;
+}
+
+.searchModule {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    width: 100%;
+    max-width: 500px;
+    height: 56px;
+
+    padding: 0px 18px 0px 22px;
+
+    border-radius: 28px;
+    background: #F4F1F6;
+}
+
+.searchInput {
+    flex: 1 1 auto;
+    border: none;
+    outline: none;
+    background: transparent;
+
+    color: #49454F;
+    font-family: Aptos;
+    font-size: 20px;
+    font-weight: 400;
+
+    padding: 0px;
+    margin: 0px;
+}
+
+.searchInput::placeholder {
+    color: #49454F;
+    opacity: 1;
+}
+
+.searchIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 44px;
+    height: 44px;
+
+    pointer-events: none;
+}
+
+.actionButtons {
+    display: flex;
+    align-items: center;
+    gap: 48px;
+}
+
+.topConstant {
+    display: flex;
+    justify-content: flex-end;
+    gap: min(150px);
+}
+
+.shortcutHints p {
+    background-color: #80808033;
+    padding-left: 6px;
+    padding-right: 6px;
+    border-radius: 4px;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    color: #341539;
+
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+
+    -webkit-user-drag: none;
+    /* Chrome/Safari */
+}
