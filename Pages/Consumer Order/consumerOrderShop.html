@@ -3,21 +3,30 @@
     <head>
         <meta charset="utf-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <title>Hawkr | Dashboard</title>
+        <title>Hawkr | Shop</title>
         <meta name="description" content="" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="stylesheet" href="consumerDashboard.css" />
+        <link rel="stylesheet" href="consumerOrderShop.css" />
     </head>
 
     <body>
         <div class="topBar">
-            <img
-                class="hawkrLogo"
-                src="../../images/hawkr logo.svg"
-                --
-                alt="hawkr logo"
-            />
+            <button class="backButton" id="backButton" aria-label="Go back">
+                <img
+                    src="../../images/Back Arrow icon.svg"
+                    alt="Back"
+                    class="backArrowIcon"
+                    draggable="false"
+                />
+            </button>
             <div class="searchModule" id="searchModule">
+                <input
+                    class="searchInput"
+                    id="searchInput"
+                    type="text"
+                    placeholder="Search Within this Stall"
+                    autocomplete="off"
+                />
                 <span class="searchIcon">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -32,13 +41,6 @@
                         />
                     </svg>
                 </span>
-                <input
-                    class="searchInput"
-                    id="searchInput"
-                    type="text"
-                    placeholder="Hungry for Hawkr Food?"
-                    autocomplete="off"
-                />
             </div>
             <div class="topActionButtons">
                 <svg
@@ -84,55 +86,10 @@
             </div>
         </div>
 
-        <main class="dashboardContent">
-            <!-- Hero Section with Carousel and Order Status -->
-            <section class="heroSection">
-                <div class="carouselContainer">
-                    <div class="carousel" id="carouselSlides">
-                        <!-- Dynamically rendered -->
-                    </div>
-                    <div class="carouselDots" id="carouselDots">
-                        <!-- Dynamically rendered -->
-                    </div>
-                </div>
-                <div class="orderStatusContainer">
-                    <!-- Dynamically rendered: shows order status or ads -->
-                </div>
-            </section>
-
-            <!-- Quick Actions -->
-            <section class="quickActions" id="quickActionsContainer">
-                <!-- Dynamically rendered -->
-            </section>
-
-            <!-- Cultural Heritage Section -->
-            <section class="culturalHeritageSection">
-                <h2 class="sectionTitle">
-                    This is an "Intangible Cultural Heritage of Humanity"
-                    <span class="unescoTag">~&nbsp;UNESCO&nbsp;2020</span>
-                </h2>
-                <div class="hawkerCardsRow" id="featuredHawkersContainer">
-                    <!-- Dynamically rendered -->
-                </div>
-            </section>
-
-            <!-- Hawkers Near You Section -->
-            <section class="nearbyHawkersSection">
-                <h2 class="sectionTitle">Here are Hawkers Near You</h2>
-                <div class="hawkerCardsRow" id="nearbyHawkersContainer">
-                    <!-- Dynamically rendered -->
-                </div>
-            </section>
-
-            <!-- Vouchers Section -->
-            <section class="vouchersSection">
-                <h2 class="sectionTitle">Vouchers</h2>
-                <div id="vouchersContainer">
-                    <!-- Dynamically rendered -->
-                </div>
-            </section>
+        <main class="shopContent" id="shopContent">
+            <!-- Dynamically rendered shop info and products -->
         </main>
 
-        <script src="consumerDashboard.js" defer></script>
+        <script src="consumerOrderShop.js" defer></script>
     </body>
 </html>

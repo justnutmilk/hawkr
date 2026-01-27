@@ -5,109 +5,69 @@
 
 @font-face {
     font-family: "Source Serif";
-    src: url("../../fonts/SourceSerif4-Italic-VariableFont_opsz\,wght.ttf") format("truetype");
+    src: url("../../fonts/SourceSerif4-Italic-VariableFont_opsz\,wght.ttf")
+        format("truetype");
 }
 
 @font-face {
     font-family: "Source Serif";
-    src: url("../../fonts/SourceSerif4-VariableFont_opsz\,wght.ttf") format("truetype");
+    src: url("../../fonts/SourceSerif4-VariableFont_opsz\,wght.ttf")
+        format("truetype");
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 body {
     display: flex;
-
-}
-
-.userProfile {
-    display: flex;
-    padding: 8px 16px;
-    align-items: center;
-    gap: 8px;
-    border-radius: 8px;
-    background: #F4F1F6;
-    margin-left: 16px;
-}
-
-.userName {
-    color: #341539;
-    font-family: Aptos;
-    font-size: 19px;
-    font-style: normal;
-    font-weight: 400;
-    line-height: normal;
-    margin: 0px;
-}
-
-.navOutside {
-    display: flex;
-    max-width: 200px;
-    height: 100vh;
-    padding: 35px 0;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 48px;
+    font-family:
+        Aptos,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    background-color: #fff;
+    min-height: 100vh;
+    gap: 32px;
 }
 
-.navInside {
+/* Top Bar Styles */
+.topBar {
     display: flex;
-    width: 200px;
-    max-width: 200px;
-    flex-direction: column;
-    align-items: flex-start;
-    flex: 1 0 0;
-}
-
-.navButton {
-    display: flex;
-    padding: 16px 24px;
-    align-items: center;
-    gap: 16px;
-    align-self: stretch;
-
-    color: #913B9F;
-    text-align: center;
-    font-family: Aptos;
-    font-size: 16px;
-    font-style: normal;
-    font-weight: 400;
-    line-height: normal;
-    letter-spacing: 0.64px;
-}
-
-.navContainer {
-    height: 100vh;
-    overflow-y: auto;
-    overflow-x: hidden;
-    display: flex;
-    flex-direction: column;
     justify-content: space-between;
-    align-items: flex-start;
-    position: fixed;
-    width: 200px;
-
-    border-right: 1px solid #F0F0F0;
-    background: #FFFFFF;
+    align-items: center;
+    width: 100%;
+    max-width: 1920px;
+    margin: 0 auto;
+    padding: 48px 10% 0 10%;
 }
 
-.rightSide {
-    margin-left: 200px;
-    padding: 32px;
-    flex: 1 1 auto;
+.topActionButtons {
+    display: flex;
+    align-items: center;
+    gap: 3em;
+}
+
+.hawkrLogo {
+    height: 40px;
 }
 
 .searchModule {
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     width: 100%;
     max-width: 500px;
     height: 56px;
-
     padding: 0px 18px 0px 22px;
-
     border-radius: 28px;
-    background: #F4F1F6;
+    background: #f4f1f6;
 }
 
 .searchInput {
@@ -115,18 +75,16 @@ body {
     border: none;
     outline: none;
     background: transparent;
-
-    color: #49454F;
+    color: #49454f;
     font-family: Aptos;
     font-size: 20px;
     font-weight: 400;
-
     padding: 0px;
     margin: 0px;
 }
 
 .searchInput::placeholder {
-    color: #49454F;
+    color: #49454f;
     opacity: 1;
 }
 
@@ -134,39 +92,402 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-
     width: 44px;
     height: 44px;
-
     pointer-events: none;
 }
 
-.actionButtons {
+/* Dashboard Content */
+.dashboardContent {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    padding-bottom: 48px;
+    align-items: center;
+}
+
+.heroSection {
+    display: flex;
+    gap: 16px;
+    margin-top: 32px;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: auto;
+    max-width: 1920px;
+    padding-left: 10%;
+    padding-right: 10%;
+    position: relative;
+    padding-bottom: 30px;
+}
+
+.carouselContainer {
+    flex: 2 1 800px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.carousel {
+    background: #f4f1f6;
+    border-radius: 12px;
     display: flex;
     align-items: center;
-    gap: 48px;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 7;
 }
 
-.topConstant {
+.carouselSlide {
+    display: none;
+    width: 100%;
+    height: 100%;
+}
+
+.carouselSlide.active {
+    display: block;
+}
+
+.carouselImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+.carouselDots {
     display: flex;
-    justify-content: flex-end;
-    gap: min(150px);
+    justify-content: center;
+    gap: 8px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
 }
 
-.shortcutHints p {
-    background-color: #80808033;
-    padding-left: 6px;
-    padding-right: 6px;
-    border-radius: 4px;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    font-weight: 600;
-    font-size: 18px;
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #341539;
+    opacity: 0.3;
+    cursor: pointer;
+    transition: opacity 0.3s;
+}
+
+.dot.active {
+    opacity: 1;
+}
+
+.orderStatusContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1 1 351px;
+}
+
+.orderStatusCard {
+    background: #fff;
+    border: 2px solid #341539;
+    border-radius: 12px;
+    padding: 24px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.orderStatusCard:first-child {
+    aspect-ratio: 5 / 2;
+}
+
+.orderStatusCard:last-child {
+    aspect-ratio: 11 / 6;
+}
+
+.orderStatusCard .adImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+.orderStatusLabel {
+    font-size: 16px;
     color: #341539;
+    font-weight: 500;
+}
 
-    user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
+.orderStatusValue {
+    font-size: 24px;
+    color: #341539;
+    font-weight: 700;
+}
 
-    -webkit-user-drag: none;
-    /* Chrome/Safari */
+/* Quick Actions */
+.quickActions {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    width: 100%;
+    max-width: 1920px;
+    padding-left: 10%;
+    padding-right: 10%;
+    margin: 0 auto;
+}
+
+.quickActionItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    width: 120px;
+}
+
+.quickActionItem:hover {
+    transform: translateY(-2px);
+}
+
+.quickActionIcon {
+    display: flex;
+    width: 80px;
+    height: 80px;
+    padding: 24px;
+    justify-content: center;
+    align-items: center;
+    border-radius: 28px;
+}
+
+.quickActionIconImg {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.quickActionLabel {
+    font-size: 23px;
+    color: #341539;
+    font-family: "Source Serif", Georgia, serif;
+    font-weight: 500;
+}
+
+/* Section Titles */
+.sectionTitle {
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 39px;
+    font-weight: 700;
+    color: #341539;
+    margin-bottom: 16px;
+}
+
+.unescoTag {
+    font-size: 19px;
+    font-weight: 700;
+    color: #595959;
+    font-style: normal;
+    line-height: 0.5%;
+}
+
+/* Hawker Cards */
+.hawkerCardsRow {
+    display: flex;
+    gap: 48px;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+}
+
+/* Hide scrollbar but keep functionality */
+.hawkerCardsRow::-webkit-scrollbar {
+    height: 8px;
+}
+
+.hawkerCardsRow::-webkit-scrollbar-track {
+    background: #f4f1f6;
+    border-radius: 4px;
+}
+
+.hawkerCardsRow::-webkit-scrollbar-thumb {
+    background: #341539;
+    border-radius: 4px;
+}
+
+.hawkerCard {
+    width: 260px;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.hawkerCard:hover {
+    transform: translateY(-4px);
+}
+
+.hawkerCardImage {
+    width: 100%;
+    height: 150px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f4f1f6;
+    margin-bottom: 12px;
+}
+
+.hawkerCardImage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hawkerCardInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.hawkerCardName {
+    color: #341539;
+    font-family:"Source Serif", Georgia, serif;
+    font-size: 23px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.hawkerCardAddress {
+    font-family: "Aptos";
+    font-size: 16px;
+    color: #341539;
+    line-height: 1.4;
+    font-weight: 400;
+}
+
+.hawkerCardMeta {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+    align-items: center;
+}
+
+.hawkerRating,
+.hawkerHours {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 16px;
+    color: #595959;
+}
+
+/* Nearby Hawkers Section */
+.nearbyHawkersSection {
+    width: 100%;
+    max-width: 1920px;
+    padding-left: 10%;
+    padding-right: 10%;
+}
+
+.nearbyMessage {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: #595959;
+    font-family: "Source Serif", Georgia, serif;
+    align-self: center;
+}
+
+/* Vouchers Section */
+.vouchersSection {
+    width: 100%;
+    max-width: 1920px;
+    padding-left: 10%;
+    padding-right: 10%;
+}
+
+.vouchersEmptyMessage {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: #595959;
+    font-family: "Source Serif", Georgia, serif;
+    align-self: center;
+}
+
+/* Loading Spinner */
+.loadingSpinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid #f4f1f6;
+    border-top-color: #341539;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1200px) {
+    .heroSection {
+        flex-direction: column;
+    }
+
+    .carouselContainer {
+        flex: 1 1 auto;
+        max-width: 100%;
+    }
+
+    .orderStatusContainer {
+        flex-direction: row;
+        width: 100%;
+        flex: 1 1 auto;
+    }
+
+    .orderStatusCard:first-child,
+    .orderStatusCard:last-child {
+        height: auto;
+        flex: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .quickActions {
+        gap: 24px;
+        justify-content: space-around;
+    }
+
+    .quickActionItem {
+        width: 80px;
+    }
+
+    .quickActionIcon {
+        width: 80px;
+        height: 80px;
+        padding: 16px;
+    }
+
+    .gameItem {
+        width: 80px;
+    }
+
+    .gameIcon {
+        width: 80px;
+        height: 80px;
+    }
+}
+
+.culturalHeritageSection {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    max-width: 1920px;
+    padding-left: 10%;
+    padding-right: 10%;
 }
