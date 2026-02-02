@@ -1,0 +1,121 @@
+.orderSegmentWrap
+{
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    justify-content: center;
+}
+
+.orderSegment
+{
+    position: relative;
+    isolation: isolate;
+
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    width: 100%;
+    padding: 2px;
+
+    border-radius: 9999px;
+    background: #ECECEC;
+    --orderSegmentHeight: 36px;
+}
+
+
+.orderSegment::before,
+.orderSegment::after
+{
+    content: "";
+    position: absolute;
+    border-radius: inherit;
+    pointer-events: none;
+
+    transition: inset 220ms cubic-bezier(0.4, 0, 0.2, 1), opacity 140ms ease;
+
+    inset:
+      calc(anchor(start) + 2px)
+      calc(anchor(end) + 2px)
+      calc(anchor(end) + 2px)
+      calc(anchor(start) + 2px);
+}
+
+/* hover pill */
+.orderSegment::before
+{
+    z-index: 0;
+    background: rgba(0, 0, 0, 0.06);
+    position-anchor: --orderSegmentHover;
+    opacity: 0;
+}
+
+.orderSegment:has(.orderSegmentButton:hover)::before
+{
+    opacity: 1;
+}
+
+/* active pill */
+.orderSegment::after
+{
+    z-index: 1;
+    background: #FFFFFF;
+    position-anchor: --orderSegmentChecked;
+
+    box-shadow: 0px 1px 3px rgba(0,0,0,0.10);
+    outline: 1px solid #E1E1E1;
+}
+
+.orderSegmentButton
+{
+    position: relative;
+    z-index: 2;
+
+    flex: 1 1 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 10px 0px;     /* hugs content */
+    border-radius: 9999px;
+
+    font-family: Aptos;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: normal;
+
+    color: #000000;
+    cursor: pointer;
+    user-select: none;
+
+    anchor-name: var(--segHoverAnchor, --tmpHover), var(--segCheckedAnchor, --tmpChecked);
+
+    height: var(--orderSegmentHeight);
+    padding: 0px 0px;
+    font-size: 16px;
+    line-height: 16px;
+    white-space: nowrap;
+}
+
+.orderSegmentButton:hover
+{
+    --segHoverAnchor: --orderSegmentHover;
+}
+
+.orderSegmentButton:has(.orderSegmentInput:checked)
+{
+    --segCheckedAnchor: --orderSegmentChecked;
+}
+
+.orderSegmentInput
+{
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0px;
+    border: 0px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}

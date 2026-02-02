@@ -148,7 +148,16 @@ function renderItemDetails(item) {
                     <h1 class="itemName">${item.name}</h1>
                     <span class="itemPrice">${formatPrice(item.price)}</span>
                     <div class="itemActions">
-                        <button class="addToCartBtn" id="addToCartBtn">Add to Cart</button>
+                        <button class="addToCartBtn" id="addToCartBtn">
+                            <span class="btn-content">
+                                <span class="btn-text">Add to Cart</span>
+                                <span class="btn-tick">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="19" viewBox="0 0 28 19" fill="none">
+                                        <path d="M2 9.5L9.77833 17L25.3333 2" stroke="#FFFAFA" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                            </span>
+                        </button>
                         <button class="favouriteBtn" id="favouriteBtn" aria-label="Add to favourites">
                             ${heartIcon}
                         </button>
@@ -194,76 +203,124 @@ function renderItemPage(item) {
   }
 }
 
-let itemQuantity = 0;
+// Cart state
+let popupTimeout = null;
+
+// ============================================
+// LOCAL STORAGE CART FUNCTIONS
+// ============================================
+
+function getCartFromStorage() {
+  const cart = localStorage.getItem("hawkrCart");
+  return cart ? JSON.parse(cart) : [];
+}
+
+function saveCartToStorage(cart) {
+  localStorage.setItem("hawkrCart", JSON.stringify(cart));
+}
+
+function getCartCount() {
+  const cart = getCartFromStorage();
+  return cart.reduce((total, item) => total + item.quantity, 0);
+}
+
+function addItemToCart(item) {
+  const cart = getCartFromStorage();
+
+  // Check if item already exists in cart
+  const existingItemIndex = cart.findIndex(
+    (cartItem) => cartItem.id === item.id,
+  );
+
+  if (existingItemIndex > -1) {
+    // Increment quantity if item exists
+    cart[existingItemIndex].quantity += 1;
+  } else {
+    // Add new item to cart
+    cart.push({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      image: item.image,
+      quantity: 1,
+      stall: item.stall,
+    });
+  }
+
+  saveCartToStorage(cart);
+  return cart;
+}
 
 function handleAddToCart(item) {
   console.log("Add to cart:", item.id, item.name);
-  itemQuantity = 1;
-  showQuantitySelector();
+
+  const addToCartBtn = document.getElementById("addToCartBtn");
+  if (!addToCartBtn || addToCartBtn.classList.contains("added")) return;
+
+  // Add item to cart in localStorage
+  addItemToCart(item);
+
+  // Update badge
+  updateCartBadge();
+
+  // Show tick animation
+  addToCartBtn.classList.add("added");
+
+  // Show cart popup
+  showCartPopup(item);
 }
 
-function showQuantitySelector() {
-  const addToCartBtn = document.getElementById("addToCartBtn");
-  if (!addToCartBtn) return;
+function updateCartBadge() {
+  const cartBadge = document.getElementById("cartBadge");
+  const cartCount = getCartCount();
 
-  // Transform the button into a quantity control container
-  addToCartBtn.className = "addToCartBtn quantityMode";
-  addToCartBtn.id = "addToCartBtn";
-  addToCartBtn.innerHTML = `
-    <div class="quantitySelector" id="quantitySelector">
-      <button class="quantityBtn minusBtn" id="minusBtn" type="button" aria-label="Decrease quantity">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="2" viewBox="0 0 16 2" fill="none">
-          <path d="M1 1H15" stroke="#341539" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-      </button>
-      <div class="quantityDivider"></div>
-      <button class="quantityBtn plusBtn" id="plusBtn" type="button" aria-label="Increase quantity">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M8 1V15M1 8H15" stroke="#341539" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-      </button>
+  if (cartBadge) {
+    if (cartCount > 0) {
+      cartBadge.textContent = cartCount;
+      cartBadge.style.display = "flex";
+    } else {
+      cartBadge.style.display = "none";
+    }
+  }
+}
+
+function showCartPopup(item) {
+  const cartPopup = document.getElementById("cartPopup");
+  const cartPopupItem = document.getElementById("cartPopupItem");
+
+  if (!cartPopup || !cartPopupItem) return;
+
+  // Populate popup content
+  cartPopupItem.innerHTML = `
+    <div class="cartPopupItemImage">
+      <img src="${item.image}" alt="${item.name}" onerror="this.style.display='none'">
     </div>
-    <span class="quantityDisplay" id="quantityDisplay">${itemQuantity}</span>
+    <div class="cartPopupItemInfo">
+      <p class="cartPopupItemName">${item.name}</p>
+      <p class="cartPopupItemPrice">${formatPrice(item.price)}</p>
+    </div>
+    <span class="cartPopupItemQty">x1</span>
   `;
 
-  // Add event listeners
-  document.getElementById("minusBtn").addEventListener("click", handleDecrease);
-  document.getElementById("plusBtn").addEventListener("click", handleIncrease);
-}
-
-function handleDecrease() {
-  if (itemQuantity > 1) {
-    itemQuantity--;
-    updateQuantityDisplay();
-  } else {
-    // Remove from cart, show Add to Cart button again
-    itemQuantity = 0;
-    hideQuantitySelector();
+  // Clear any existing timeout
+  if (popupTimeout) {
+    clearTimeout(popupTimeout);
   }
+
+  // Show popup
+  cartPopup.classList.add("show");
+
+  // Auto-hide after 3 seconds
+  popupTimeout = setTimeout(() => {
+    hideCartPopup();
+  }, 3000);
 }
 
-function handleIncrease() {
-  itemQuantity++;
-  updateQuantityDisplay();
-}
-
-function updateQuantityDisplay() {
-  const quantityDisplay = document.getElementById("quantityDisplay");
-  if (quantityDisplay) {
-    quantityDisplay.textContent = itemQuantity;
+function hideCartPopup() {
+  const cartPopup = document.getElementById("cartPopup");
+  if (cartPopup) {
+    cartPopup.classList.remove("show");
   }
-}
-
-function hideQuantitySelector() {
-  const addToCartBtn = document.getElementById("addToCartBtn");
-  if (!addToCartBtn) return;
-
-  // Transform back to Add to Cart button
-  addToCartBtn.className = "addToCartBtn";
-  addToCartBtn.innerHTML = "Add to Cart";
-  addToCartBtn.addEventListener("click", () => {
-    handleAddToCart(window.currentItem);
-  });
 }
 
 function handleToggleFavourite(item) {
@@ -301,6 +358,9 @@ function handleBackClick() {
 async function initializeItemPage() {
   try {
     showLoading();
+
+    // Load cart badge count from localStorage
+    updateCartBadge();
 
     const itemId = getItemIdFromUrl();
     const itemData = await api.fetchItemData(itemId);

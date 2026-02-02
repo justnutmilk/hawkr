@@ -3,10 +3,10 @@
     <head>
         <meta charset="utf-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <title>Hawkr | Shop</title>
+        <title>Hawkr | Settings</title>
         <meta name="description" content="" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="stylesheet" href="consumerOrderShop.css" />
+        <link rel="stylesheet" href="consumerSettings.css" />
     </head>
 
     <body>
@@ -24,7 +24,7 @@
                     class="searchInput"
                     id="searchInput"
                     type="text"
-                    placeholder="Search Within this Stall"
+                    placeholder="Search for something else..."
                     autocomplete="off"
                 />
                 <span class="searchIcon">
@@ -43,7 +43,7 @@
                 </span>
             </div>
             <div class="topActionButtons">
-                <a href="../Consumer Settings/consumerNotifications.html"
+                <a href="consumerNotifications.html"
                     ><svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="27"
@@ -57,7 +57,7 @@
                             stroke-width="2.66667"
                         /></svg
                 ></a>
-                <a href="consumerCart.html"
+                <a href="../Consumer Order/consumerCart.html"
                     ><svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="32"
@@ -109,7 +109,7 @@
                             Jane Doe
                         </span>
                         <a
-                            href="../Consumer Settings/consumerSettings.html"
+                            href="consumerSettings.html"
                             class="profileDropdownItem"
                         >
                             <img
@@ -134,10 +134,31 @@
             </div>
         </div>
 
-        <main class="shopContent" id="shopContent">
-            <!-- Dynamically rendered shop info and products -->
+        <main class="settingsPageContent" id="settingsPageContent">
+            <!-- Dynamically rendered content -->
         </main>
 
-        <script src="consumerOrderShop.js" defer></script>
+        <!-- Edit Personal Details Popup -->
+        <div class="editPopupOverlay" id="editDetailsOverlay">
+            <div class="editPopup" id="editDetailsPopup">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Add Card Popup -->
+        <div class="editPopupOverlay" id="addCardOverlay">
+            <div class="editPopup" id="addCardPopup">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Remove Card Confirmation Popup -->
+        <div class="editPopupOverlay" id="removeCardOverlay">
+            <div class="editPopup" id="removeCardPopup">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <script src="consumerSettings.js" defer></script>
     </body>
 </html>

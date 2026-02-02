@@ -45,7 +45,7 @@ body {
     width: 100%;
     max-width: 1920px;
     margin: 0 auto;
-    padding: 48px 10% 0 10%;
+    padding: 48px 15% 0 15%;
 }
 
 .hawkrLogo {
@@ -103,8 +103,8 @@ body {
     flex-direction: column;
     width: 100%;
     max-width: 1920px;
-    padding-left: 10%;
-    padding-right: 10%;
+    padding-left: 15%;
+    padding-right: 15%;
 }
 
 .nowBrowsingLabel {
@@ -143,8 +143,8 @@ body {
     gap: 32px;
     width: 100%;
     max-width: 1920px;
-    padding-left: 10%;
-    padding-right: 10%;
+    padding-left: 15%;
+    padding-right: 15%;
 }
 
 .centreTitleParent {
@@ -171,7 +171,7 @@ body {
 }
 
 .seeAllButton {
-    color: #913B9F;
+    color: #913b9f;
     font-family: "Source Serif", Georgia, serif;
     font-size: 16px;
     font-weight: 400;
@@ -255,15 +255,15 @@ body {
     font-style: normal;
     font-weight: 600;
     line-height: normal;
-    background: #F2F2FF;
+    background: #f2f2ff;
 }
 
 .cuisineTag.halal {
-    background: #EAF5E9;
+    background: #eaf5e9;
 }
 
 .cuisineTag.kosher {
-    background: #EEEADE;
+    background: #eeeade;
 }
 
 .cuisineTag img {
@@ -345,4 +345,102 @@ body {
     .topActionButtons {
         gap: 1.5em;
     }
+}
+
+/* ============================================
+   PROFILE DROPDOWN
+   ============================================ */
+
+.profileDropdownWrapper {
+    position: relative;
+}
+
+.profileButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.profileDropdown {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    min-width: 220px;
+    padding: 24px;
+    border-radius: 24px;
+    background: #fff;
+    border: 2px solid #913b9f;
+    box-shadow: 0 8px 32px rgba(52, 21, 57, 0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease,
+        visibility 0.3s ease;
+}
+
+.profileDropdownWrapper:hover .profileDropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.profileDropdownName {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #913b9f;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: normal;
+    padding: 4px 8px;
+}
+
+.profileDropdownItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 8px;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    transition: background 0.15s ease;
+}
+
+.profileDropdownItem:hover {
+    background: #ece6f0;
+}
+
+.profileDropdownLogout {
+    color: #eb001b;
+}
+
+.profileDropdownItemIcon {
+    width: 18px;
+    height: 18px;
+}
+
+.profileDropdownLogoutIcon {
+    width: 18px;
+    height: 18px;
+    filter: brightness(0) saturate(100%) invert(14%) sepia(89%) saturate(5765%)
+        hue-rotate(350deg) brightness(92%) contrast(107%);
 }

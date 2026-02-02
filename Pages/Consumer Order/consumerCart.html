@@ -3,10 +3,10 @@
     <head>
         <meta charset="utf-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <title>Hawkr | Shop</title>
+        <title>Hawkr | Cart</title>
         <meta name="description" content="" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="stylesheet" href="consumerOrderShop.css" />
+        <link rel="stylesheet" href="consumerCart.css" />
     </head>
 
     <body>
@@ -24,7 +24,7 @@
                     class="searchInput"
                     id="searchInput"
                     type="text"
-                    placeholder="Search Within this Stall"
+                    placeholder="Search for something else..."
                     autocomplete="off"
                 />
                 <span class="searchIcon">
@@ -134,10 +134,58 @@
             </div>
         </div>
 
-        <main class="shopContent" id="shopContent">
-            <!-- Dynamically rendered shop info and products -->
+        <main class="cartContent" id="cartContent">
+            <!-- Dynamically rendered cart content -->
         </main>
 
-        <script src="consumerOrderShop.js" defer></script>
+        <!-- Edit Item Popup Overlay -->
+        <div class="editPopupOverlay" id="editPopupOverlay">
+            <div class="editPopup" id="editPopup">
+                <div class="editPopupHeader">
+                    <h2 class="editPopupTitle">Special Requests</h2>
+                    <button
+                        class="editPopupClose"
+                        id="editPopupClose"
+                        aria-label="Close"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <path
+                                d="M18 6L6 18M6 6L18 18"
+                                stroke="#341539"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                    </button>
+                </div>
+                <div class="editPopupItemInfo" id="editPopupItemInfo">
+                    <!-- Item info populated by JS -->
+                </div>
+                <div class="editPopupContent">
+                    <div class="specialRequestSection">
+                        <textarea
+                            class="specialRequestInput"
+                            id="specialRequestInput"
+                            placeholder="We get it, we're picky eaters too"
+                            rows="4"
+                        ></textarea>
+                    </div>
+                </div>
+                <div class="editPopupFooter">
+                    <button class="editPopupSaveBtn" id="editPopupSaveBtn">
+                        Save Requests
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script src="consumerCart.js" defer></script>
     </body>
 </html>

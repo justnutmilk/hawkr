@@ -118,127 +118,6 @@ body {
     gap: 3em;
 }
 
-/* Cart Icon with Badge */
-.cartIconWrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.cartBadge {
-    display: none;
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 6px;
-    background: #913b9f;
-    color: #fff;
-    font-family: Aptos, sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    border-radius: 10px;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Cart Popup */
-.cartPopup {
-    position: fixed;
-    top: 110px;
-    right: 10%;
-    width: 400px;
-    max-width: calc(100vw - 40px);
-    background: #fff;
-    border: 2px solid #913b9f;
-    border-radius: 24px;
-    padding: 24px;
-    box-shadow: 0 8px 32px rgba(52, 21, 57, 0.15);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition:
-        opacity 0.3s ease,
-        transform 0.3s ease,
-        visibility 0.3s ease;
-    z-index: 9999;
-}
-
-.cartPopup.show {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-.cartPopupTitle {
-    color: #341539;
-    font-family: "Source Serif", Georgia, serif;
-    font-size: 20px;
-    font-weight: 600;
-    margin: 0;
-    padding-bottom: 16px;
-    border-bottom: 0.5px solid #808080;
-}
-
-.cartPopupItem {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding-top: 16px;
-}
-
-.cartPopupItemImage {
-    width: 64px;
-    height: 64px;
-    border-radius: 12px;
-    overflow: hidden;
-    flex-shrink: 0;
-    background: #f4f1f6;
-}
-
-.cartPopupItemImage img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.cartPopupItemInfo {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1;
-    min-width: 0;
-}
-
-.cartPopupItemName {
-    color: #341539;
-    font-family: "Source Serif", Georgia, serif;
-    font-size: 18px;
-    font-weight: 600;
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.cartPopupItemPrice {
-    color: #341539;
-    font-family: Aptos, sans-serif;
-    font-size: 16px;
-    font-weight: 400;
-    margin: 0;
-}
-
-.cartPopupItemQty {
-    color: #341539;
-    font-family: Aptos, sans-serif;
-    font-size: 18px;
-    font-weight: 400;
-    flex-shrink: 0;
-}
-
 .searchModule {
     display: flex;
     align-items: center;
@@ -278,11 +157,11 @@ body {
     pointer-events: none;
 }
 
-/* Item Content */
-.itemContent {
+/* Confirmed Content */
+.confirmedContent {
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: 48px;
     padding-bottom: 48px;
     width: 100%;
     max-width: 1920px;
@@ -291,29 +170,97 @@ body {
     padding-right: 15%;
 }
 
-/* Item Header Section */
-.itemHeaderSection {
+/* Order Confirmed Banner */
+.orderConfirmedBanner {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    background: #f4f1f6;
+    border-radius: 24px;
+    gap: 8px;
 }
 
-.nowOrderingLabel {
-    color: #808080;
+.orderConfirmedIcon {
+    width: 34px;
+    height: 34px;
+}
+
+.orderConfirmedText {
+    color: #341539;
+    text-align: center;
     font-family: "Source Serif", Georgia, serif;
     font-size: 16px;
     font-style: normal;
-    font-weight: 400;
-    line-height: 24px;
+    font-weight: 600;
+    line-height: normal;
 }
 
-.stallNameRow {
+.orderNumber {
+    color: #341539;
+    text-align: center;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 32px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+/* Order Items List */
+.orderItemsList {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 24px;
 }
 
-.stallName {
+/* Order Item */
+.orderItem {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.orderItemImage {
+    width: 100px;
+    height: 100px;
+    border-radius: 16px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.orderItemDetails {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    gap: 8px;
+}
+
+.orderItemRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.orderItemNameGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 8px;
+}
+
+.itemName {
+    color: #341539;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 23px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 24px;
+}
+
+.storeName {
     color: #341539;
     font-family: Aptos, sans-serif;
     font-size: 16px;
@@ -323,282 +270,199 @@ body {
     letter-spacing: 0.64px;
 }
 
-/* Cuisine Tags */
-.cuisineTags {
-    display: flex;
-    gap: 24px;
-    flex-wrap: wrap;
-}
-
-.cuisineTag {
-    display: inline-flex;
-    padding: 6px 16px;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    border-radius: 48px;
-    color: #341539;
-    font-family: "Source Serif", Georgia, serif;
+.specialRequest {
+    color: #913b9f;
+    font-family: Aptos, sans-serif;
     font-size: 16px;
     font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+}
+
+.price {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 23px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+    padding-top: 8px;
+}
+
+.qtyCount {
+    width: 48px;
+    height: 48px;
+    border: 2px solid #913b9f;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Aptos, sans-serif;
+    font-size: 18px;
+    font-weight: 400;
+    color: #341539;
+}
+
+/* Total Row */
+.totalRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.totalLabel {
+    color: #341539;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 27px;
     font-weight: 600;
-    line-height: normal;
-    background: #f2f2ff;
+    line-height: 32px;
 }
 
-.cuisineTag.halal {
-    background: #eaf5e9;
+.totalPrice {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 27px;
+    font-weight: 400;
+    line-height: 32px;
 }
 
-.cuisineTag.kosher {
-    background: #eeeade;
+/* Details Row - Collection & Transaction side by side */
+.detailsRow {
+    display: flex;
+    gap: 48px;
 }
 
-.cuisineTag img {
-    width: 16px;
-    height: 16px;
-    object-fit: contain;
+/* Section Label */
+.sectionLabel {
+    color: #341539;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 23px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 24px;
 }
 
-/* Item Details Section */
-.itemDetailsSection {
+/* Collection Details Section */
+.collectionDetailsSection {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 16px;
+    flex: 1;
 }
 
-/* Item Top Section (Image + Info) */
-.itemTopSection {
+.collectionRow {
     display: flex;
-    gap: 15%;
+    align-items: flex-start;
+    gap: 16px;
 }
 
-/* Item Image */
-.itemImage {
-    width: 45%;
-    aspect-ratio: 550 / 450;
-    border-radius: 24px;
-    overflow: hidden;
+.collectionIcon {
+    display: flex;
+    padding: 10px;
+    align-items: center;
+    gap: 10px;
+    border-radius: 8px;
+    background: #ffebeb;
     flex-shrink: 0;
 }
 
-.itemImage img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+.collectionIcon.time {
+    background: #ffebeb;
 }
 
-/* Item Info */
-.itemInfo {
+.collectionIcon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.collectionInfo {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    align-self: start;
-    align-items: flex-start;
-    width: 100%;
+    gap: 2px;
 }
 
-.itemName {
+.collectionTitle {
     color: #341539;
     font-family: "Source Serif", Georgia, serif;
-    font-size: 39px;
-    font-style: normal;
-    font-weight: 600;
-    line-height: 48px;
-    width: 100%;
-}
-
-.itemPrice {
-    color: #341539;
-    font-family: Aptos, sans-serif;
-    font-size: 23px;
+    font-size: 19px;
     font-style: normal;
     font-weight: 400;
     line-height: 24px;
 }
 
-/* Item Actions */
-.itemActions {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    width: 100%;
-}
-
-.addToCartBtn {
-    display: flex;
-    flex: 1;
-    padding: 8px 10px;
-    justify-content: center;
-    align-items: center;
-    border-radius: 48px;
-    background: #913b9f;
-    color: #fffafa;
-    font-family: "Source Serif";
-    font-size: 23px;
-    font-style: normal;
-    font-weight: 600;
-    line-height: normal;
-    text-box-edge: cap alphabetic;
-    border: none;
-    cursor: pointer;
-    transition:
-        background 0.2s ease,
-        transform 0.2s ease;
-}
-
-.addToCartBtn:hover {
-    background: #7a3287;
-    transform: scale(1.02);
-}
-
-.addToCartBtn:active {
-    transform: scale(0.98);
-}
-
-.favouriteBtn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: none;
-    border: none;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-    padding: 0px;
-}
-
-.favouriteBtn:hover {
-    transform: scale(1.1);
-}
-
-.heartIconWrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 28px;
-}
-
-.heartIconWrapper svg {
-    width: 100%;
-    height: 28px;
-}
-
-/* Added to Cart State */
-.addToCartBtn.added {
-    pointer-events: none;
-}
-
-.addToCartBtn .btn-content {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition:
-        opacity 0.2s ease,
-        transform 0.2s ease;
-}
-
-.addToCartBtn .btn-text {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.addToCartBtn.added .btn-text {
-    opacity: 0;
-    transform: translateY(-10px);
-    position: absolute;
-}
-
-.addToCartBtn .btn-tick {
-    opacity: 0;
-    transform: translateY(10px) scale(0.8);
-    position: absolute;
-}
-
-.addToCartBtn.added .btn-tick {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    position: relative;
-}
-
-.addToCartBtn .btn-tick svg {
-    width: 28px;
-    height: 19px;
-}
-
-/* Item Bottom Section (Allergens + Description) */
-.itemBottomSection {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-}
-
-/* Allergens Section */
-.allergensSection {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.allergensLabel {
+.collectionSubtitle {
     color: #341539;
-    font-family: "Source Serif", Georgia, serif;
-    font-size: 19px;
-    font-style: normal;
-    font-weight: 600;
-    line-height: 24px;
-}
-
-.allergenTags {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-.allergenTag {
-    display: flex;
-    padding: 6px 16px;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    border-radius: 100px;
-    background: #ffebeb;
-    color: #341539;
-    font-family: "Source Serif", Georgia, serif;
+    font-family: Aptos, sans-serif;
     font-size: 16px;
     font-style: normal;
-    font-weight: 600;
+    font-weight: 400;
     line-height: normal;
 }
 
-.allergenTag img {
-    width: 15px;
-    height: 15px;
+/* Transaction Details Section */
+.transactionDetailsSection {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1;
+}
+
+.paymentMethodCard {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.paymentMethodImage {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
     object-fit: contain;
 }
 
-/* Description Section */
-.descriptionSection {
+.paymentLogosGroup {
     display: flex;
-    flex-direction: column;
-    gap: 16px;
+    align-items: center;
+    gap: 8px;
 }
 
-.descriptionLabel {
+.paymentInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.paymentMethod {
     color: #341539;
     font-family: "Source Serif", Georgia, serif;
     font-size: 19px;
     font-style: normal;
-    font-weight: 600;
+    font-weight: 400;
     line-height: 24px;
 }
 
-.descriptionText {
-    color: #341539;
+.paymentMethodDetails {
+    color: #808080;
     font-family: Aptos, sans-serif;
     font-size: 16px;
+    font-style: normal;
     font-weight: 400;
-    line-height: 1.5;
+    line-height: normal;
+}
+
+.transactionIds {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.transactionId {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
 }
 
 /* Loading Spinner */
@@ -624,25 +488,15 @@ body {
         padding: 32px 5% 0 5%;
     }
 
-    .itemContent {
+    .confirmedContent {
         padding-left: 5%;
         padding-right: 5%;
-        gap: 24px;
+        gap: 32px;
     }
 
-    .itemTopSection {
+    .detailsRow {
         flex-direction: column;
-        gap: 24px;
-    }
-
-    .itemImage {
-        width: 100%;
-    }
-
-    .stallNameRow {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
+        gap: 32px;
     }
 }
 
@@ -672,37 +526,30 @@ body {
         height: 48px;
     }
 
-    .itemName {
-        font-size: 28px;
-        line-height: 36px;
+    .orderItem {
+        gap: 16px;
     }
 
-    .itemPrice {
+    .orderItemImage {
+        width: 80px;
+        height: 80px;
+    }
+
+    .itemName {
         font-size: 20px;
     }
 
-    .addToCartBtn {
-        padding: 14px 24px;
-        font-size: 16px;
+    .price {
+        font-size: 20px;
     }
 
-    .cuisineTags {
-        gap: 12px;
+    .totalPrice,
+    .totalLabel {
+        font-size: 24px;
     }
 
-    .cuisineTag {
-        font-size: 14px;
-        padding: 4px 12px;
-    }
-
-    .allergenTag {
-        font-size: 14px;
-        padding: 4px 12px;
-    }
-
-    .allergensLabel,
-    .descriptionLabel {
-        font-size: 17px;
+    .orderNumber {
+        font-size: 28px;
     }
 }
 
@@ -711,7 +558,7 @@ body {
         padding: 16px 4% 0 4%;
     }
 
-    .itemContent {
+    .confirmedContent {
         padding-left: 4%;
         padding-right: 4%;
     }
@@ -739,26 +586,30 @@ body {
         height: 20px;
     }
 
-    .itemName {
-        font-size: 24px;
-        line-height: 32px;
+    .orderItemTop {
+        flex-direction: column;
+        gap: 8px;
     }
 
-    .itemPrice {
+    .itemName {
         font-size: 18px;
     }
 
-    .addToCartBtn {
-        padding: 12px 20px;
-        font-size: 15px;
+    .price {
+        font-size: 18px;
     }
 
-    .nowOrderingLabel {
-        font-size: 14px;
+    .totalPrice,
+    .totalLabel {
+        font-size: 22px;
     }
 
-    .stallName {
-        font-size: 14px;
+    .orderNumber {
+        font-size: 24px;
+    }
+
+    .orderConfirmedBanner {
+        padding: 24px 16px;
     }
 }
 
