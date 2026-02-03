@@ -76,12 +76,6 @@ const mockData = {
       icon: "../../assets/icons/feedback.svg",
       color: "#F2F5FC",
     },
-    {
-      id: "games",
-      label: "Games",
-      icon: "../../assets/icons/games.svg",
-      color: "#EAF5E9",
-    },
   ],
 
   // Cultural Heritage Hawkers (Featured)
@@ -154,13 +148,6 @@ const mockData = {
 
   // User Vouchers
   userVouchers: [],
-
-  // Available Games
-  games: [
-    { id: 1, name: "Game 1", icon: "gamepad" },
-    { id: 2, name: "Game 2", icon: "gamepad" },
-    { id: 3, name: "Game 3", icon: "gamepad" },
-  ],
 };
 
 // ============================================
@@ -196,11 +183,6 @@ const api = {
   async fetchUserVouchers() {
     await this.simulateNetworkDelay();
     return mockData.userVouchers;
-  },
-
-  async fetchGames() {
-    await this.simulateNetworkDelay();
-    return mockData.games;
   },
 
   // Simulate network delay (200-500ms)
@@ -245,21 +227,12 @@ const icons = {
     <path d="M28 2.66667H4C2.53333 2.66667 1.34667 3.86667 1.34667 5.33333L1.33333 29.3333L6.66667 24H28C29.4667 24 30.6667 22.8 30.6667 21.3333V5.33333C30.6667 3.86667 29.4667 2.66667 28 2.66667ZM9.33333 12H22.6667V14.6667H9.33333V12ZM18.6667 18.6667H9.33333V16H18.6667V18.6667ZM22.6667 10.6667H9.33333V8H22.6667V10.6667Z" fill="#5C9EAD"/>
   </svg>`,
 
-  // Games icon - Game controller (green)
-  games: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
-    <path d="M22.6667 10.6667H20V8H17.3333V10.6667H14.6667V8H12V10.6667H9.33333C7.86667 10.6667 6.66667 11.8667 6.66667 13.3333V24C6.66667 25.4667 7.86667 26.6667 9.33333 26.6667H22.6667C24.1333 26.6667 25.3333 25.4667 25.3333 24V13.3333C25.3333 11.8667 24.1333 10.6667 22.6667 10.6667ZM14.6667 22.6667H12V20H9.33333V17.3333H12V14.6667H14.6667V17.3333H17.3333V14.6667H14.6667V22.6667ZM20 21.3333C19.2667 21.3333 18.6667 20.7333 18.6667 20C18.6667 19.2667 19.2667 18.6667 20 18.6667C20.7333 18.6667 21.3333 19.2667 21.3333 20C21.3333 20.7333 20.7333 21.3333 20 21.3333ZM22.6667 17.3333C21.9333 17.3333 21.3333 16.7333 21.3333 16C21.3333 15.2667 21.9333 14.6667 22.6667 14.6667C23.4 14.6667 24 15.2667 24 16C24 16.7333 23.4 17.3333 22.6667 17.3333Z" fill="#4CAF50"/>
-  </svg>`,
-
   star: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
     <path d="M6 0L7.34708 4.1459H11.7063L8.17963 6.7082L9.52671 10.8541L6 8.2918L2.47329 10.8541L3.82037 6.7082L0.293661 4.1459H4.65292L6 0Z" fill="#FFC107"/>
   </svg>`,
 
   clock: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
     <path d="M6 0C2.7 0 0 2.7 0 6C0 9.3 2.7 12 6 12C9.3 12 12 9.3 12 6C12 2.7 9.3 0 6 0ZM6 10.8C3.36 10.8 1.2 8.64 1.2 6C1.2 3.36 3.36 1.2 6 1.2C8.64 1.2 10.8 3.36 10.8 6C10.8 8.64 8.64 10.8 6 10.8ZM6.3 3H5.4V6.6L8.55 8.49L9 7.74L6.3 6.15V3Z" fill="#666"/>
-  </svg>`,
-
-  gamepad: `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 32 32" fill="none">
-    <path d="M9.33333 18.6667H12V16H14.6667V13.3333H12V10.6667H9.33333V13.3333H6.66667V16H9.33333V18.6667ZM20 16.6667C20.5556 16.6667 21.0278 16.4722 21.4167 16.0833C21.8056 15.6944 22 15.2222 22 14.6667C22 14.1111 21.8056 13.6389 21.4167 13.25C21.0278 12.8611 20.5556 12.6667 20 12.6667C19.4444 12.6667 18.9722 12.8611 18.5833 13.25C18.1944 13.6389 18 14.1111 18 14.6667C18 15.2222 18.1944 15.6944 18.5833 16.0833C18.9722 16.4722 19.4444 16.6667 20 16.6667ZM24 12.6667C24.5556 12.6667 25.0278 12.4722 25.4167 12.0833C25.8056 11.6944 26 11.2222 26 10.6667C26 10.1111 25.8056 9.63889 25.4167 9.25C25.0278 8.86111 24.5556 8.66667 24 8.66667C23.4444 8.66667 22.9722 8.86111 22.5833 9.25C22.1944 9.63889 22 10.1111 22 10.6667C22 11.2222 22.1944 11.6944 22.5833 12.0833C22.9722 12.4722 23.4444 12.6667 24 12.6667ZM6.66667 25.3333C5.2 25.3333 3.94444 24.8222 2.9 23.8C1.85556 22.7778 1.33333 21.5333 1.33333 20.0667V9.33333C1.33333 7.86667 1.85556 6.62222 2.9 5.6C3.94444 4.57778 5.2 4.06667 6.66667 4.06667H25.3333C26.8 4.06667 28.0556 4.57778 29.1 5.6C30.1444 6.62222 30.6667 7.86667 30.6667 9.33333V20.0667C30.6667 21.5333 30.1444 22.7778 29.1 23.8C28.0556 24.8222 26.8 25.3333 25.3333 25.3333H6.66667Z" fill="#4CAF50"/>
   </svg>`,
 };
 
@@ -498,37 +471,6 @@ function renderVouchers(vouchers) {
   }
 }
 
-function renderGames(games) {
-  const container = document.getElementById("gamesContainer");
-  if (!container) return;
-
-  container.innerHTML = games
-    .map(
-      (game) => `
-    <div class="gameItem" data-game-id="${game.id}">
-      <div class="gameIcon">
-        ${icons[game.icon] || icons.gamepad}
-      </div>
-      <span class="gameLabel">${game.name}</span>
-    </div>
-  `,
-    )
-    .join("");
-
-  // Add click handlers
-  container.querySelectorAll(".gameItem").forEach((item) => {
-    item.addEventListener("click", () => {
-      const gameId = item.dataset.gameId;
-      handleGameClick(gameId);
-    });
-  });
-}
-
-function handleGameClick(gameId) {
-  console.log(`Game clicked: ${gameId}`);
-  // TODO: Navigate to game page
-}
-
 // ============================================
 // LOADING STATE HELPERS
 // ============================================
@@ -554,7 +496,6 @@ async function initializeDashboard() {
       featuredHawkers,
       nearbyHawkers,
       userVouchers,
-      games,
     ] = await Promise.all([
       api.fetchCarouselSlides(),
       api.fetchCurrentOrder(),
@@ -562,7 +503,6 @@ async function initializeDashboard() {
       api.fetchFeaturedHawkers(),
       api.fetchNearbyHawkers(),
       api.fetchUserVouchers(),
-      api.fetchGames(),
     ]);
 
     // Render all sections
@@ -572,7 +512,6 @@ async function initializeDashboard() {
     renderFeaturedHawkers(featuredHawkers);
     renderNearbyHawkers(nearbyHawkers);
     renderVouchers(userVouchers);
-    renderGames(games);
   } catch (error) {
     console.error("Failed to initialize dashboard:", error);
   }
