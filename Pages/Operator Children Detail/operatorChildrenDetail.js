@@ -5,6 +5,7 @@ const tagIcons = {
 
 const mockStore = {
   name: "Chinese Foods Private Limited",
+  uen: "202401234K",
   tags: ["Chinese", "Halal", "Halal"],
   rent: { day: 50, month: 1500, year: 18000 },
   charts: {
@@ -739,8 +740,9 @@ function renderPage() {
     <div class="storeHeader">
       <div class="storeHeaderTop">
         <div class="storeHeaderInfo">
-          <span class="storePerusing">Now Perusing</span>
+          <span class="storePerusing">Now Perusing:</span>
           <span class="storeName">${store.name}</span>
+          <span class="storeUen">UEN: ${store.uen}</span>
         </div>
         <div class="storeTags">${tags}</div>
       </div>

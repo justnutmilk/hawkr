@@ -314,17 +314,19 @@ function renderRatingsSection(rating, reviews) {
 }
 
 function renderHygieneSection(hygieneGrade) {
+  const shopId = getShopIdFromUrl();
   return `
         <section class="hygieneSection">
             <div class="hygieneHeader">
                 <h3 class="sectionHeader">Hygiene Grade</h3>
                 <button class="hygieneInfoBtn" aria-label="More info about hygiene grade">
                     <img src="../../assets/icons/information.svg" alt="Info" draggable="false">
+                    <span class="hygieneInfoTooltip">Hawkr believes transparency in hygiene records fosters trust between consumers and the brand.</span>
                 </button>
             </div>
             <span class="hygieneGrade">${hygieneGrade.grade}</span>
             <p class="hygieneLastUpdated">Last updated ${hygieneGrade.lastUpdated}</p>
-            <a href="#" class="hygieneHistoryLink">view history ></a>
+            <a href="consumerShopHygiene.html?id=${shopId}" class="hygieneHistoryLink">view history ></a>
         </section>
     `;
 }
@@ -351,9 +353,7 @@ function renderShopPage(shop) {
 }
 
 function handleProductClick(productId) {
-  // Navigate to product detail page with product ID
-  console.log("Product clicked:", productId);
-  // window.location.href = `productDetail.html?id=${productId}`;
+  window.location.href = `consumerOrderItem.html?id=${productId}`;
 }
 
 // ============================================

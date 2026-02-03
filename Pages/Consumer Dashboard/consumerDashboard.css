@@ -35,6 +35,7 @@ body {
     background-color: #fff;
     min-height: 100vh;
     gap: 32px;
+    overflow-x: hidden;
 }
 
 /* Top Bar Styles */

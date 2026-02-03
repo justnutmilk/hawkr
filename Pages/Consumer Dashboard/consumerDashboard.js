@@ -370,8 +370,29 @@ function renderQuickActions(actions) {
 }
 
 function handleQuickAction(actionId) {
-  console.log(`Quick action clicked: ${actionId}`);
-  // TODO: Implement navigation/action handling
+  switch (actionId) {
+    case "order":
+      window.location.href = "../Consumer Order/consumerOrder.html";
+      break;
+    case "favourites":
+      window.location.href = "../Consumer Favourites/consumerFavourites.html";
+      break;
+    case "nearby":
+      document
+        .querySelector(".nearbyHawkersSection")
+        ?.scrollIntoView({ behavior: "smooth" });
+      break;
+    case "vouchers":
+      document
+        .querySelector(".vouchersSection")
+        ?.scrollIntoView({ behavior: "smooth" });
+      break;
+    case "history":
+      window.location.href = "../Consumer Settings/consumerTransactions.html";
+      break;
+    default:
+      console.log(`Quick action clicked: ${actionId}`);
+  }
 }
 
 function renderHawkerCard(hawker) {
@@ -447,8 +468,7 @@ function renderNearbyHawkers(hawkers) {
 }
 
 function handleHawkerClick(hawkerId) {
-  console.log(`Hawker clicked: ${hawkerId}`);
-  // TODO: Navigate to hawker detail page
+  window.location.href = `../Consumer Order/consumerHawkerCentre.html?id=${hawkerId}`;
 }
 
 function renderVouchers(vouchers) {

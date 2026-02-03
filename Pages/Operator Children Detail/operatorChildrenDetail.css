@@ -362,6 +362,14 @@ body {
     line-height: normal;
 }
 
+.storeUen {
+    color: #595959;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: normal;
+}
+
 .storeTags {
     display: flex;
     gap: 8px;
@@ -466,12 +474,15 @@ body {
 }
 
 .chartSegmented .segmentedButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background-color: transparent;
     border: none;
     border-radius: inherit;
     width: 150px;
-    padding: 7px 0;
-    text-align: center;
+    height: 38px;
+    padding: 0;
     font-family: Aptos, sans-serif;
     font-size: 16px;
     font-weight: 600;
@@ -740,12 +751,15 @@ body {
 }
 
 .reviewsSegmented .segmentedButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background-color: transparent;
     border: none;
     border-radius: inherit;
     width: 160px;
-    padding: 10px 0;
-    text-align: center;
+    height: 38px;
+    padding: 0;
     font-family: Aptos, sans-serif;
     font-size: 16px;
     font-weight: 600;
@@ -1009,12 +1023,15 @@ body {
 }
 
 .docSegmented .segmentedButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background-color: transparent;
     border: none;
     border-radius: inherit;
     width: 150px;
-    padding: 7px 0;
-    text-align: center;
+    height: 38px;
+    padding: 0;
     font-family: Aptos, sans-serif;
     font-size: 16px;
     font-weight: 600;

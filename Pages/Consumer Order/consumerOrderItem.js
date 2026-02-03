@@ -119,7 +119,7 @@ function renderItemHeader(stall) {
 
   return `
         <section class="itemHeaderSection">
-            <span class="nowOrderingLabel">Now Ordering</span>
+            <span class="nowOrderingLabel">Now Ordering:</span>
             <div class="stallNameRow">
                 <span class="stallName">${stall.name}</span>
                 <div class="cuisineTags">

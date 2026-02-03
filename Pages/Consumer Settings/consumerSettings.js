@@ -229,14 +229,17 @@ function renderDangerZone() {
   return `
     <div class="dangerSection">
       <span class="dangerTitle">Danger Zone</span>
-      <span class="dangerDescription">This place is dangerous. Only click here if you know what you're doing!</span>
+      <span class="dangerDescription">This place is dangerous. Buttons here trigger permanent actions that can’t be undone. Only proceed if you’re sure what you’re doing.</span>
       <div class="dangerItem">
         <div class="dangerItemLeft">
           <div class="dangerItemTitleGroup">
             <span class="dangerItemTitle">Delete Account</span>
-            <img src="${icons.information}" alt="Info" />
+            <span class="informationIcon">
+              <img src="${icons.information}" alt="Info" />
+              <span class="informationTooltip">We'll permanently delete your Hawkr profile and remove personal data linked to your account after the required retention periods end. Some records may be retained for security, fraud prevention, or legal compliance.</span>
+            </span>
           </div>
-          <span class="dangerItemDescription">We'll wipe your Hawkr profile, and (almost) everything we know about you. <a href="404.html">View Privacy Policy ></a></span>
+          <span class="dangerItemDescription">We’ll wipe your Hawkr profile, and (almost) everything we know about you. <a href="404.html">View Privacy Policy ></a></span>
         </div>
         <button class="deleteButton" id="deleteAccount">Delete Account</button>
       </div>

@@ -35,6 +35,7 @@ body {
     background-color: #fff;
     min-height: 100vh;
     gap: 48px;
+    overflow-x: hidden;
 }
 
 /* Top Bar Styles */
@@ -46,6 +47,47 @@ body {
     max-width: 1920px;
     margin: 0 auto;
     padding: 48px 15% 0 15%;
+}
+
+.topBarLeft {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+}
+
+.homeButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #ece6f0;
+    border: 1px solid transparent;
+    box-shadow: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition:
+        transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background 0.3s ease,
+        box-shadow 0.3s ease;
+}
+
+.homeButton:hover {
+    background: rgba(236, 230, 240, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow:
+        0 4px 16px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    transform: scale(1.08);
+}
+
+.homeIcon {
+    width: 24px;
+    height: 24px;
 }
 
 /* Back Button */
@@ -1018,9 +1060,14 @@ body {
     min-width: 220px;
     padding: 24px;
     border-radius: 24px;
-    background: #fff;
-    border: 2px solid #913b9f;
-    box-shadow: 0 8px 32px rgba(52, 21, 57, 0.15);
+    background: rgba(200, 150, 210, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: none;
+    box-shadow:
+        0 8px 32px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
     gap: 8px;

@@ -572,7 +572,11 @@ function renderLinkedState() {
       </div>
       <div class="onboardField">
         <label class="onboardFieldLabel" for="onboardPhone">Contact Number</label>
-        <input class="onboardFieldInput" id="onboardPhone" type="tel" value="${v.contactNumber}" />
+        <div class="onboardPhoneRow">
+          <img src="../../assets/icons/singapore.svg" alt="SG" class="onboardPhoneFlag" />
+          <span class="onboardPhonePrefix">+65</span>
+          <input class="onboardFieldInput" id="onboardPhone" type="tel" value="${v.contactNumber.replace("+65 ", "").replace("+65", "")}" maxlength="9" placeholder="8XXX XXXX" />
+        </div>
       </div>
     </div>
   `;

@@ -311,12 +311,15 @@ body {
 }
 
 .segmentedButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background-color: transparent;
     border: none;
     border-radius: inherit;
     width: 200px;
-    padding: 10px 0;
-    text-align: center;
+    height: 38px;
+    padding: 0;
     font-family: Aptos, sans-serif;
     font-size: 16px;
     font-weight: 600;
