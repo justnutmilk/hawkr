@@ -1,0 +1,1033 @@
+@font-face {
+    font-family: "Aptos";
+    src: url("../../fonts/Aptos.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Geist Mono";
+    src: url("../../fonts/GeistMono-VariableFont_wght.ttf") format("truetype");
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+body {
+    display: flex;
+    overflow-x: hidden;
+    font-family:
+        Aptos,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    background-color: #fff;
+    min-height: 100vh;
+}
+
+/* ============================================
+   SIDEBAR
+   ============================================ */
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 200px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 32px 24px 32px 0px;
+    border-right: 1px solid #e0e0e0;
+    background: #fff;
+    z-index: 100;
+    margin-left: 24px;
+}
+
+.sidebarTop {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+}
+
+.vendorAccount {
+    display: flex;
+    padding: 8px 16px;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    border-radius: 8px;
+    background: #f0f0f0;
+}
+
+.vendorIcon {
+    width: 21px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+.vendorName {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    color: #341539;
+    text-overflow: ellipsis;
+    font-family: Aptos;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.sidebarNav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.navItem {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+    transition: background 0.2s ease;
+}
+
+.navItem:hover {
+    background: #f4f1f6;
+}
+
+.navItem.active {
+    color: #913b9f;
+}
+
+.sidebarIcon {
+    width: 20px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+.navItem.hasDropdown {
+    position: relative;
+}
+
+.sidebarChevron {
+    width: 10px;
+    height: auto;
+    margin-left: auto;
+}
+
+.sidebarBottom {
+    display: flex;
+    align-items: center;
+}
+
+.sidebarLogo {
+    width: 170px;
+    height: auto;
+}
+
+/* ============================================
+   MAIN CONTENT
+   ============================================ */
+
+.mainContent {
+    margin-left: 200px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-bottom: 48px;
+}
+
+/* Top Bar */
+.topBar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #fff;
+    padding: 32px 48px 0 48px;
+}
+
+.backButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid #e0e0e0;
+    background: #fff;
+    text-decoration: none;
+    color: #341539;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    position: absolute;
+    left: 48px;
+    flex-shrink: 0;
+}
+
+.backButton:hover {
+    background: #f4f1f6;
+}
+
+.backButton svg {
+    color: #341539;
+}
+
+.searchModule {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 500px;
+    height: 48px;
+    padding: 0px 16px 0px 20px;
+    border-radius: 24px;
+    background: #f4f1f6;
+}
+
+.searchInput {
+    flex: 1 1 auto;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #49454f;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    padding: 0;
+    margin: 0;
+}
+
+.searchInput::placeholder {
+    color: #49454f;
+    opacity: 1;
+}
+
+.searchShortcut {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    pointer-events: none;
+}
+
+.searchKey {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 6px;
+    background: #e8e4ec;
+    box-shadow: 0 2px 0 #d0cad6;
+    color: #49454f;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.searchIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    pointer-events: none;
+}
+
+.topBarActions {
+    display: flex;
+    align-items: center;
+    gap: 3em;
+    position: absolute;
+    right: 48px;
+}
+
+.topBarActions svg {
+    cursor: pointer;
+}
+
+/* ============================================
+   TWO-COLUMN LAYOUT
+   ============================================ */
+
+.createOrderLayout {
+    display: flex;
+    gap: 32px;
+    padding: 0 48px;
+    align-items: flex-start;
+}
+
+.menuColumn {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    min-width: 0;
+}
+
+.receiptColumn {
+    flex: 0 0 300px;
+    position: sticky;
+    top: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ============================================
+   CATEGORY SECTIONS
+   ============================================ */
+
+.menuCategoryTitle {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+/* ============================================
+   MENU ITEM CARDS (grid of 3)
+   ============================================ */
+
+.menuCategoryGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.posMenuItem {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid #808080;
+    border-radius: 12px;
+    padding: 12px;
+    transition: border-color 0.2s ease;
+}
+
+.posMenuItem.active {
+    border-color: #913b9f;
+    border-width: 2px;
+    padding: 11px;
+}
+
+.posMenuItemImage {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 12px;
+    object-fit: cover;
+    background: #f4f1f6;
+}
+
+.posMenuItemInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.posMenuItemName {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+}
+
+.posMenuItemPrice {
+    color: #808080;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 400;
+}
+
+/* ============================================
+   APPLE-STYLE STEPPER
+   ============================================ */
+
+.posStepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    border-radius: 999px;
+    background: #f0f0f0;
+    overflow: hidden;
+}
+
+.posStepperBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    height: 100%;
+    border: none;
+    background: transparent;
+    color: #341539;
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    line-height: 1;
+    user-select: none;
+    padding: 0 16px;
+}
+
+.posStepperBtn:hover {
+    background: #e4e1e8;
+}
+
+.posStepperBtn:active {
+    background: #d8d5dc;
+}
+
+.posStepperDivider {
+    width: 1px;
+    height: 18px;
+    background: #c0c0c0;
+    flex-shrink: 0;
+}
+
+.posStepperRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.posStepperQty {
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 600;
+    color: #808080;
+    min-width: 20px;
+    text-align: center;
+    user-select: none;
+    transition: color 0.2s ease;
+}
+
+.posStepperQty.active {
+    color: #913b9f;
+}
+
+/* ============================================
+   RECEIPT (matches orderLineItem style)
+   ============================================ */
+
+.receipt {
+    display: flex;
+    padding: 24px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 32px;
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #595959;
+}
+
+.receiptOrderNumber {
+    color: #341539;
+    text-align: center;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 33px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.receiptSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    align-self: stretch;
+}
+
+/* Customer name - editable field styled to look like the purple badge */
+.receiptCustomerInput {
+    display: flex;
+    padding: 4px 16px;
+    justify-content: center;
+    align-items: center;
+    align-self: stretch;
+    border-radius: 8px;
+    background: #913b9f;
+    color: #fffafa;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    text-align: center;
+    border: 2px solid #913b9f;
+    outline: none;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+.receiptCustomerInput::placeholder {
+    color: rgba(255, 250, 250, 0.6);
+}
+
+.receiptCustomerInput:focus {
+    border-color: #7a3286;
+    background: #7a3286;
+}
+
+/* Order type segmented control */
+.segmentedControl {
+    --padding: 0.15rem;
+    display: flex;
+    position: relative;
+    padding: var(--padding);
+    border-radius: 9999px;
+    background: #f0f0f0;
+    align-self: stretch;
+    anchor-name: --segmented-button-hover;
+}
+
+.segmentedControl::before,
+.segmentedControl::after {
+    content: "";
+    position: absolute;
+    border-radius: inherit;
+    transition: inset 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    inset: calc(anchor(start) + var(--padding))
+        calc(anchor(end) + var(--padding)) calc(anchor(end) + var(--padding))
+        calc(anchor(start) + var(--padding));
+}
+
+.segmentedControl::before {
+    background-color: #e4e4e4;
+    position-anchor: --segmented-button-hover;
+    opacity: 0;
+    transition:
+        inset 250ms cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 150ms ease;
+}
+
+.segmentedControl:hover::before {
+    opacity: 1;
+}
+
+.segmentedControl::after {
+    background-color: #fff;
+    position-anchor: --segmented-button-checked;
+    box-shadow:
+        0 1px 3px 0 rgb(0 0 0 / 0.08),
+        0 1px 2px -1px rgb(0 0 0 / 0.06);
+}
+
+.segmentedButton {
+    background-color: transparent;
+    border: none;
+    border-radius: inherit;
+    flex: 1;
+    padding: 10px 0;
+    text-align: center;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    color: #341539;
+    cursor: pointer;
+    z-index: 1;
+    anchor-name: var(--anchor-name-1, --a), var(--anchor-name-2, --b);
+}
+
+.segmentedButton:hover {
+    --anchor-name-1: --segmented-button-hover;
+}
+
+.segmentedButton:has(:checked) {
+    --anchor-name-2: --segmented-button-checked;
+}
+
+.segmentedButton:has(:focus-visible) {
+    outline: 2px solid #913b9f;
+}
+
+.segmentedButton input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Receipt items list */
+.receiptItems {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    align-self: stretch;
+}
+
+.receiptEmpty {
+    color: #808080;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-style: italic;
+    text-align: center;
+    padding: 12px 0;
+}
+
+.receiptEntry {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.receiptEntryQty {
+    color: #913b9f;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    flex-shrink: 0;
+}
+
+.receiptEntryDetails {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.receiptEntryName {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+}
+
+.receiptEntryPrice {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Receipt entry note (special request) */
+.receiptEntryNote {
+    color: #913b9f;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+}
+
+.receiptEntryNote::before {
+    content: "\21B3\00a0";
+}
+
+/* Edit button */
+.receiptEditBtn {
+    display: inline-flex;
+    padding: 4px 12px;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    border-radius: 32px;
+    background: #ece6f0;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition:
+        transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+        box-shadow 0.3s ease,
+        background 0.3s ease;
+}
+
+.receiptEditBtn::before {
+    content: "";
+    position: absolute;
+    top: var(--mouse-y, 50%);
+    left: var(--mouse-x, 50%);
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(
+        circle at center,
+        rgba(145, 59, 159, 0.15) 0%,
+        rgba(145, 59, 159, 0.05) 40%,
+        transparent 70%
+    );
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+
+.receiptEditBtn:hover::before {
+    opacity: 1;
+}
+
+.receiptEditBtn:hover {
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.9) 0%,
+        rgba(236, 230, 240, 0.95) 100%
+    );
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transform: scale(1.02);
+    box-shadow:
+        0 4px 16px rgba(145, 59, 159, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.receiptEditBtn:active {
+    transform: scale(0.98);
+}
+
+.receiptEditBtnText {
+    color: #913b9f;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 20px;
+}
+
+/* Receipt footer */
+.receiptFooter {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    align-self: stretch;
+}
+
+.receiptTotalRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    align-self: stretch;
+}
+
+.receiptTotalLabel {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+}
+
+.receiptTotalValue {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+}
+
+/* Action buttons below receipt */
+.receiptActions {
+    display: flex;
+    gap: 12px;
+}
+
+.receiptCancelBtn {
+    flex: 1;
+    display: flex;
+    padding: 10px 20px;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+    border: 1px solid #eb001b;
+    background: transparent;
+    color: #eb001b;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.receiptCancelBtn:hover {
+    background: #fdf2f1;
+}
+
+.receiptPlaceBtn {
+    flex: 1;
+    display: flex;
+    padding: 10px 20px;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+    border: none;
+    background: #913b9f;
+    color: #fffafa;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.receiptPlaceBtn:hover {
+    background: #7a3286;
+}
+
+/* ============================================
+   TOAST POPUP
+   ============================================ */
+
+.toast {
+    position: fixed;
+    top: 110px;
+    right: 48px;
+    width: 360px;
+    max-width: calc(100vw - 40px);
+    background: #fff;
+    border: 2px solid #913b9f;
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 8px 32px rgba(52, 21, 57, 0.15);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease,
+        visibility 0.3s ease;
+    z-index: 9999;
+}
+
+.toast.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.toast.error {
+    border-color: #c0392b;
+}
+
+.toastMessage {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    text-align: center;
+}
+
+.toast.error .toastMessage {
+    color: #c0392b;
+}
+
+/* ============================================
+   EDIT POPUP
+   ============================================ */
+
+.editPopupOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+        opacity 0.3s ease,
+        visibility 0.3s ease;
+}
+
+.editPopupOverlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.editPopup {
+    background: #fff;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: scale(0.9) translateY(20px);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
+}
+
+.editPopupOverlay.active .editPopup {
+    transform: scale(1) translateY(0);
+}
+
+.editPopupHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 24px 16px 24px;
+    border-bottom: 0.5px solid #e0e0e0;
+}
+
+.editPopupTitle {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.editPopupClose {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: #f4f4f5;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.editPopupClose:hover {
+    background: #e8e8e9;
+    transform: scale(1.05);
+}
+
+.editPopupClose:active {
+    transform: scale(0.95);
+}
+
+.editPopupItemInfo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 24px;
+    background: #faf8fb;
+}
+
+.editPopupItemImage {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    object-fit: cover;
+}
+
+.editPopupItemDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.editPopupItemName {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.editPopupItemPrice {
+    color: #808080;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+}
+
+.editPopupContent {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.specialRequestSection {
+    display: flex;
+    flex-direction: column;
+}
+
+.specialRequestInput {
+    padding: 14px 16px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 16px;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    color: #341539;
+    resize: none;
+    transition: border-color 0.2s ease;
+}
+
+.specialRequestInput::placeholder {
+    color: #a0a0a0;
+}
+
+.specialRequestInput:focus {
+    outline: none;
+    border-color: #913b9f;
+}
+
+.editPopupFooter {
+    padding: 16px 24px 24px 24px;
+}
+
+.editPopupSaveBtn {
+    width: 100%;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 48px;
+    background: #913b9f;
+    color: #fff;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.editPopupSaveBtn:hover {
+    background: #7a3287;
+    transform: scale(1.02);
+}
+
+.editPopupSaveBtn:active {
+    transform: scale(0.98);
+}

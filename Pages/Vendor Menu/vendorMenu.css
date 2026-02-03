@@ -1,0 +1,1020 @@
+@font-face {
+    font-family: "Aptos";
+    src: url("../../fonts/Aptos.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Geist Mono";
+    src: url("../../fonts/GeistMono-VariableFont_wght.ttf") format("truetype");
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+body {
+    display: flex;
+    overflow-x: hidden;
+    font-family:
+        Aptos,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    background-color: #fff;
+    min-height: 100vh;
+}
+
+/* ============================================
+   SIDEBAR
+   ============================================ */
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 200px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 32px 24px 32px 0px;
+    border-right: 1px solid #e0e0e0;
+    background: #fff;
+    z-index: 100;
+    margin-left: 24px;
+}
+
+.sidebarTop {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+}
+
+.vendorAccount {
+    display: flex;
+    padding: 8px 16px;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    border-radius: 8px;
+    background: #f0f0f0;
+}
+
+.vendorIcon {
+    width: 21px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+.vendorName {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    color: #341539;
+    text-overflow: ellipsis;
+    font-family: Aptos;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.sidebarNav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.navItem {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+    transition: background 0.2s ease;
+}
+
+.navItem:hover {
+    background: #f4f1f6;
+}
+
+.navItem.active {
+    color: #913b9f;
+}
+
+.sidebarIcon {
+    width: 20px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+.navItem.hasDropdown {
+    position: relative;
+}
+
+.sidebarChevron {
+    width: 10px;
+    height: auto;
+    margin-left: auto;
+}
+
+.sidebarBottom {
+    display: flex;
+    align-items: center;
+}
+
+.sidebarLogo {
+    width: 170px;
+    height: auto;
+}
+
+/* ============================================
+   MAIN CONTENT
+   ============================================ */
+
+.mainContent {
+    margin-left: 200px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* Top Bar */
+.topBar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #fff;
+    padding: 32px 48px 0 48px;
+}
+
+.searchModule {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 500px;
+    height: 48px;
+    padding: 0px 16px 0px 20px;
+    border-radius: 24px;
+    background: #f4f1f6;
+}
+
+.searchInput {
+    flex: 1 1 auto;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #49454f;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    padding: 0;
+    margin: 0;
+}
+
+.searchInput::placeholder {
+    color: #49454f;
+    opacity: 1;
+}
+
+.searchShortcut {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    pointer-events: none;
+}
+
+.searchKey {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 6px;
+    background: #e8e4ec;
+    box-shadow: 0 2px 0 #d0cad6;
+    color: #49454f;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.searchIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    pointer-events: none;
+}
+
+.topBarActions {
+    display: flex;
+    align-items: center;
+    gap: 3em;
+    position: absolute;
+    right: 48px;
+}
+
+.topBarActions svg {
+    cursor: pointer;
+}
+
+/* ============================================
+   MENU CONTENT
+   ============================================ */
+
+.menuContent {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 0 48px 48px 48px;
+}
+
+/* Menu Header */
+.menuHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.menuHeaderActions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.sectionLabel {
+    color: #913b9f;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.newOrderButton,
+.addItemButton {
+    display: flex;
+    padding: 4px 16px;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    border-radius: 8px;
+    background: #913b9f;
+    color: #fffafa;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    text-decoration: none;
+}
+
+.newOrderButton:hover,
+.addItemButton:hover {
+    background: #7a3286;
+}
+
+.newOrderButton kbd,
+.addItemButton kbd {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 19px;
+    height: 19px;
+    padding: 0 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+    color: #fffafa;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* Menu Cards */
+/* Category Pills */
+.menuCategoryPills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.menuCategoryPill {
+    padding: 6px 16px;
+    border-radius: 9999px;
+    border: 1px solid #e0e0e0;
+    background: #fff;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.menuCategoryPill:hover {
+    background: #f4f1f6;
+    border-color: #913b9f;
+}
+
+.menuCategoryPill.active {
+    background: #913b9f;
+    border-color: #913b9f;
+    color: #fff;
+}
+
+.menuSections {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.menuSection {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.menuSectionTitle {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.menuCards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+/* ============================================
+   MENU ITEM CARD
+   ============================================ */
+
+.menuItem {
+    display: flex;
+    padding: 24px;
+    flex-direction: column;
+    gap: 16px;
+    width: calc((100% - 48px) / 3);
+    border-radius: 8px;
+    border: 1px solid #595959;
+}
+
+.menuItemImage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 160px;
+    border-radius: 8px;
+    background: #f0f0f0;
+}
+
+.menuItemName {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.menuItemCategory {
+    display: inline-flex;
+    padding: 4px 16px;
+    align-items: center;
+    border-radius: 8px;
+    background: #f0f0f0;
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 24px;
+    align-self: flex-start;
+}
+
+.menuItemPrice {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+}
+
+.menuItemDescription {
+    color: #595959;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Tags */
+.menuItemTags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.menuTag {
+    display: inline-flex;
+    padding: 4px 12px;
+    align-items: center;
+    gap: 6px;
+    border-radius: 48px;
+    background: #f2f2ff;
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: normal;
+    text-transform: capitalize;
+}
+
+.menuTag img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
+
+.menuTag.halal {
+    background: #eaf5e9;
+}
+
+.menuTag.kosher {
+    background: #eeeade;
+}
+
+/* Allergens */
+.menuItemAllergens {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.allergensLabel {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.allergenTags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.allergenTag {
+    display: flex;
+    padding: 4px 12px;
+    align-items: center;
+    gap: 6px;
+    border-radius: 100px;
+    background: #ffebeb;
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: normal;
+    text-transform: capitalize;
+}
+
+.allergenTag img {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+}
+
+.menuItemFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.menuItemAvailability {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.menuItemAvailability.available {
+    color: #2e7d32;
+}
+
+.menuItemAvailability.unavailable {
+    color: #808080;
+}
+
+.availabilityDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.available .availabilityDot {
+    background: #2e7d32;
+}
+
+.unavailable .availabilityDot {
+    background: #808080;
+}
+
+.menuItemEdit {
+    display: flex;
+    padding: 4px 12px;
+    align-items: center;
+    border-radius: 8px;
+    border: 1px solid #808080;
+    background: transparent;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 24px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.menuItemEdit:hover {
+    background: #f4f1f6;
+}
+
+/* ============================================
+   ADD ITEM SIDE PANEL
+   ============================================ */
+
+.addPanelOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 299;
+}
+
+.addPanelOverlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.addPanel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 560px;
+    height: 100vh;
+    background: #fff;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    z-index: 300;
+}
+
+.addPanel.active {
+    transform: translateX(0);
+}
+
+.addPanelHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.addPanelTitle {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.addPanelClose {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.addPanelForm {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 24px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.addFormGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.addFormLabel {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.addFormHint {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.addFormInput,
+.addFormTextarea,
+.addFormSelect {
+    border-radius: 8px;
+    border: 1px solid #d0d0d0;
+    padding: 8px 12px;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    color: #341539;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.addFormInput:focus,
+.addFormTextarea:focus,
+.addFormSelect:focus {
+    border-color: #913b9f;
+}
+
+.addFormTextarea {
+    resize: none;
+}
+
+.addFormInput.error {
+    border-color: #eb001b;
+}
+
+.addFormError {
+    color: #eb001b;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    display: none;
+}
+
+.addFormInput.error ~ .addFormError {
+    display: block;
+}
+
+.addFormCustomCategory,
+.editFormCustomCategory {
+    display: none;
+    margin-top: 4px;
+}
+
+.addFormTagsInput {
+    text-transform: capitalize;
+}
+
+.addFormPriceWrapper {
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    border: 1px solid #d0d0d0;
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+}
+
+.addFormPriceWrapper:focus-within {
+    border-color: #913b9f;
+}
+
+.addFormPricePrefix {
+    padding: 8px 0 8px 12px;
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    user-select: none;
+}
+
+.addFormPriceInput {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 8px 12px 8px 4px;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    color: #341539;
+}
+
+.addFormUploadBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid #808080;
+    background: transparent;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    width: fit-content;
+}
+
+.addFormUploadBtn:hover {
+    background: #f4f1f6;
+}
+
+.addFormAllergenList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.addFormAllergenItem {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    color: #341539;
+}
+
+.addFormAllergenItem input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #913b9f;
+    cursor: pointer;
+}
+
+.addPanelFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 24px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.addPanelCancelBtn {
+    display: flex;
+    padding: 8px 16px;
+    align-items: center;
+    border-radius: 8px;
+    border: 1px solid #808080;
+    background: transparent;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.addPanelCancelBtn:hover {
+    background: #f4f1f6;
+}
+
+.addPanelSaveBtn {
+    display: flex;
+    padding: 8px 16px;
+    align-items: center;
+    border-radius: 8px;
+    border: none;
+    background: #913b9f;
+    color: #fffafa;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.addPanelSaveBtn:hover {
+    background: #7a3286;
+}
+
+/* ============================================
+   EDIT POPUP OVERLAY
+   ============================================ */
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 200;
+}
+
+.overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.editPopup {
+    background: #fff;
+    border-radius: 8px;
+    padding: 24px;
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.editPopupHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.editPopupTitle {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.editPopupClose {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.editForm {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.editFormGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.editFormGroup.editFormCheckGroup {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+}
+
+.editFormLabel {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.editFormHint {
+    font-weight: 400;
+    color: #808080;
+}
+
+.editFormInput,
+.editFormTextarea,
+.editFormSelect {
+    border-radius: 8px;
+    border: 1px solid #d0d0d0;
+    padding: 8px 12px;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    color: #341539;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+#editTags,
+#editAllergens {
+    text-transform: capitalize;
+}
+
+.editFormInput:focus,
+.editFormTextarea:focus,
+.editFormSelect:focus {
+    border-color: #913b9f;
+}
+
+.editFormTextarea {
+    resize: none;
+}
+
+.editFormCheckbox {
+    width: 18px;
+    height: 18px;
+    accent-color: #913b9f;
+    cursor: pointer;
+}
+
+.editPopupFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.editPopupCancelBtn {
+    display: flex;
+    padding: 8px 16px;
+    align-items: center;
+    border-radius: 8px;
+    border: 1px solid #808080;
+    background: transparent;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.editPopupCancelBtn:hover {
+    background: #f4f1f6;
+}
+
+.editPopupSaveBtn {
+    display: flex;
+    padding: 8px 16px;
+    align-items: center;
+    border-radius: 8px;
+    border: none;
+    background: #913b9f;
+    color: #fffafa;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.editPopupSaveBtn:hover {
+    background: #7a3286;
+}

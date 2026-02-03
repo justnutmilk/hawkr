@@ -1,0 +1,779 @@
+@font-face {
+    font-family: "Aptos";
+    src: url("../../fonts/Aptos.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Geist Mono";
+    src: url("../../fonts/GeistMono-VariableFont_wght.ttf") format("truetype");
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+body {
+    display: flex;
+    overflow-x: hidden;
+    font-family:
+        Aptos,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    background-color: #fff;
+    min-height: 100vh;
+}
+
+/* ============================================
+   SIDEBAR
+   ============================================ */
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 200px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 32px 24px 32px 0px;
+    border-right: 1px solid #e0e0e0;
+    background: #fff;
+    z-index: 100;
+    margin-left: 24px;
+}
+
+.sidebarTop {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+}
+
+.vendorAccount {
+    display: flex;
+    padding: 8px 16px;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    border-radius: 8px;
+    background: #f0f0f0;
+}
+
+.vendorIcon {
+    width: 21px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+.vendorName {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    color: #341539;
+    text-overflow: ellipsis;
+    font-family: Aptos;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.sidebarNav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.navItem {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+    transition: background 0.2s ease;
+}
+
+.navItem:hover {
+    background: #f4f1f6;
+}
+
+.navItem.active {
+    color: #913b9f;
+}
+
+.sidebarIcon {
+    width: 20px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+.navItem.hasDropdown {
+    position: relative;
+}
+
+.sidebarChevron {
+    width: 10px;
+    height: auto;
+    margin-left: auto;
+}
+
+.sidebarBottom {
+    display: flex;
+    align-items: center;
+}
+
+.sidebarLogo {
+    width: 170px;
+    height: auto;
+}
+
+/* ============================================
+   MAIN CONTENT
+   ============================================ */
+
+.mainContent {
+    margin-left: 200px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* Top Bar */
+.topBar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #fff;
+    padding: 32px 48px 0 48px;
+}
+
+.backButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid #e0e0e0;
+    background: #fff;
+    text-decoration: none;
+    color: #341539;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    position: absolute;
+    left: 48px;
+    flex-shrink: 0;
+}
+
+.backButton:hover {
+    background: #f4f1f6;
+}
+
+.searchModule {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 500px;
+    height: 48px;
+    padding: 0px 16px 0px 20px;
+    border-radius: 24px;
+    background: #f4f1f6;
+}
+
+.searchInput {
+    flex: 1 1 auto;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #49454f;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    padding: 0;
+    margin: 0;
+}
+
+.searchInput::placeholder {
+    color: #49454f;
+    opacity: 1;
+}
+
+.searchShortcut {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    pointer-events: none;
+}
+
+.searchKey {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 6px;
+    background: #e8e4ec;
+    box-shadow: 0 2px 0 #d0cad6;
+    color: #49454f;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.searchIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    pointer-events: none;
+}
+
+.topBarActions {
+    display: flex;
+    align-items: center;
+    gap: 3em;
+    position: absolute;
+    right: 48px;
+}
+
+.topBarActions svg {
+    cursor: pointer;
+}
+
+/* ============================================
+   PAGE CONTENT
+   ============================================ */
+
+.pageContent {
+    display: flex;
+    flex-direction: column;
+    gap: 64px;
+    padding: 0 48px 48px 48px;
+}
+
+/* Header Row */
+.detailHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.detailHeaderLeft {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.nowPerusing {
+    color: #808080;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.transactionIdDisplay {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 19px;
+    font-weight: 500;
+    line-height: normal;
+    letter-spacing: 3.04px;
+}
+
+.initiateRefund {
+    display: flex;
+    padding: 4px 16px;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    border-radius: 8px;
+    border: 1px solid #ffdde1;
+    background: #fff0f2;
+    color: #eb001b;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.initiateRefund:hover {
+    background: #ffe8eb;
+}
+
+.initiateRefund .buttonKeyboard {
+    border-radius: 4px;
+    background: #ffdde1;
+    box-shadow: 0 2px 0 rgba(235, 0, 27, 0.15);
+    color: #eb001b;
+}
+
+.buttonKeyboard {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 19px;
+    height: 19px;
+    padding: 0px;
+    border-radius: 4px;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* ============================================
+   SECTION TITLES
+   ============================================ */
+
+.sectionTitle {
+    color: #913b9f;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 23px;
+    font-weight: 600;
+    line-height: 24px;
+}
+
+.sectionTitle.dark {
+    color: #341539;
+}
+
+/* ============================================
+   ORDER SUMMARY
+   ============================================ */
+
+.orderSummaryOutside {
+    display: flex;
+    flex-direction: column;
+    gap: 64px;
+}
+
+.orderSummaryInside {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.orderItem {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.orderItemImage {
+    width: 100px;
+    height: 100px;
+    border-radius: 16px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: #f0f0f0;
+}
+
+.orderItemDetails {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    gap: 4px;
+}
+
+.orderItemName {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 23px;
+    font-weight: 600;
+    line-height: 24px;
+}
+
+.orderItemVendor {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+    letter-spacing: 0.64px;
+}
+
+.orderItemTags {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.requestTag {
+    display: flex;
+    padding: 4px 16px;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    border-radius: 32px;
+    background: #ece6f0;
+    border: none;
+    color: #913b9f;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+}
+
+.requestText {
+    color: #913b9f;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+}
+
+.orderItemRight {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-shrink: 0;
+    align-self: stretch;
+}
+
+.orderItemPrice {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 23px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+    white-space: nowrap;
+}
+
+.orderItemQty {
+    width: 33px;
+    height: 33px;
+    border: 2px solid #913b9f;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #341539;
+    text-align: center;
+    font-feature-settings:
+        "liga" off,
+        "clig" off;
+    font-family: Aptos, sans-serif;
+    font-size: 19px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 22px;
+}
+
+/* Total Row */
+.totalRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-left: 124px;
+}
+
+.totalLabel {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 28px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+}
+
+.totalValue {
+    color: #341539;
+    font-family: Aptos;
+    font-size: 28px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+}
+
+/* ============================================
+   TRANSACTION DETAILS
+   ============================================ */
+
+.transactionDetailsSection {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.transactionDetailsPayment {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.transactionDetailsLogos {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.transactionDetailsLogos img {
+    height: 44px;
+    width: auto;
+}
+
+.transactionDetailsMethod {
+    display: flex;
+    flex-direction: column;
+}
+
+.transactionDetailsBrand {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 19px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+}
+
+.transactionDetailsSub {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.transactionDetailsId {
+    color: #808080;
+    font-feature-settings: "ss03" on;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    letter-spacing: 0.64px;
+}
+
+/* ============================================
+   RELATED INSTANCES / ORDERS
+   ============================================ */
+
+.relatedOrdersInstances {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.noRelated {
+    color: #595959;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.relatedTable {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.relatedRow {
+    display: flex;
+    gap: 16px;
+    padding: 8px;
+    border-radius: 8px;
+    align-items: center;
+    transition: background 0.15s ease;
+}
+
+.relatedRow:hover {
+    background: #f5f5f5;
+}
+
+.relatedRow .transactionCell {
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: #341539;
+}
+
+.relatedRow .transactionCellAmount {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1.2;
+}
+
+.relatedRow .transactionCellMethod {
+    flex: 1;
+}
+
+.relatedRow .transactionCellTransactionId {
+    flex: 1.5;
+}
+
+.relatedRow .transactionCellCustomer {
+    flex: 1;
+}
+
+.relatedRow .transactionCellDate {
+    flex: 1.2;
+}
+
+.relatedRow .paymentAmount {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+}
+
+.relatedRow .transactionBadge {
+    display: flex;
+    padding: 2px 8px;
+    align-items: center;
+    gap: 8px;
+    border-radius: 8px;
+    font-family: Aptos, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 16px;
+    white-space: nowrap;
+}
+
+.relatedRow .transactionBadge.successful {
+    border: 1px solid #cee6cc;
+    background: #eaf5e9;
+    color: #417c3d;
+}
+
+.relatedRow .transactionBadge img {
+    width: 12px;
+    height: auto;
+}
+
+.relatedRow .paymentMethodBox {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.relatedRow .paymentLogos {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.relatedRow .paymentLogos img {
+    height: 24px;
+    width: auto;
+}
+
+.relatedRow .paymentMethodLabel {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.relatedRow .transactionId {
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    color: #341539;
+}
+
+.relatedRow .transactionCustomer {
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    color: #341539;
+}
+
+.relatedRow .transactionDateTime {
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    color: #341539;
+}
+
+/* ============================================
+   REVIEW CARD
+   ============================================ */
+
+.reviewCard {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 24px;
+    border-radius: 16px;
+    background: #f4f1f6;
+}
+
+.reviewTitle {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 23px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.reviewText {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.reviewMeta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.reviewStars {
+    display: flex;
+    gap: 2px;
+}
+
+.reviewStars svg {
+    width: 16px;
+    height: 16px;
+}
+
+.reviewInfo {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: normal;
+}

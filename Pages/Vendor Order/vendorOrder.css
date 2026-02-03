@@ -1,0 +1,619 @@
+@font-face {
+    font-family: "Aptos";
+    src: url("../../fonts/Aptos.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Geist Mono";
+    src: url("../../fonts/GeistMono-VariableFont_wght.ttf") format("truetype");
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+body {
+    display: flex;
+    overflow-x: hidden;
+    font-family:
+        Aptos,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    background-color: #fff;
+    min-height: 100vh;
+}
+
+/* ============================================
+   SIDEBAR
+   ============================================ */
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 200px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 32px 24px 32px 0px;
+    border-right: 1px solid #e0e0e0;
+    background: #fff;
+    z-index: 100;
+    margin-left: 24px;
+}
+
+.sidebarTop {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+}
+
+.vendorAccount {
+    display: flex;
+    padding: 8px 16px;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    border-radius: 8px;
+    background: #f0f0f0;
+}
+
+.vendorIcon {
+    width: 21px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+.vendorName {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    color: #341539;
+    text-overflow: ellipsis;
+    font-family: Aptos;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.sidebarNav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.navItem {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+    transition: background 0.2s ease;
+}
+
+.navItem:hover {
+    background: #f4f1f6;
+}
+
+.navItem.active {
+    color: #913b9f;
+}
+
+.sidebarIcon {
+    width: 20px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+.navItem.hasDropdown {
+    position: relative;
+}
+
+.sidebarChevron {
+    width: 10px;
+    height: auto;
+    margin-left: auto;
+}
+
+.sidebarBottom {
+    display: flex;
+    align-items: center;
+}
+
+.sidebarLogo {
+    width: 170px;
+    height: auto;
+}
+
+/* ============================================
+   MAIN CONTENT
+   ============================================ */
+
+.mainContent {
+    margin-left: 200px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* Top Bar */
+.topBar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #fff;
+    padding: 32px 48px 0 48px;
+}
+
+.searchModule {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 500px;
+    height: 48px;
+    padding: 0px 16px 0px 20px;
+    border-radius: 24px;
+    background: #f4f1f6;
+}
+
+.searchInput {
+    flex: 1 1 auto;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #49454f;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    padding: 0;
+    margin: 0;
+}
+
+.searchInput::placeholder {
+    color: #49454f;
+    opacity: 1;
+}
+
+.searchShortcut {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    pointer-events: none;
+}
+
+.searchKey {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 6px;
+    background: #e8e4ec;
+    box-shadow: 0 2px 0 #d0cad6;
+    color: #49454f;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.searchIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    pointer-events: none;
+}
+
+.topBarActions {
+    display: flex;
+    align-items: center;
+    gap: 3em;
+    position: absolute;
+    right: 48px;
+}
+
+.topBarActions svg {
+    cursor: pointer;
+}
+
+/* ============================================
+   SEGMENTED CONTROL
+   ============================================ */
+
+.segmentedControl {
+    --padding: 0.15rem;
+    display: flex;
+    position: relative;
+    padding: var(--padding);
+    border-radius: 9999px;
+    background: #f0f0f0;
+    align-self: center;
+    anchor-name: --segmented-button-hover;
+}
+
+.segmentedControl::before,
+.segmentedControl::after {
+    content: "";
+    position: absolute;
+    border-radius: inherit;
+    transition: inset 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    inset: calc(anchor(start) + var(--padding))
+        calc(anchor(end) + var(--padding)) calc(anchor(end) + var(--padding))
+        calc(anchor(start) + var(--padding));
+}
+
+.segmentedControl::before {
+    background-color: #e4e4e4;
+    position-anchor: --segmented-button-hover;
+    opacity: 0;
+    transition:
+        inset 250ms cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 150ms ease;
+}
+
+.segmentedControl:hover::before {
+    opacity: 1;
+}
+
+.segmentedControl::after {
+    background-color: #fff;
+    position-anchor: --segmented-button-checked;
+    box-shadow:
+        0 1px 3px 0 rgb(0 0 0 / 0.08),
+        0 1px 2px -1px rgb(0 0 0 / 0.06);
+}
+
+.segmentedButton {
+    background-color: transparent;
+    border: none;
+    border-radius: inherit;
+    width: 200px;
+    padding: 10px 0;
+    text-align: center;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    color: #341539;
+    cursor: pointer;
+    z-index: 1;
+    anchor-name: var(--anchor-name-1, --a), var(--anchor-name-2, --b);
+}
+
+.segmentedButton:hover {
+    --anchor-name-1: --segmented-button-hover;
+}
+
+.segmentedButton:has(:checked) {
+    --anchor-name-2: --segmented-button-checked;
+}
+
+.segmentedButton:has(:focus-visible) {
+    outline: 2px solid #913b9f;
+}
+
+.segmentedButton input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* ============================================
+   ORDER CONTENT
+   ============================================ */
+
+.orderContent {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 0 48px 48px 48px;
+}
+
+/* Order Line Header */
+.orderLineHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sectionLabel {
+    color: #913b9f;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.newOrderButton {
+    display: flex;
+    padding: 4px 16px;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    border-radius: 8px;
+    background: #913b9f;
+    color: #fffafa;
+    text-decoration: none;
+    border: none;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.newOrderButton:hover {
+    background: #7a3286;
+}
+
+.newOrderButton kbd {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 19px;
+    height: 19px;
+    padding: 0px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+    color: #fffafa;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* Order Line Cards */
+.orderLineCards {
+    display: flex;
+    gap: 24px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    align-items: flex-start;
+}
+
+.orderLineCards::-webkit-scrollbar {
+    height: 4px;
+}
+
+.orderLineCards::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.orderLineCards::-webkit-scrollbar-thumb {
+    background: #d9d9d9;
+    border-radius: 4px;
+}
+
+/* ============================================
+   ORDER LINE ITEM
+   ============================================ */
+
+.orderLineItem {
+    display: flex;
+    padding: 24px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 32px;
+    width: 380px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    border: 1px solid #595959;
+}
+
+.orderLineImportant {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    align-self: stretch;
+}
+
+.orderItemNumber {
+    color: #341539;
+    text-align: center;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 33px;
+    font-weight: 400;
+    line-height: normal;
+    white-space: nowrap;
+}
+
+.orderItemCustomerName {
+    display: flex;
+    padding: 4px 16px;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    align-self: stretch;
+    border-radius: 8px;
+    background: #913b9f;
+    color: #fffafa;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.orderItemDateTime {
+    display: flex;
+    padding: 4px 16px;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    align-self: stretch;
+    border-radius: 8px;
+    background: #f0f0f0;
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 24px;
+    white-space: nowrap;
+}
+
+.orderItemType {
+    display: flex;
+    padding: 4px 16px;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    align-self: stretch;
+    border-radius: 8px;
+    border: 1px solid #808080;
+    background: #f0f0f0;
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 24px;
+    white-space: nowrap;
+}
+
+/* ============================================
+   ORDER ITEMS LIST
+   ============================================ */
+
+.orderItemsList {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.orderEntry {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.orderEntryQty {
+    color: #913b9f;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    flex-shrink: 0;
+}
+
+.orderEntryDetails {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.orderEntryName {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+}
+
+.orderEntryPrice {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.orderEntryNote {
+    color: #913b9f;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+}
+
+.orderEntryNote::before {
+    content: "\21B3\00a0";
+}
+
+/* ============================================
+   ORDER FOOTER
+   ============================================ */
+
+.orderItemTotalRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    align-self: stretch;
+}
+
+.orderItemTotal {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    white-space: nowrap;
+}
+
+.orderItemTotalValue {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    white-space: nowrap;
+}
+
+.orderItemTransaction {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: normal;
+    align-self: stretch;
+    text-align: left;
+}
+
+.orderItemTransactionId {
+    text-decoration-line: underline;
+    text-decoration-style: solid;
+    text-decoration-skip-ink: auto;
+    text-underline-position: from-font;
+}

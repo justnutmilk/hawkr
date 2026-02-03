@@ -1,0 +1,1142 @@
+@font-face {
+    font-family: "Aptos";
+    src: url("../../fonts/Aptos.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Geist Mono";
+    src: url("../../fonts/GeistMono-VariableFont_wght.ttf") format("truetype");
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    overflow-x: hidden;
+}
+
+body {
+    display: flex;
+    overflow-x: hidden;
+    font-family:
+        Aptos,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    background-color: #fff;
+    min-height: 100vh;
+}
+
+/* ============================================
+   SIDEBAR
+   ============================================ */
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 200px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 32px 24px 32px 0px;
+    border-right: 1px solid #e0e0e0;
+    background: #fff;
+    z-index: 100;
+    margin-left: 24px;
+}
+
+.sidebarTop {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+}
+
+.operatorAccount {
+    display: flex;
+    padding: 8px 16px;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    border-radius: 8px;
+    background: #f0f0f0;
+}
+
+.operatorIcon {
+    width: 42px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+.operatorName {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    color: #341539;
+    text-overflow: ellipsis;
+    font-family: Aptos;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+/* Sidebar Navigation */
+.sidebarNav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.navItem {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+    transition: background 0.2s ease;
+}
+
+.navItem:hover {
+    background: #f4f1f6;
+}
+
+.navItem.active {
+    color: #913b9f;
+}
+
+.sidebarIcon {
+    width: 20px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+/* Sidebar Bottom */
+.sidebarBottom {
+    display: flex;
+    align-items: center;
+}
+
+.sidebarLogo {
+    width: 170px;
+    height: auto;
+}
+
+/* ============================================
+   MAIN CONTENT
+   ============================================ */
+
+.mainContent {
+    margin-left: 224px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+    height: 100vh;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+/* Sticky Header */
+.stickyHeader {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+}
+
+/* Top Bar */
+.topBar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 32px 48px 0 48px;
+}
+
+.searchModule {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 500px;
+    height: 48px;
+    padding: 0px 16px 0px 20px;
+    border-radius: 24px;
+    background: #f4f1f6;
+}
+
+.searchInput {
+    flex: 1 1 auto;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #49454f;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    padding: 0;
+    margin: 0;
+}
+
+.searchInput::placeholder {
+    color: #49454f;
+    opacity: 1;
+}
+
+.searchShortcut {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    pointer-events: none;
+}
+
+.searchKey {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 6px;
+    background: #e8e4ec;
+    box-shadow: 0 2px 0 #d0cad6;
+    color: #49454f;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.searchIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    pointer-events: none;
+}
+
+.topBarActions {
+    display: flex;
+    align-items: center;
+    gap: 3em;
+    position: absolute;
+    right: 48px;
+}
+
+.topBarActions a {
+    display: flex;
+    align-items: center;
+}
+
+.topBarActions svg {
+    cursor: pointer;
+}
+
+/* ============================================
+   SEGMENTED CONTROL
+   ============================================ */
+
+.segmentedControl {
+    --padding: 0.15rem;
+    display: flex;
+    position: relative;
+    padding: var(--padding);
+    border-radius: 9999px;
+    background: #f0f0f0;
+    align-self: center;
+    anchor-name: --segmented-button-hover;
+}
+
+.segmentedControl::before,
+.segmentedControl::after {
+    content: "";
+    position: absolute;
+    border-radius: inherit;
+    transition: inset 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    inset: calc(anchor(start) + var(--padding))
+        calc(anchor(end) + var(--padding)) calc(anchor(end) + var(--padding))
+        calc(anchor(start) + var(--padding));
+}
+
+.segmentedControl::before {
+    background-color: #e4e4e4;
+    position-anchor: --segmented-button-hover;
+    opacity: 0;
+    transition:
+        inset 250ms cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 150ms ease;
+}
+
+.segmentedControl:hover::before {
+    opacity: 1;
+}
+
+.segmentedControl::after {
+    background-color: #fff;
+    position-anchor: --segmented-button-checked;
+    box-shadow:
+        0 1px 3px 0 rgb(0 0 0 / 0.08),
+        0 1px 2px -1px rgb(0 0 0 / 0.06);
+}
+
+.segmentedButton {
+    background-color: transparent;
+    border: none;
+    border-radius: inherit;
+    width: 200px;
+    padding: 10px 0;
+    text-align: center;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    color: #341539;
+    cursor: pointer;
+    z-index: 1;
+    anchor-name: var(--anchor-name-1, --a), var(--anchor-name-2, --b);
+}
+
+.segmentedButton:hover {
+    --anchor-name-1: --segmented-button-hover;
+}
+
+.segmentedButton:has(:checked) {
+    --anchor-name-2: --segmented-button-checked;
+}
+
+.segmentedButton:has(:focus-visible) {
+    outline: 2px solid #913b9f;
+}
+
+.segmentedButton input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* ============================================
+   PAGE CONTENT
+   ============================================ */
+
+.pageContent {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    padding: 0 48px 48px 48px;
+}
+
+/* Page Header */
+.pageHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pageTitle {
+    color: #913b9f;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.onboardButton {
+    display: flex;
+    padding: 4px 16px;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    border-radius: 8px;
+    background: #913b9f;
+    color: #fffafa;
+    text-decoration: none;
+    border: none;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.onboardButton:hover {
+    background: #7a3286;
+}
+
+.onboardButton kbd {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 19px;
+    height: 19px;
+    padding: 0 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+    color: #fffafa;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* ============================================
+   CHILDREN GRID
+   ============================================ */
+
+.childrenGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 48px;
+}
+
+.childCard {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: none;
+    border: none;
+    padding: 16px;
+    border-radius: 24px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.childCard:hover {
+    background: #f5f5f5;
+}
+
+.childCardImage {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    border-radius: 24px;
+    background: #f0f0f0;
+}
+
+.childCardName {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.childCardTags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.childTag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 16px;
+    border-radius: 48px;
+    background: #f2f2ff;
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: normal;
+    white-space: nowrap;
+}
+
+.childTag.halal {
+    background: #eaf5e9;
+}
+
+.childTag.kosher {
+    background: #eeeade;
+}
+
+.childTagIcon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
+
+/* Card Meta */
+.childCardMeta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.childCardMetaItem {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #808080;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.childCardHours {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.childCardHoursLines {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.childCardHoursLine {
+    color: #808080;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.childCardMetaIcon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+/* ============================================
+   ONBOARD PANEL
+   ============================================ */
+
+.onboardOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 299;
+}
+
+.onboardOverlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.onboardPanel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 560px;
+    height: 100vh;
+    background: #fff;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    z-index: 300;
+}
+
+.onboardPanel.active {
+    transform: translateX(0);
+}
+
+.onboardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.onboardTitle {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.onboardClose {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.onboardBody {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 24px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* State 1: Code Generated */
+.onboardCodeSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    padding: 48px 0;
+}
+
+.onboardCode {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 48px;
+    font-weight: 700;
+    letter-spacing: 12px;
+    line-height: normal;
+    user-select: all;
+}
+
+.onboardCodePrefix {
+    color: #808080;
+}
+
+.onboardCodeSubtitle {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: center;
+    max-width: 360px;
+}
+
+.onboardCopyBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    border-radius: 8px;
+    border: 1px solid #913b9f;
+    background: transparent;
+    color: #913b9f;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.onboardCopyBtn:hover {
+    background: #f4f1f6;
+}
+
+.onboardWaiting {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #808080;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.onboardWaitingIcon {
+    width: 16px;
+    height: 16px;
+    animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.onboardSimulateBtn {
+    padding: 8px 20px;
+    border-radius: 8px;
+    border: 1px dashed #808080;
+    background: transparent;
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.onboardSimulateBtn:hover {
+    background: #f5f5f5;
+}
+
+/* State 2: Vendor Linked */
+.onboardFields {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.onboardField {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.onboardFieldLabel {
+    color: #913b9f;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.onboardFieldMicrocopy {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.onboardFieldInput {
+    border-radius: 8px;
+    border: 1px solid #d0d0d0;
+    padding: 8px 12px;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    color: #341539;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.onboardFieldInput:focus {
+    border-color: #913b9f;
+}
+
+/* Cuisine Tag Input */
+.onboardCuisineContainer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    border-radius: 8px;
+    border: 1px solid #d0d0d0;
+    padding: 6px 12px;
+    cursor: text;
+    transition: border-color 0.2s ease;
+}
+
+.onboardCuisineContainer:focus-within {
+    border-color: #913b9f;
+}
+
+.onboardCuisineTag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    position: relative;
+}
+
+.onboardCuisineTag .childTag {
+    padding-right: 28px;
+}
+
+.onboardCuisineRemove {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #808080;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    transition: color 0.2s ease;
+}
+
+.onboardCuisineRemove:hover {
+    color: #d32f2f;
+}
+
+.onboardCuisineInput {
+    border: none;
+    outline: none;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    color: #341539;
+    flex: 1;
+    min-width: 100px;
+    padding: 4px 0;
+}
+
+.onboardCuisineInput::placeholder {
+    color: #b0b0b0;
+}
+
+/* Schedule Editor */
+.onboardSchedule {
+    border-radius: 8px;
+    border: 1px solid #d0d0d0;
+    overflow: hidden;
+}
+
+.onboardScheduleRow {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 12px;
+}
+
+.onboardScheduleRow + .onboardScheduleRow {
+    border-top: 1px solid #f0f0f0;
+}
+
+.onboardScheduleDay {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: normal;
+    width: 36px;
+    flex-shrink: 0;
+    padding-top: 4px;
+}
+
+.onboardScheduleToggleLabel {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    padding-top: 4px;
+}
+
+.onboardScheduleToggleInput {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.onboardScheduleToggle {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #d0d0d0;
+    transition: background 0.2s ease;
+}
+
+.onboardScheduleToggleInput:checked + .onboardScheduleToggle {
+    background: #913b9f;
+}
+
+.onboardScheduleSlots {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+}
+
+.onboardScheduleSlot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.onboardScheduleTime {
+    border-radius: 6px;
+    border: 1px solid #d0d0d0;
+    padding: 4px 8px;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    color: #341539;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.onboardScheduleTime:focus {
+    border-color: #913b9f;
+}
+
+.onboardScheduleTo {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.onboardScheduleAddSlot {
+    background: none;
+    border: none;
+    color: #913b9f;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 0;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.onboardScheduleAddSlot:hover {
+    text-decoration: underline;
+}
+
+.onboardScheduleRemoveSlot {
+    background: none;
+    border: none;
+    color: #808080;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    transition: color 0.2s ease;
+}
+
+.onboardScheduleRemoveSlot:hover {
+    color: #d32f2f;
+}
+
+.onboardScheduleClosed {
+    color: #b0b0b0;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-style: italic;
+    font-weight: 400;
+    padding: 4px 0;
+}
+
+.onboardFileBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: #eaf5e9;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.onboardUploadBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid #d0d0d0;
+    background: #fff;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    align-self: flex-start;
+}
+
+.onboardUploadBtn:hover {
+    background: #f5f5f5;
+}
+
+.onboardUploadInput {
+    display: none;
+}
+
+.onboardUploadText {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.onboardUploadIcon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.onboardFilePreview {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.onboardFilePreviewBox {
+    position: relative;
+    width: 100%;
+    height: 160px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    overflow: hidden;
+    background: #f5f5f5;
+}
+
+.onboardImagePreview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.onboardPdfPreview {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.onboardPdfPlaceholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: #f5f5f5;
+}
+
+.onboardPdfPlaceholderText {
+    color: #b0b0b0;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.onboardFileDelete {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    transition: background 0.2s ease;
+}
+
+.onboardFileDelete:hover {
+    background: #fdecea;
+}
+
+.onboardFileDeleteIcon {
+    width: 16px;
+    height: 16px;
+}
+
+.onboardFileBadgeIcon {
+    width: 14px;
+    height: 14px;
+}
+
+/* Footer */
+.onboardFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 24px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.onboardCancelBtn {
+    display: flex;
+    padding: 8px 16px;
+    align-items: center;
+    border-radius: 8px;
+    border: 1px solid #808080;
+    background: transparent;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.onboardCancelBtn:hover {
+    background: #f4f1f6;
+}
+
+.onboardRejectBtn {
+    display: flex;
+    padding: 8px 16px;
+    align-items: center;
+    border-radius: 8px;
+    border: 1px solid #d32f2f;
+    background: transparent;
+    color: #d32f2f;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.onboardRejectBtn:hover {
+    background: #fdecea;
+}
+
+.onboardApproveBtn {
+    display: flex;
+    padding: 8px 16px;
+    align-items: center;
+    border-radius: 8px;
+    border: none;
+    background: #913b9f;
+    color: #fffafa;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.onboardApproveBtn:hover {
+    background: #7a3286;
+}

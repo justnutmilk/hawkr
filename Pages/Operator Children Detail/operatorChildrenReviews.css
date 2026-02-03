@@ -1,0 +1,629 @@
+@font-face {
+    font-family: "Aptos";
+    src: url("../../fonts/Aptos.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Geist Mono";
+    src: url("../../fonts/GeistMono-VariableFont_wght.ttf") format("truetype");
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    overflow-x: hidden;
+}
+
+body {
+    display: flex;
+    overflow-x: hidden;
+    font-family:
+        Aptos,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    background-color: #fff;
+    min-height: 100vh;
+}
+
+/* ============================================
+   SIDEBAR
+   ============================================ */
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 200px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 32px 24px 32px 0px;
+    border-right: 1px solid #e0e0e0;
+    background: #fff;
+    z-index: 100;
+    margin-left: 24px;
+}
+
+.sidebarTop {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+}
+
+.operatorAccount {
+    display: flex;
+    padding: 8px 16px;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    border-radius: 8px;
+    background: #f0f0f0;
+}
+
+.operatorIcon {
+    width: 42px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+.operatorName {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    color: #341539;
+    text-overflow: ellipsis;
+    font-family: Aptos;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+/* Sidebar Navigation */
+.sidebarNav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.navItem {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+    transition: background 0.2s ease;
+}
+
+.navItem:hover {
+    background: #f4f1f6;
+}
+
+.navItem.active {
+    color: #913b9f;
+}
+
+.sidebarIcon {
+    width: 20px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+/* Sidebar Bottom */
+.sidebarBottom {
+    display: flex;
+    align-items: center;
+}
+
+.sidebarLogo {
+    width: 170px;
+    height: auto;
+}
+
+/* ============================================
+   MAIN CONTENT
+   ============================================ */
+
+.mainContent {
+    margin-left: 224px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+    height: 100vh;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+/* Top Bar */
+.topBar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 32px 48px 0 48px;
+    position: relative;
+}
+
+.searchModule {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 500px;
+    height: 48px;
+    padding: 0px 16px 0px 20px;
+    border-radius: 24px;
+    background: #f4f1f6;
+}
+
+.searchInput {
+    flex: 1 1 auto;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #49454f;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    padding: 0;
+    margin: 0;
+}
+
+.searchInput::placeholder {
+    color: #49454f;
+    opacity: 1;
+}
+
+.searchShortcut {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    pointer-events: none;
+}
+
+.searchKey {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 6px;
+    background: #e8e4ec;
+    box-shadow: 0 2px 0 #d0cad6;
+    color: #49454f;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.searchIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    pointer-events: none;
+}
+
+.topBarActions {
+    display: flex;
+    align-items: center;
+    gap: 3em;
+    position: absolute;
+    right: 48px;
+}
+
+.topBarActions a {
+    display: flex;
+    align-items: center;
+}
+
+.topBarActions svg {
+    cursor: pointer;
+}
+
+.topBarActionIcon {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+}
+
+/* ============================================
+   BACK BUTTON
+   ============================================ */
+
+.backButton {
+    position: absolute;
+    left: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #ece6f0;
+    border: 1px solid transparent;
+    box-shadow: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition:
+        transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background 0.3s ease,
+        box-shadow 0.3s ease,
+        border-color 0.3s ease,
+        backdrop-filter 0.3s ease;
+}
+
+.backButton:hover {
+    background: rgba(236, 230, 240, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow:
+        0 4px 16px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    transform: scale(1.08);
+}
+
+.backButton:active {
+    animation: liquidBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes liquidBounce {
+    0% {
+        transform: scale(1);
+    }
+    20% {
+        transform: scale(0.85) rotate(-3deg);
+    }
+    40% {
+        transform: scale(1.12) rotate(2deg);
+    }
+    60% {
+        transform: scale(0.95) rotate(-1deg);
+    }
+    80% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.backArrowIcon {
+    width: 15px;
+    height: 24px;
+    aspect-ratio: 5 / 8;
+}
+
+/* ============================================
+   PAGE CONTENT
+   ============================================ */
+
+.pageContent {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+    padding: 0 48px 48px 48px;
+}
+
+/* Store Header */
+.storeHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.storeHeaderTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.storeHeaderInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.storePerusing {
+    color: #808080;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.storeName {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.storeTags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.storeTag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 16px;
+    border-radius: 48px;
+    background: #f2f2ff;
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: normal;
+    white-space: nowrap;
+}
+
+.storeTag.halal {
+    background: #eaf5e9;
+}
+
+.storeTag.kosher {
+    background: #eeeade;
+}
+
+.storeTagIcon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
+
+/* ============================================
+   REVIEWS
+   ============================================ */
+
+.reviewsSection {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.reviewsHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.reviewsHeaderLeft {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.reviewsHeaderIcon {
+    width: 32px;
+    height: 32px;
+}
+
+.reviewsTitle {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 23px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+/* Segmented Control */
+.reviewsSegmented {
+    --padding: 0.15rem;
+    display: flex;
+    position: relative;
+    padding: var(--padding);
+    border-radius: 9999px;
+    background: #f0f0f0;
+    anchor-name: --segmented-button-hover;
+}
+
+.reviewsSegmented::before,
+.reviewsSegmented::after {
+    content: "";
+    position: absolute;
+    border-radius: inherit;
+    transition: inset 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    inset: calc(anchor(start) + var(--padding))
+        calc(anchor(end) + var(--padding)) calc(anchor(end) + var(--padding))
+        calc(anchor(start) + var(--padding));
+}
+
+.reviewsSegmented::before {
+    background-color: #e4e4e4;
+    position-anchor: --segmented-button-hover;
+    opacity: 0;
+    transition:
+        inset 250ms cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 150ms ease;
+}
+
+.reviewsSegmented:hover::before {
+    opacity: 1;
+}
+
+.reviewsSegmented::after {
+    background-color: #fff;
+    position-anchor: --segmented-button-checked;
+    box-shadow:
+        0 1px 3px 0 rgb(0 0 0 / 0.08),
+        0 1px 2px -1px rgb(0 0 0 / 0.06);
+}
+
+.segmentedButton {
+    background-color: transparent;
+    border: none;
+    border-radius: inherit;
+    width: 160px;
+    padding: 10px 0;
+    text-align: center;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    color: #341539;
+    cursor: pointer;
+    z-index: 1;
+    anchor-name: var(--anchor-name-1, --a), var(--anchor-name-2, --b);
+}
+
+.segmentedButton:hover {
+    --anchor-name-1: --segmented-button-hover;
+}
+
+.segmentedButton:has(:checked) {
+    --anchor-name-2: --segmented-button-checked;
+}
+
+.segmentedButton:has(:focus-visible) {
+    outline: 2px solid #913b9f;
+}
+
+.segmentedButton input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Review Cards */
+.reviewCards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.reviewCard {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 24px;
+    border-radius: 12px;
+    background: #f4f1f6;
+}
+
+.reviewCardTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.reviewTitle {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 23px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.reviewAckIcon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.reviewBody {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+.reviewBody p {
+    margin: 0;
+}
+
+.reviewBody p + p {
+    margin-top: 12px;
+}
+
+.reviewMeta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.reviewStars {
+    display: flex;
+    gap: 2px;
+}
+
+.reviewStar {
+    font-size: 18px;
+    color: #d0d0d0;
+}
+
+.reviewStar.filled {
+    color: #913b9f;
+}
+
+.reviewDate,
+.reviewAuthor {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.reviewMetaDot {
+    color: #808080;
+    font-size: 14px;
+}
+
+/* Load More */
+.loadMoreButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #cee6cc;
+    background: #eaf5e9;
+    color: #595959;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.loadMoreButton:hover {
+    background: #dceeda;
+}
