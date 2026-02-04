@@ -1,0 +1,802 @@
+@font-face {
+    font-family: "Aptos";
+    src: url("../../fonts/Aptos.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Source Serif";
+    src: url("../../fonts/SourceSerif4-Italic-VariableFont_opsz\,wght.ttf")
+        format("truetype");
+}
+
+@font-face {
+    font-family: "Source Serif";
+    src: url("../../fonts/SourceSerif4-VariableFont_opsz\,wght.ttf")
+        format("truetype");
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    font-family:
+        Aptos,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    background-color: #fff;
+    min-height: 100vh;
+    gap: 48px;
+    overflow-x: hidden;
+}
+
+/* Top Bar Styles */
+.topBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1920px;
+    margin: 0 auto;
+    padding: 48px 15% 0 15%;
+}
+
+.topBarLeft {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+}
+
+.homeButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #ece6f0;
+    border: 1px solid transparent;
+    box-shadow: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition:
+        transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background 0.3s ease,
+        box-shadow 0.3s ease;
+}
+
+.homeButton:hover {
+    background: rgba(236, 230, 240, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow:
+        0 4px 16px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    transform: scale(1.08);
+}
+
+.homeIcon {
+    width: 24px;
+    height: 24px;
+}
+
+/* Back Button */
+.backButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #ece6f0;
+    border: 1px solid transparent;
+    box-shadow: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition:
+        transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background 0.3s ease,
+        box-shadow 0.3s ease,
+        border-color 0.3s ease,
+        backdrop-filter 0.3s ease;
+}
+
+.backButton:hover {
+    background: rgba(236, 230, 240, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow:
+        0 4px 16px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    transform: scale(1.08);
+}
+
+.backButton:active {
+    animation: liquidBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes liquidBounce {
+    0% {
+        transform: scale(1);
+    }
+    20% {
+        transform: scale(0.85) rotate(-3deg);
+    }
+    40% {
+        transform: scale(1.12) rotate(2deg);
+    }
+    60% {
+        transform: scale(0.95) rotate(-1deg);
+    }
+    80% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.backArrowIcon {
+    width: 15px;
+    height: 24px;
+    aspect-ratio: 5 / 8;
+}
+
+.topActionButtons {
+    display: flex;
+    align-items: center;
+    gap: 3em;
+}
+
+.searchModule {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 500px;
+    height: 56px;
+    padding: 0px 18px 0px 22px;
+    border-radius: 28px;
+    background: #f4f1f6;
+    gap: 12px;
+}
+
+.searchInput {
+    flex: 1 1 auto;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #49454f;
+    font-family: Aptos;
+    font-size: 20px;
+    font-weight: 400;
+    padding: 0px;
+    margin: 0px;
+}
+
+.searchInput::placeholder {
+    color: #49454f;
+    opacity: 1;
+}
+
+.searchIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    pointer-events: none;
+    flex-shrink: 0;
+}
+
+/* Main Content */
+.hygienePageContent {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+    padding-bottom: 48px;
+    width: 100%;
+    max-width: 1920px;
+    margin: 0 auto;
+    padding-left: 15%;
+    padding-right: 15%;
+}
+
+/* Shop Header */
+.shopHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.nowPerusingLabel {
+    color: #808080;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+}
+
+.shopName {
+    color: #341539;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 39px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.shopTags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.shopTag {
+    display: inline-flex;
+    padding: 6px 16px;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    border-radius: 48px;
+    color: #341539;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    background: #f2f2ff;
+}
+
+.shopTag.halal {
+    background: #eaf5e9;
+}
+
+.shopTag.kosher {
+    background: #eeeade;
+}
+
+.shopTagIcon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
+
+/* Hygiene Section */
+.hygieneSection {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.hygieneHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.hygieneTitle {
+    color: #913b9f;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+}
+
+/* Segmented Control */
+.segmentedControl {
+    --padding: 0.15rem;
+    display: flex;
+    position: relative;
+    padding: var(--padding);
+    border-radius: 9999px;
+    background: #f0f0f0;
+    align-self: center;
+    anchor-name: --segmented-button-hover;
+}
+
+.segmentedControl::before,
+.segmentedControl::after {
+    content: "";
+    position: absolute;
+    border-radius: inherit;
+    transition: inset 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    inset: calc(anchor(start) + var(--padding))
+        calc(anchor(end) + var(--padding)) calc(anchor(end) + var(--padding))
+        calc(anchor(start) + var(--padding));
+}
+
+.segmentedControl::before {
+    background-color: #e4e4e4;
+    position-anchor: --segmented-button-hover;
+    opacity: 0;
+    transition:
+        inset 250ms cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 150ms ease;
+}
+
+.segmentedControl:hover::before {
+    opacity: 1;
+}
+
+.segmentedControl::after {
+    background-color: #fff;
+    position-anchor: --segmented-button-checked;
+    box-shadow:
+        0 1px 3px 0 rgb(0 0 0 / 0.08),
+        0 1px 2px -1px rgb(0 0 0 / 0.06);
+}
+
+.segmentedButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: none;
+    border-radius: inherit;
+    width: 200px;
+    height: 38px;
+    padding: 0;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    color: #341539;
+    cursor: pointer;
+    z-index: 1;
+    anchor-name: var(--anchor-name-1, --a), var(--anchor-name-2, --b);
+}
+
+.segmentedButton:hover {
+    --anchor-name-1: --segmented-button-hover;
+}
+
+.segmentedButton:has(:checked) {
+    --anchor-name-2: --segmented-button-checked;
+}
+
+.segmentedButton:has(:focus-visible) {
+    outline: 2px solid #913b9f;
+}
+
+.segmentedButton input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+.hygieneMicrocopyWrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hygieneMicrocopyWrapper svg {
+    flex-shrink: 0;
+}
+
+.hygieneMicrocopy {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+/* Hygiene Content */
+.hygieneContent {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Current Grade Card */
+.hygieneCurrentCard {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 32px;
+    background: #f4f1f6;
+    border-radius: 24px;
+    max-width: 300px;
+}
+
+.hygieneGradeHeader {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.hygieneGradeLetter {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 96px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.hygieneGradeUpdated {
+    color: #595959;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+}
+
+/* Information Icon */
+.informationIcon {
+    display: flex;
+    padding: 8px;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    border-radius: 8px;
+    border: 1px solid #ac92ba;
+    background: #f0f0f0;
+    cursor: pointer;
+    position: relative;
+}
+
+.informationTooltip {
+    position: absolute;
+    bottom: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    padding: 16px 20px;
+    background: rgba(200, 150, 210, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: none;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+    width: max-content;
+    max-width: 380px;
+    text-align: justify;
+    border-radius: 24px;
+    box-shadow:
+        0 8px 32px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease,
+        visibility 0.3s ease;
+    z-index: 100;
+}
+
+.informationTooltip a {
+    color: #913b9f;
+    text-decoration: none;
+}
+
+.informationTooltip a:hover {
+    text-decoration: underline;
+}
+
+.informationIcon:hover .informationTooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Archived Grades */
+.hygieneArchiveList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.hygieneArchiveCard {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 24px 32px;
+    background: #f4f1f6;
+    border-radius: 16px;
+    max-width: 480px;
+}
+
+.hygieneArchiveGradeWrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    min-width: 80px;
+}
+
+.hygieneArchiveGrade {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.hygieneArchiveInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.hygieneArchiveDate {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.hygieneArchiveActive {
+    color: #595959;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+/* Empty State */
+.hygieneEmpty {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-style: italic;
+    padding: 24px;
+}
+
+/* Transparency Section */
+.transparencySection {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.transparencyIcon {
+    width: 48px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+.transparencyContent {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.transparencyHeader {
+    color: #913b9f;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 28px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.transparencySubtext {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+/* Loading Spinner */
+.loadingSpinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid #f4f1f6;
+    border-top-color: #341539;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .topBar {
+        padding: 24px 5% 0 5%;
+    }
+
+    .hygienePageContent {
+        padding-left: 5%;
+        padding-right: 5%;
+    }
+
+    .shopName {
+        font-size: 28px;
+    }
+
+    .hygieneHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .topActionButtons {
+        gap: 1.5em;
+    }
+
+    .backButton,
+    .homeButton {
+        width: 48px;
+        height: 48px;
+    }
+}
+
+@media (max-width: 480px) {
+    .topBar {
+        padding: 16px 4% 0 4%;
+    }
+
+    .hygienePageContent {
+        padding-left: 4%;
+        padding-right: 4%;
+    }
+
+    .backButton,
+    .homeButton {
+        width: 40px;
+        height: 40px;
+    }
+
+    .backArrowIcon {
+        width: 12px;
+        height: 20px;
+    }
+
+    .homeIcon {
+        width: 20px;
+        height: 20px;
+    }
+
+    .searchInput {
+        font-size: 16px;
+    }
+
+    .hygieneCurrentCard {
+        padding: 24px;
+    }
+
+    .hygieneGradeLetter {
+        font-size: 72px;
+    }
+
+    .hygieneArchiveCard {
+        padding: 16px 20px;
+    }
+
+    .hygieneArchiveGrade {
+        font-size: 36px;
+    }
+}
+
+/* ============================================
+   PROFILE DROPDOWN
+   ============================================ */
+
+.profileDropdownWrapper {
+    position: relative;
+}
+
+.profileButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.profileDropdown {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    min-width: 220px;
+    padding: 24px;
+    border-radius: 24px;
+    background: rgba(200, 150, 210, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: none;
+    box-shadow:
+        0 8px 32px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease,
+        visibility 0.3s ease;
+}
+
+.profileDropdownWrapper:hover .profileDropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.profileDropdownName {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #913b9f;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: normal;
+    padding: 4px 8px;
+}
+
+.profileDropdownItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 8px;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    transition: background 0.15s ease;
+}
+
+.profileDropdownItem:hover {
+    background: #ece6f0;
+}
+
+.profileDropdownLogout {
+    color: #eb001b;
+}
+
+.profileDropdownItemIcon {
+    width: 18px;
+    height: 18px;
+}
+
+.profileDropdownLogoutIcon {
+    width: 18px;
+    height: 18px;
+    filter: brightness(0) saturate(100%) invert(14%) sepia(89%) saturate(5765%)
+        hue-rotate(350deg) brightness(92%) contrast(107%);
+}

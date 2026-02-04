@@ -1,0 +1,769 @@
+/* ============================================
+   ROLE SELECTION PAGE
+   ============================================ */
+
+.roleSelectContainer {
+    max-width: 700px;
+}
+
+.roleCards {
+    display: flex;
+    gap: 24px;
+    margin-top: 32px;
+}
+
+.roleCard {
+    flex: 1;
+    padding: 32px 24px;
+    border: 2px solid #e0e0e0;
+    border-radius: 16px;
+    background: #fff;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.roleCard:hover {
+    border-color: #913b9f;
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(145, 59, 159, 0.15);
+}
+
+.roleCard.selected {
+    border-color: #913b9f;
+    background: rgba(145, 59, 159, 0.03);
+}
+
+.roleCardIcon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.roleCardIcon.customerIcon {
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    color: #2e7d32;
+}
+
+.roleCardIcon.vendorIcon {
+    background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+    color: #7b1fa2;
+}
+
+.roleCardTitle {
+    color: #341539;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.roleCardDesc {
+    color: #595959;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.roleCardFeatures {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.roleCardFeatures li {
+    color: #595959;
+    font-size: 13px;
+    padding-left: 20px;
+    position: relative;
+}
+
+.roleCardFeatures li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 6px;
+    width: 8px;
+    height: 8px;
+    background: #913b9f;
+    border-radius: 50%;
+    opacity: 0.6;
+}
+
+/* ============================================
+   ONBOARDING PAGES
+   ============================================ */
+
+.onboardingContainer {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: #f4f1f6;
+}
+
+.onboardingHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 48px;
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.onboardingLogo {
+    height: 32px;
+}
+
+.onboardingProgress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.progressStep {
+    width: 32px;
+    height: 4px;
+    border-radius: 2px;
+    background: #e0e0e0;
+    transition: background 0.3s ease;
+}
+
+.progressStep.active {
+    background: #913b9f;
+}
+
+.progressStep.completed {
+    background: #2e7d32;
+}
+
+.onboardingStepLabel {
+    color: #595959;
+    font-size: 14px;
+    margin-left: 16px;
+}
+
+.onboardingBody {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+}
+
+.onboardingCard {
+    width: 100%;
+    max-width: 600px;
+    background: #fff;
+    border-radius: 24px;
+    padding: 48px;
+    box-shadow: 0 4px 24px rgba(52, 21, 57, 0.08);
+}
+
+.onboardingTitle {
+    color: #341539;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.onboardingSubtitle {
+    color: #595959;
+    font-size: 16px;
+    margin-bottom: 32px;
+    line-height: 1.5;
+}
+
+/* Onboarding Form Fields */
+.onboardingFields {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.onboardingField {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.onboardingFieldLabel {
+    color: #341539;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.onboardingFieldMicrocopy {
+    color: #808080;
+    font-size: 13px;
+}
+
+.onboardingFieldInput {
+    width: 100%;
+    height: 52px;
+    padding: 0 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    color: #341539;
+    background: #fff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.onboardingFieldInput:focus {
+    outline: none;
+    border-color: #913b9f;
+    box-shadow: 0 0 0 3px rgba(145, 59, 159, 0.1);
+}
+
+/* Toggle Switch for Notifications */
+.toggleOption {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    background: #f9f7fa;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    transition: border-color 0.2s ease;
+}
+
+.toggleOption:hover {
+    border-color: #e0e0e0;
+}
+
+.toggleOptionInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.toggleOptionTitle {
+    color: #341539;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.toggleOptionDesc {
+    color: #595959;
+    font-size: 13px;
+}
+
+.toggleSwitch {
+    position: relative;
+    width: 52px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
+.toggleSwitch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggleSlider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #e0e0e0;
+    border-radius: 28px;
+    transition: 0.3s;
+}
+
+.toggleSlider::before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.3s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toggleSwitch input:checked + .toggleSlider {
+    background-color: #913b9f;
+}
+
+.toggleSwitch input:checked + .toggleSlider::before {
+    transform: translateX(24px);
+}
+
+/* Telegram Connect */
+.telegramConnect {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-radius: 12px;
+    border: 2px solid #2196f3;
+}
+
+.telegramIcon {
+    width: 48px;
+    height: 48px;
+    background: #2196f3;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.telegramIcon svg {
+    width: 28px;
+    height: 28px;
+    fill: #fff;
+}
+
+.telegramInfo {
+    flex: 1;
+}
+
+.telegramTitle {
+    color: #1565c0;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.telegramDesc {
+    color: #1976d2;
+    font-size: 13px;
+}
+
+.telegramBtn {
+    padding: 10px 20px;
+    background: #2196f3;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.telegramBtn:hover {
+    background: #1976d2;
+}
+
+.telegramConnected {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #2e7d32;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Onboarding Footer */
+.onboardingFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.onboardingSkipBtn {
+    padding: 12px 24px;
+    background: transparent;
+    color: #595959;
+    border: none;
+    border-radius: 12px;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.onboardingSkipBtn:hover {
+    color: #341539;
+}
+
+.onboardingNextBtn {
+    padding: 14px 32px;
+    background: #341539;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.onboardingNextBtn:hover {
+    background: #4a2150;
+}
+
+.onboardingNextBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   VENDOR ONBOARDING - MULTI STEP
+   ============================================ */
+
+.vendorOnboardingCard {
+    max-width: 800px;
+}
+
+/* File Upload Areas */
+.uploadArea {
+    border: 2px dashed #e0e0e0;
+    border-radius: 12px;
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #fafafa;
+}
+
+.uploadArea:hover {
+    border-color: #913b9f;
+    background: rgba(145, 59, 159, 0.02);
+}
+
+.uploadArea.dragover {
+    border-color: #913b9f;
+    background: rgba(145, 59, 159, 0.05);
+}
+
+.uploadArea input[type="file"] {
+    display: none;
+}
+
+.uploadIcon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 16px;
+    color: #808080;
+}
+
+.uploadText {
+    color: #595959;
+    font-size: 14px;
+}
+
+.uploadText strong {
+    color: #913b9f;
+}
+
+.uploadHint {
+    color: #808080;
+    font-size: 12px;
+    margin-top: 8px;
+}
+
+/* Uploaded File Preview */
+.uploadedFile {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: #f4f1f6;
+    border-radius: 12px;
+}
+
+.uploadedFilePreview {
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #e0e0e0;
+}
+
+.uploadedFileInfo {
+    flex: 1;
+}
+
+.uploadedFileName {
+    color: #341539;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.uploadedFileSize {
+    color: #808080;
+    font-size: 12px;
+}
+
+.uploadedFileRemove {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #eb001b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Operating Hours Table */
+.hoursTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.hoursRow {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.hoursRow:last-child {
+    border-bottom: none;
+}
+
+.hoursDay {
+    width: 60px;
+    color: #341539;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.hoursToggle {
+    width: 44px;
+}
+
+.hoursSlots {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.hoursSlot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hoursTime {
+    width: 100px;
+    height: 36px;
+    padding: 0 8px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    color: #341539;
+}
+
+.hoursTime:focus {
+    outline: none;
+    border-color: #913b9f;
+}
+
+.hoursTo {
+    color: #808080;
+    font-size: 14px;
+}
+
+.hoursClosed {
+    color: #808080;
+    font-size: 14px;
+    font-style: italic;
+}
+
+.hoursAddSlot {
+    background: none;
+    border: none;
+    color: #913b9f;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.hoursAddSlot:hover {
+    text-decoration: underline;
+}
+
+.hoursRemoveSlot {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: #f0f0f0;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #808080;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hoursRemoveSlot:hover {
+    background: #ffebee;
+    color: #eb001b;
+}
+
+/* Cuisine Tags */
+.cuisineContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    min-height: 52px;
+    background: #fff;
+    cursor: text;
+}
+
+.cuisineContainer:focus-within {
+    border-color: #913b9f;
+}
+
+.cuisineTag {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    background: #f4f1f6;
+    border-radius: 20px;
+    font-size: 14px;
+    color: #341539;
+}
+
+.cuisineTag.halal {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.cuisineTagRemove {
+    width: 16px;
+    height: 16px;
+    border: none;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+}
+
+.cuisineInput {
+    flex: 1;
+    min-width: 120px;
+    border: none;
+    outline: none;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    background: transparent;
+}
+
+/* Phone Input */
+.phoneInputRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    background: #fff;
+    height: 52px;
+}
+
+.phoneInputRow:focus-within {
+    border-color: #913b9f;
+}
+
+.phoneFlag {
+    width: 24px;
+    height: 16px;
+}
+
+.phonePrefix {
+    color: #341539;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.phoneInput {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    color: #341539;
+}
+
+/* Google Maps Embed */
+.mapContainer {
+    width: 100%;
+    height: 200px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #e0e0e0;
+    margin-top: 12px;
+}
+
+.mapContainer iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    .roleCards {
+        flex-direction: column;
+    }
+
+    .onboardingHeader {
+        padding: 16px 24px;
+    }
+
+    .onboardingBody {
+        padding: 24px;
+    }
+
+    .onboardingCard {
+        padding: 32px 24px;
+    }
+
+    .hoursRow {
+        flex-wrap: wrap;
+    }
+
+    .hoursSlots {
+        width: 100%;
+        margin-top: 8px;
+    }
+}

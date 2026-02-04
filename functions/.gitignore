@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# Runtime config (contains secrets)
+.runtimeconfig.json
+.env
+.env.local
+
+# Local emulator data
+.firebase/
+
+# Logs
+*.log

@@ -1,0 +1,708 @@
+@font-face {
+    font-family: "Aptos";
+    src: url("../../fonts/Aptos.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Source Serif";
+    src: url("../../fonts/SourceSerif4-Italic-VariableFont_opsz\,wght.ttf")
+        format("truetype");
+}
+
+@font-face {
+    font-family: "Source Serif";
+    src: url("../../fonts/SourceSerif4-VariableFont_opsz\,wght.ttf")
+        format("truetype");
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    font-family:
+        Aptos,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    background-color: #fff;
+    min-height: 100vh;
+    gap: 48px;
+    overflow-x: hidden;
+}
+
+/* Top Bar Styles */
+.topBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1920px;
+    margin: 0 auto;
+    padding: 48px 15% 0 15%;
+}
+
+.topBarLeft {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+}
+
+.homeButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #ece6f0;
+    border: 1px solid transparent;
+    box-shadow: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition:
+        transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background 0.3s ease,
+        box-shadow 0.3s ease;
+}
+
+.homeButton:hover {
+    background: rgba(236, 230, 240, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow:
+        0 4px 16px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    transform: scale(1.08);
+}
+
+.homeIcon {
+    width: 24px;
+    height: 24px;
+}
+
+/* Back Button */
+.backButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #ece6f0;
+    border: 1px solid transparent;
+    box-shadow: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition:
+        transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background 0.3s ease,
+        box-shadow 0.3s ease,
+        border-color 0.3s ease,
+        backdrop-filter 0.3s ease;
+}
+
+.backButton:hover {
+    background: rgba(236, 230, 240, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow:
+        0 4px 16px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    transform: scale(1.08);
+}
+
+.backButton:active {
+    animation: liquidBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes liquidBounce {
+    0% {
+        transform: scale(1);
+    }
+    20% {
+        transform: scale(0.85) rotate(-3deg);
+    }
+    40% {
+        transform: scale(1.12) rotate(2deg);
+    }
+    60% {
+        transform: scale(0.95) rotate(-1deg);
+    }
+    80% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.backArrowIcon {
+    width: 15px;
+    height: 24px;
+    aspect-ratio: 5 / 8;
+}
+
+.topActionButtons {
+    display: flex;
+    align-items: center;
+    gap: 3em;
+}
+
+.searchModule {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 500px;
+    height: 56px;
+    padding: 0px 18px 0px 22px;
+    border-radius: 28px;
+    background: #f4f1f6;
+    gap: 12px;
+}
+
+.searchInput {
+    flex: 1 1 auto;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #49454f;
+    font-family: Aptos;
+    font-size: 20px;
+    font-weight: 400;
+    padding: 0px;
+    margin: 0px;
+}
+
+.searchInput::placeholder {
+    color: #49454f;
+    opacity: 1;
+}
+
+.searchIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    pointer-events: none;
+    flex-shrink: 0;
+}
+
+/* Hawker Centre Content */
+.hawkerCentreContent {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+    padding-bottom: 48px;
+}
+
+/* Hawker Centre Header Section */
+.hawkerCentreHeaderSection {
+    display: flex;
+    align-items: flex-end;
+    gap: 32px;
+    width: 100%;
+    max-width: 1920px;
+    margin: 0 auto;
+    padding-left: 15%;
+    padding-right: 15%;
+}
+
+/* Hawker Centre Image */
+.hawkerCentreImage {
+    border-radius: 24px;
+    object-fit: cover;
+}
+
+/* Hawker Centre Header Text */
+.hawkerCentreHeaderText {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Hawker Centre Info (name + details - image matches this height) */
+.hawkerCentreInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Now Perusing Label */
+.nowPerusingLabel {
+    color: #808080;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+}
+
+/* Hawker Centre Name */
+.hawkerCentreName {
+    color: #341539;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 39px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+/* Hawker Centre Details */
+.hawkerCentreDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.hawkerCentreAddress {
+    color: #595959;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.hawkerCentreMeta {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-top: 4px;
+}
+
+.hawkerCentreRating {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    color: #595959;
+}
+
+.hawkerCentreRating svg {
+    flex-shrink: 0;
+}
+
+.hawkerCentreHours {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    color: #595959;
+}
+
+.hawkerCentreHours svg {
+    flex-shrink: 0;
+}
+
+/* Hero Image */
+.hawkerCentreHero {
+    width: 100%;
+    max-width: 1920px;
+    margin: 0 auto;
+    padding-left: 15%;
+    padding-right: 15%;
+}
+
+.hawkerCentreHeroImage {
+    width: 100%;
+    height: 300px;
+    border-radius: 24px;
+    overflow: hidden;
+}
+
+.hawkerCentreHeroImage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Stalls Section */
+.stallsSection {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+    max-width: 1920px;
+    margin: 0 auto;
+    padding-left: 15%;
+    padding-right: 15%;
+}
+
+.sectionHeader {
+    color: #913b9f;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+}
+
+/* Stall Cards Grid */
+.stallCardsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 200px);
+    gap: 48px;
+    justify-content: space-between;
+}
+
+/* Stall Card */
+.stallCard {
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition: transform 0.2s;
+    gap: 16px;
+    width: 200px;
+}
+
+.stallCard:hover {
+    transform: translateY(-4px);
+}
+
+.stallCardImage {
+    width: 200px;
+    height: 200px;
+    aspect-ratio: 1 / 1;
+    border-radius: 24px;
+    overflow: hidden;
+}
+
+.stallCardImage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.stallCardInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 200px;
+}
+
+.stallName {
+    color: #341539;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 23px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+}
+
+/* Cuisine Tags */
+.cuisineTags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.cuisineTag {
+    display: inline-flex;
+    padding: 4px 12px;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    border-radius: 48px;
+    color: #341539;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    background: #f2f2ff;
+}
+
+.cuisineTag.halal {
+    background: #eaf5e9;
+}
+
+.cuisineTag.kosher {
+    background: #eeeade;
+}
+
+.cuisineTag img {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+}
+
+/* Stall Meta (Rating and Hours) */
+.stallMeta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.stallRating {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    color: #595959;
+}
+
+.stallRating svg {
+    flex-shrink: 0;
+}
+
+.stallHours {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    color: #595959;
+}
+
+.stallHours svg {
+    flex-shrink: 0;
+}
+
+/* Loading Spinner */
+.loadingSpinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid #f4f1f6;
+    border-top-color: #341539;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1200px) {
+    .stallCardsGrid {
+        grid-template-columns: repeat(3, 200px);
+        gap: 32px;
+    }
+}
+
+@media (max-width: 900px) {
+    .stallCardsGrid {
+        grid-template-columns: repeat(2, 200px);
+        gap: 24px;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .topBar {
+        padding: 24px 5% 0 5%;
+    }
+
+    .hawkerCentreHeaderSection,
+    .hawkerCentreHero,
+    .stallsSection {
+        padding-left: 5%;
+        padding-right: 5%;
+    }
+
+    .stallCardsGrid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 200px));
+        justify-content: center;
+        gap: 24px;
+    }
+
+    .stallCard,
+    .stallCardImage,
+    .stallCardInfo {
+        width: 100%;
+        max-width: 200px;
+    }
+
+    .stallCardImage {
+        height: auto;
+        aspect-ratio: 1 / 1;
+    }
+
+    .hawkerCentreName {
+        font-size: 28px;
+    }
+
+    .stallName {
+        font-size: 20px;
+    }
+
+    .hawkerCentreHeroImage {
+        height: 200px;
+    }
+
+    .topActionButtons {
+        gap: 1.5em;
+    }
+
+    .backButton,
+    .homeButton {
+        width: 48px;
+        height: 48px;
+    }
+}
+
+@media (max-width: 480px) {
+    .topBar {
+        padding: 16px 4% 0 4%;
+    }
+
+    .hawkerCentreHeaderSection,
+    .hawkerCentreHero,
+    .stallsSection {
+        padding-left: 4%;
+        padding-right: 4%;
+    }
+
+    .hawkerCentreMeta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .backButton,
+    .homeButton {
+        width: 40px;
+        height: 40px;
+    }
+
+    .backArrowIcon {
+        width: 12px;
+        height: 20px;
+    }
+
+    .homeIcon {
+        width: 20px;
+        height: 20px;
+    }
+
+    .searchInput {
+        font-size: 16px;
+    }
+}
+
+/* ============================================
+   PROFILE DROPDOWN
+   ============================================ */
+
+.profileDropdownWrapper {
+    position: relative;
+}
+
+.profileButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.profileDropdown {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    min-width: 220px;
+    padding: 24px;
+    border-radius: 24px;
+    background: rgba(200, 150, 210, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: none;
+    box-shadow:
+        0 8px 32px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease,
+        visibility 0.3s ease;
+}
+
+.profileDropdownWrapper:hover .profileDropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.profileDropdownName {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #913b9f;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: normal;
+    padding: 4px 8px;
+}
+
+.profileDropdownItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 8px;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    transition: background 0.15s ease;
+}
+
+.profileDropdownItem:hover {
+    background: #ece6f0;
+}
+
+.profileDropdownLogout {
+    color: #eb001b;
+}
+
+.profileDropdownItemIcon {
+    width: 18px;
+    height: 18px;
+}
+
+.profileDropdownLogoutIcon {
+    width: 18px;
+    height: 18px;
+    filter: brightness(0) saturate(100%) invert(14%) sepia(89%) saturate(5765%)
+        hue-rotate(350deg) brightness(92%) contrast(107%);
+}

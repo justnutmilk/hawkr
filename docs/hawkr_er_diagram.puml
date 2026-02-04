@@ -1,0 +1,379 @@
+@startuml Hawker_Centre_Management_System
+
+' ============================================
+' CUSTOMER & AUTHENTICATION
+' ============================================
+
+entity Customer {
+  * CustomerID : string <<PK>> (Firebase Auth UID)
+  --
+  CustName : varchar
+  CustContactNo : varchar
+  CustEmail : varchar
+  CustNRIC : varchar
+  CustProfilePhoto : varchar (URL)
+  CustCreatedAt : datetime
+  CustUpdatedAt : datetime
+  TelegramConnected : boolean
+  BrowserNotifications : boolean
+}
+
+entity PaymentMethod {
+  * PaymentMethodID : string <<PK>>
+  --
+  * CustomerID : string <<FK>>
+  Type : varchar (Visa, MasterCard, etc.)
+  LastFour : varchar
+  Expiry : varchar
+  IsDefault : boolean
+  CreatedAt : datetime
+}
+
+' ============================================
+' ORDERS
+' ============================================
+
+entity CustOrder {
+  * OrderID : string <<PK>>
+  --
+  * CustomerID : string <<FK>>
+  * StallID : string <<FK>>
+  OrderDate : datetime
+  OrderTotalAmt : decimal
+  OrderStatus : varchar (pending, confirmed, preparing, ready, completed, cancelled)
+  PmtType : varchar
+  PmtStatus : varchar (pending, paid, refunded)
+  SpecialInstructions : text
+  EstimatedReadyTime : datetime
+  CompletedAt : datetime
+}
+
+entity OrderItem {
+  * OrderItemID : string <<PK>>
+  --
+  * OrderID : string <<FK>>
+  * ItemCode : string <<FK>>
+  Quantity : int
+  UnitPrice : decimal
+  Subtotal : decimal
+  SpecialRequests : text
+  ItemName : varchar (denormalized for history)
+}
+
+' ============================================
+' MENU & FOOD STALLS
+' ============================================
+
+entity MenuItem {
+  * ItemCode : string <<PK>>
+  --
+  * StallID : string <<FK>>
+  ItemName : varchar
+  ItemDesc : varchar
+  ItemPrice : decimal
+  ItemCategory : varchar
+  ItemImage : varchar (URL)
+  IsAvailable : boolean
+  IsHalal : boolean
+  PrepTime : int (minutes)
+  CreatedAt : datetime
+  UpdatedAt : datetime
+}
+
+entity MenuItemCuisine {
+  * MenuItemCuisineID : string <<PK>>
+  --
+  * ItemCode : string <<FK>>
+  * CuisineID : string <<FK>>
+}
+
+entity Cuisine {
+  * CuisineID : string <<PK>>
+  --
+  CuisineName : varchar
+  CuisineDesc : varchar
+  CuisineIcon : varchar (URL)
+}
+
+entity FoodStall {
+  * StallID : string <<PK>>
+  --
+  * HawkerCentreID : string <<FK>>
+  * OwnerID : string <<FK>>
+  StallName : varchar
+  StallUnitNo : varchar
+  StallDesc : varchar
+  StallImage : varchar (URL)
+  StallRating : decimal (computed average)
+  TotalReviews : int (computed count)
+  OperatingHours : json
+  IsOpen : boolean
+  HygieneGrade : varchar (denormalized from latest Inspection)
+  GradeExpiry : date (denormalized from latest Inspection)
+  CreatedAt : datetime
+  UpdatedAt : datetime
+}
+
+entity StallCuisine {
+  * StallCuisineID : string <<PK>>
+  --
+  * StallID : string <<FK>>
+  * CuisineID : string <<FK>>
+}
+
+' ============================================
+' HAWKER CENTRES & OPERATORS
+' ============================================
+
+entity HawkerCentre {
+  * HawkerCentreID : string <<PK>>
+  --
+  * OperatorID : string <<FK>>
+  HCName : varchar
+  HCAddress : varchar
+  HCPostalCode : varchar
+  HCImage : varchar (URL)
+  HCRating : decimal (computed average)
+  TotalStalls : int (computed count)
+  OperatingHours : json
+  Latitude : decimal
+  Longitude : decimal
+  CreatedAt : datetime
+  UpdatedAt : datetime
+}
+
+entity Operator {
+  * OperatorID : string <<PK>> (Firebase Auth UID)
+  --
+  OperatorName : varchar
+  ContactPerson : varchar
+  ContactEmail : varchar
+  ContactPhone : varchar
+  CreatedAt : datetime
+}
+
+' ============================================
+' STALL OWNERSHIP & RENTAL
+' ============================================
+
+entity StallOwner {
+  * OwnerID : string <<PK>> (Firebase Auth UID)
+  --
+  OwnerName : varchar
+  OwnerContactNo : varchar
+  OwnerEmail : varchar
+  OwnerNRIC : varchar
+  OwnerProfilePhoto : varchar (URL)
+  CreatedAt : datetime
+  UpdatedAt : datetime
+}
+
+entity RentalAgreement {
+  * AgreementID : string <<PK>>
+  --
+  * StallID : string <<FK>>
+  * OwnerID : string <<FK>>
+  AgrStartDate : date
+  AgrEndDate : date
+  AgrTermCondition : text
+  RentalPrice : decimal
+  AgrStatus : varchar (active, expired, terminated)
+  CreatedAt : datetime
+}
+
+' ============================================
+' FEEDBACK & COMPLAINTS
+' ============================================
+
+entity Feedback {
+  * FbkID : string <<PK>>
+  --
+  * CustomerID : string <<FK>>
+  * OrderID : string <<FK>> (optional - for order-specific feedback)
+  * StallID : string <<FK>>
+  FbkRating : int (1-5)
+  FbkComment : text
+  FbkDateTime : datetime
+  ContactRequested : boolean
+  ContactEmail : varchar (if ContactRequested)
+  ContactPhone : varchar (if ContactRequested)
+  IsPublic : boolean
+  StallResponse : text
+  StallResponseDate : datetime
+  CreatedAt : datetime
+  UpdatedAt : datetime
+}
+
+entity FeedbackTag {
+  * FbkTagID : string <<PK>>
+  --
+  * FbkID : string <<FK>>
+  TagName : varchar (Fast service, Friendly, Good value, etc.)
+}
+
+entity Complaint {
+  * ComplaintID : string <<PK>>
+  --
+  * FbkID : string <<FK>> (optional - complaint can stem from feedback)
+  * CustomerID : string <<FK>>
+  * StallID : string <<FK>>
+  Category : varchar (Food Quality, Service, Hygiene, Other)
+  ComplaintDesc : text
+  ComplaintStatus : varchar (open, investigating, resolved, closed)
+  Resolution : text
+  ResolvedBy : string <<FK>> (OperatorID or StallOwnerID)
+  ResolvedAt : datetime
+  CreatedAt : datetime
+  UpdatedAt : datetime
+}
+
+' ============================================
+' INSPECTIONS (NEA)
+' ============================================
+
+entity NEA_Officer {
+  * OfficerID : string <<PK>>
+  --
+  OfficerName : varchar
+  OfficerContactNo : varchar
+  OfficerEmail : varchar
+  OfficerBadgeNo : varchar
+  IsActive : boolean
+}
+
+entity Inspection {
+  * InspectionID : string <<PK>>
+  --
+  * OfficerID : string <<FK>>
+  * StallID : string <<FK>>
+  InspectionDate : date
+  InspectionRemark : text
+  HygieneGrade : varchar (A, B, C, D)
+  GradeExpiry : date
+  ViolationsFound : text
+  FollowUpRequired : boolean
+  FollowUpDate : date
+  CreatedAt : datetime
+}
+
+' ============================================
+' PROMOTIONS
+' ============================================
+
+entity Promotion {
+  * PromoID : string <<PK>>
+  --
+  * StallID : string <<FK>>
+  PromoTitle : varchar
+  PromoDesc : text
+  PromoImage : varchar (URL)
+  PromoStartDate : date
+  PromoEndDate : date
+  DiscountType : varchar (percentage, fixed)
+  DiscountValue : decimal
+  MinOrderAmt : decimal
+  PromoCode : varchar
+  UsageLimit : int
+  UsageCount : int
+  IsActive : boolean
+  CreatedAt : datetime
+}
+
+' ============================================
+' NOTIFICATIONS
+' ============================================
+
+entity Notification {
+  * NotificationID : string <<PK>>
+  --
+  * RecipientID : string <<FK>> (CustomerID, OwnerID, or OperatorID)
+  RecipientType : varchar (customer, owner, operator)
+  NotificationType : varchar (order_update, promotion, feedback, system)
+  Title : varchar
+  Message : text
+  RelatedEntityType : varchar (order, feedback, promotion, etc.)
+  RelatedEntityID : string
+  IsRead : boolean
+  CreatedAt : datetime
+}
+
+' ============================================
+' CART (for pending orders)
+' ============================================
+
+entity Cart {
+  * CartID : string <<PK>>
+  --
+  * CustomerID : string <<FK>>
+  * StallID : string <<FK>>
+  CreatedAt : datetime
+  UpdatedAt : datetime
+}
+
+entity CartItem {
+  * CartItemID : string <<PK>>
+  --
+  * CartID : string <<FK>>
+  * ItemCode : string <<FK>>
+  Quantity : int
+  SpecialRequests : text
+  AddedAt : datetime
+}
+
+' ============================================
+' RELATIONSHIPS
+' ============================================
+
+' Customer relationships
+Customer ||--o{ CustOrder : "places"
+Customer ||--o{ Feedback : "gives"
+Customer ||--o{ Complaint : "files"
+Customer ||--o{ PaymentMethod : "has"
+Customer ||--o{ Cart : "has"
+Customer ||--o{ Notification : "receives"
+
+' Order relationships
+CustOrder ||--|{ OrderItem : "contains"
+CustOrder }o--|| FoodStall : "placed_at"
+OrderItem }o--|| MenuItem : "includes"
+
+' Cart relationships
+Cart ||--|{ CartItem : "contains"
+Cart }o--|| FoodStall : "for_stall"
+CartItem }o--|| MenuItem : "includes"
+
+' Menu relationships
+MenuItem }o--|| FoodStall : "offered_by"
+MenuItem ||--o{ MenuItemCuisine : "tagged_with"
+MenuItemCuisine }o--|| Cuisine : "references"
+
+' Stall relationships
+FoodStall }o--|| HawkerCentre : "located_in"
+FoodStall }o--|| StallOwner : "owned_by"
+FoodStall ||--o{ StallCuisine : "serves"
+StallCuisine }o--|| Cuisine : "references"
+FoodStall ||--o{ Inspection : "inspected_in"
+FoodStall ||--o{ Promotion : "runs"
+FoodStall ||--o{ RentalAgreement : "subject_of"
+FoodStall ||--o{ Feedback : "receives"
+FoodStall ||--o{ Complaint : "receives"
+
+' Hawker Centre relationships
+HawkerCentre }o--|| Operator : "managed_by"
+
+' Stall Owner relationships
+StallOwner ||--o{ RentalAgreement : "signs"
+StallOwner ||--o{ Notification : "receives"
+
+' Operator relationships
+Operator ||--o{ Notification : "receives"
+
+' Inspection relationships
+NEA_Officer ||--o{ Inspection : "performs"
+
+' Feedback relationships
+Feedback ||--o{ FeedbackTag : "has"
+Feedback }o--o| CustOrder : "for_order"
+Feedback ||--o| Complaint : "escalates_to"
+
+@enduml

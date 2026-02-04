@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Hawkr | Set Up Your Stall</title>
+        <link rel="stylesheet" href="auth.css" />
+        <link rel="stylesheet" href="onboarding.css" />
+    </head>
+    <body>
+        <div class="onboardingContainer">
+            <header class="onboardingHeader">
+                <img src="../../images/hawkr logo.svg" alt="Hawkr" class="onboardingLogo" />
+                <div class="onboardingProgress">
+                    <div class="progressStep active" data-step="1"></div>
+                    <div class="progressStep" data-step="2"></div>
+                    <div class="progressStep" data-step="3"></div>
+                    <div class="progressStep" data-step="4"></div>
+                    <div class="progressStep" data-step="5"></div>
+                    <div class="progressStep" data-step="6"></div>
+                    <span class="onboardingStepLabel" id="stepLabel">Step 1 of 6</span>
+                </div>
+            </header>
+
+            <main class="onboardingBody">
+                <div class="onboardingCard vendorOnboardingCard" id="onboardingCard">
+
+                    <!-- Step 1: Store Name & Location -->
+                    <div class="onboardingStep" id="step1">
+                        <h1 class="onboardingTitle">Tell Us About Your Stall</h1>
+                        <p class="onboardingSubtitle">
+                            Let's start with the basics. This information will be used for verification.
+                        </p>
+
+                        <div class="onboardingFields">
+                            <div class="onboardingField">
+                                <label class="onboardingFieldLabel" for="storeName">Store Name</label>
+                                <span class="onboardingFieldMicrocopy">
+                                    Enter your ACRA-registered business name - we'll use this for verification and records.
+                                </span>
+                                <input
+                                    type="text"
+                                    id="storeName"
+                                    class="onboardingFieldInput"
+                                    placeholder="e.g., Ah Huat Kopi & Toast"
+                                    required
+                                />
+                            </div>
+
+                            <div class="onboardingField">
+                                <label class="onboardingFieldLabel" for="storeLocation">Store Location</label>
+                                <span class="onboardingFieldMicrocopy">
+                                    Search for your hawker centre or enter the address.
+                                </span>
+                                <input
+                                    type="text"
+                                    id="storeLocation"
+                                    class="onboardingFieldInput"
+                                    placeholder="e.g., Maxwell Food Centre"
+                                    required
+                                />
+                                <div class="mapContainer" id="mapContainer">
+                                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #808080;">
+                                        Map will appear here
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="onboardingField">
+                                <label class="onboardingFieldLabel" for="unitNumber">Unit Number</label>
+                                <input
+                                    type="text"
+                                    id="unitNumber"
+                                    class="onboardingFieldInput"
+                                    placeholder="e.g., #01-42"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div class="onboardingFooter">
+                            <div></div>
+                            <button class="onboardingNextBtn" id="nextStep1">
+                                Continue
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Cuisines & Hours -->
+                    <div class="onboardingStep" id="step2" style="display: none;">
+                        <h1 class="onboardingTitle">What Do You Serve?</h1>
+                        <p class="onboardingSubtitle">
+                            Help customers find you by adding your cuisines and operating hours.
+                        </p>
+
+                        <div class="onboardingFields">
+                            <div class="onboardingField">
+                                <label class="onboardingFieldLabel">Cuisines Served</label>
+                                <span class="onboardingFieldMicrocopy">
+                                    Type a cuisine and press Enter to add it.
+                                </span>
+                                <div class="cuisineContainer" id="cuisineContainer">
+                                    <input
+                                        type="text"
+                                        class="cuisineInput"
+                                        id="cuisineInput"
+                                        placeholder="Add cuisine..."
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="onboardingField">
+                                <label class="onboardingFieldLabel">Operating Hours</label>
+                                <div id="hoursContainer">
+                                    <!-- Generated by JS -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="onboardingFooter">
+                            <button class="onboardingSkipBtn" id="backStep2">Back</button>
+                            <button class="onboardingNextBtn" id="nextStep2">
+                                Continue
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Photos & Certificates -->
+                    <div class="onboardingStep" id="step3" style="display: none;">
+                        <h1 class="onboardingTitle">Show Off Your Stall</h1>
+                        <p class="onboardingSubtitle">
+                            Upload a photo of your stall and your certifications.
+                        </p>
+
+                        <div class="onboardingFields">
+                            <div class="onboardingField">
+                                <label class="onboardingFieldLabel">Store Photo</label>
+                                <span class="onboardingFieldMicrocopy">
+                                    Upload the face of your shop! This will be shown to customers.
+                                </span>
+                                <label class="uploadArea" id="storePhotoUpload">
+                                    <input type="file" accept="image/jpeg,image/png,image/webp" id="storePhotoInput" />
+                                    <div class="uploadIcon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                            <polyline points="21 15 16 10 5 21"></polyline>
+                                        </svg>
+                                    </div>
+                                    <p class="uploadText"><strong>Click to upload</strong> or drag and drop</p>
+                                    <p class="uploadHint">JPEG, PNG, or WEBP (max 2MB)</p>
+                                </label>
+                                <div class="uploadedFile" id="storePhotoPreview" style="display: none;">
+                                    <img class="uploadedFilePreview" id="storePhotoImg" src="" alt="Store photo" />
+                                    <div class="uploadedFileInfo">
+                                        <span class="uploadedFileName" id="storePhotoName"></span>
+                                        <span class="uploadedFileSize" id="storePhotoSize"></span>
+                                    </div>
+                                    <button class="uploadedFileRemove" id="storePhotoRemove">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="onboardingField">
+                                <label class="onboardingFieldLabel">Hygiene Certificate</label>
+                                <span class="onboardingFieldMicrocopy">
+                                    Upload your NEA/SFA hygiene certificate (PDF, max 2MB).
+                                </span>
+                                <label class="uploadArea" id="hygieneCertUpload">
+                                    <input type="file" accept=".pdf" id="hygieneCertInput" />
+                                    <div class="uploadIcon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                        </svg>
+                                    </div>
+                                    <p class="uploadText"><strong>Click to upload</strong> PDF file</p>
+                                    <p class="uploadHint">PDF only (max 2MB)</p>
+                                </label>
+                                <div class="uploadedFile" id="hygieneCertPreview" style="display: none;">
+                                    <div class="uploadedFilePreview" style="display: flex; align-items: center; justify-content: center; background: #f4f1f6; font-weight: 600; color: #913b9f;">PDF</div>
+                                    <div class="uploadedFileInfo">
+                                        <span class="uploadedFileName" id="hygieneCertName"></span>
+                                        <span class="uploadedFileSize" id="hygieneCertSize"></span>
+                                    </div>
+                                    <button class="uploadedFileRemove" id="hygieneCertRemove">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="onboardingField">
+                                <label class="onboardingFieldLabel">Halal Certificate (Optional)</label>
+                                <span class="onboardingFieldMicrocopy">
+                                    If your stall is halal-certified, upload your MUIS certificate.
+                                </span>
+                                <label class="uploadArea" id="halalCertUpload">
+                                    <input type="file" accept=".pdf" id="halalCertInput" />
+                                    <div class="uploadIcon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                        </svg>
+                                    </div>
+                                    <p class="uploadText"><strong>Click to upload</strong> PDF file</p>
+                                    <p class="uploadHint">PDF only (max 2MB) - Optional</p>
+                                </label>
+                                <div class="uploadedFile" id="halalCertPreview" style="display: none;">
+                                    <div class="uploadedFilePreview" style="display: flex; align-items: center; justify-content: center; background: #e8f5e9; font-weight: 600; color: #2e7d32;">PDF</div>
+                                    <div class="uploadedFileInfo">
+                                        <span class="uploadedFileName" id="halalCertName"></span>
+                                        <span class="uploadedFileSize" id="halalCertSize"></span>
+                                    </div>
+                                    <button class="uploadedFileRemove" id="halalCertRemove">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="onboardingFooter">
+                            <button class="onboardingSkipBtn" id="backStep3">Back</button>
+                            <button class="onboardingNextBtn" id="nextStep3">
+                                Continue
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Business Details -->
+                    <div class="onboardingStep" id="step4" style="display: none;">
+                        <h1 class="onboardingTitle">Business Details</h1>
+                        <p class="onboardingSubtitle">
+                            We need some details for verification and communication.
+                        </p>
+
+                        <div class="onboardingFields">
+                            <div class="onboardingField">
+                                <label class="onboardingFieldLabel" for="uen">UEN (Unique Entity Number)</label>
+                                <span class="onboardingFieldMicrocopy">
+                                    Your ACRA-registered business number for verification.
+                                </span>
+                                <input
+                                    type="text"
+                                    id="uen"
+                                    class="onboardingFieldInput"
+                                    placeholder="e.g., 202401234K"
+                                    required
+                                />
+                            </div>
+
+                            <div class="onboardingField">
+                                <label class="onboardingFieldLabel" for="contactPerson">Contact Person</label>
+                                <input
+                                    type="text"
+                                    id="contactPerson"
+                                    class="onboardingFieldInput"
+                                    placeholder="e.g., Tan Ah Huat"
+                                    required
+                                />
+                            </div>
+
+                            <div class="onboardingField">
+                                <label class="onboardingFieldLabel" for="contactNumber">Contact Number</label>
+                                <div class="phoneInputRow">
+                                    <img src="../../assets/icons/singapore.svg" alt="SG" class="phoneFlag" onerror="this.style.display='none'" />
+                                    <span class="phonePrefix">+65</span>
+                                    <input
+                                        type="tel"
+                                        id="contactNumber"
+                                        class="phoneInput"
+                                        placeholder="8XXX XXXX"
+                                        maxlength="9"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="onboardingFooter">
+                            <button class="onboardingSkipBtn" id="backStep4">Back</button>
+                            <button class="onboardingNextBtn" id="nextStep4">
+                                Continue
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Notifications -->
+                    <div class="onboardingStep" id="step5" style="display: none;">
+                        <h1 class="onboardingTitle">Stay Connected</h1>
+                        <p class="onboardingSubtitle">
+                            Get notified about new orders and important updates.
+                        </p>
+
+                        <div class="onboardingFields">
+                            <div class="toggleOption">
+                                <div class="toggleOptionInfo">
+                                    <span class="toggleOptionTitle">Browser Notifications</span>
+                                    <span class="toggleOptionDesc">
+                                        Receive alerts for new orders and updates
+                                    </span>
+                                </div>
+                                <label class="toggleSwitch">
+                                    <input type="checkbox" id="browserNotifications" />
+                                    <span class="toggleSlider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="onboardingFooter">
+                            <button class="onboardingSkipBtn" id="backStep5">Back</button>
+                            <button class="onboardingNextBtn" id="nextStep5">
+                                Continue
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 6: Telegram -->
+                    <div class="onboardingStep" id="step6" style="display: none;">
+                        <h1 class="onboardingTitle">Connect Telegram</h1>
+                        <p class="onboardingSubtitle">
+                            Link Telegram for automatic updates about customer orders. No marketing, just the essentials.
+                        </p>
+
+                        <div class="onboardingFields">
+                            <div class="telegramConnect" id="telegramConnect">
+                                <div class="telegramIcon">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                                    </svg>
+                                </div>
+                                <div class="telegramInfo">
+                                    <span class="telegramTitle">Connect with Telegram</span>
+                                    <span class="telegramDesc">
+                                        Click to open Telegram and link your account
+                                    </span>
+                                </div>
+                                <button class="telegramBtn" id="connectTelegram">Connect</button>
+                            </div>
+
+                            <div class="telegramConnect" id="telegramConnectedState" style="display: none;">
+                                <div class="telegramIcon">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                                    </svg>
+                                </div>
+                                <div class="telegramInfo">
+                                    <span class="telegramConnected">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                        Connected to Telegram
+                                    </span>
+                                    <span class="telegramDesc">
+                                        You'll receive order notifications via Telegram
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="onboardingFooter">
+                            <button class="onboardingSkipBtn" id="skipStep6">Skip for now</button>
+                            <button class="onboardingNextBtn" id="completeOnboarding">
+                                Complete Setup
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+
+        <script type="module" src="onboarding-vendor.js"></script>
+    </body>
+</html>

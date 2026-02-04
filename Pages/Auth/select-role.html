@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Hawkr | Select Your Role</title>
+        <link rel="stylesheet" href="auth.css" />
+        <link rel="stylesheet" href="onboarding.css" />
+    </head>
+    <body>
+        <div class="authContainer">
+            <div class="authLeft">
+                <div class="authBranding">
+                    <img
+                        src="../../images/hawkr logo.svg"
+                        alt="Hawkr Logo"
+                        class="authLogo"
+                    />
+                    <p class="authTagline">
+                        Singapore's Hawker Culture,<br />At Your Fingertips
+                    </p>
+                </div>
+            </div>
+
+            <div class="authRight">
+                <div class="authFormContainer roleSelectContainer">
+                    <div class="authHeader">
+                        <h1 class="authTitle">Choose Your Role</h1>
+                        <p class="authSubtitle">
+                            This selection is permanent and cannot be changed later.
+                            Please choose carefully.
+                        </p>
+                    </div>
+
+                    <div class="roleCards">
+                        <button class="roleCard" id="customerRole">
+                            <div class="roleCardIcon customerIcon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                            <h3 class="roleCardTitle">Customer</h3>
+                            <p class="roleCardDesc">
+                                Browse hawker centres, order food, leave reviews,
+                                and discover Singapore's best hawker food.
+                            </p>
+                            <ul class="roleCardFeatures">
+                                <li>Order from any hawker stall</li>
+                                <li>Save your favourite stalls</li>
+                                <li>Track your orders in real-time</li>
+                                <li>Leave reviews and feedback</li>
+                            </ul>
+                        </button>
+
+                        <button class="roleCard" id="vendorRole">
+                            <div class="roleCardIcon vendorIcon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                </svg>
+                            </div>
+                            <h3 class="roleCardTitle">Stall Owner</h3>
+                            <p class="roleCardDesc">
+                                Manage your hawker stall, receive orders,
+                                and grow your business with Hawkr.
+                            </p>
+                            <ul class="roleCardFeatures">
+                                <li>Manage your menu and prices</li>
+                                <li>Receive and track orders</li>
+                                <li>View analytics and insights</li>
+                                <li>Respond to customer feedback</li>
+                            </ul>
+                        </button>
+                    </div>
+
+                    <div class="formError formErrorGeneral" id="generalError"></div>
+                </div>
+            </div>
+        </div>
+
+        <script type="module" src="select-role.js"></script>
+    </body>
+</html>

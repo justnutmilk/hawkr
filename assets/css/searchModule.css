@@ -1,0 +1,307 @@
+/* ============================================
+   SHARED SEARCH MODULE STYLES
+   ============================================ */
+
+/* Search Module Wrapper */
+.searchModuleWrapper {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    z-index: 1000;
+}
+
+.searchModuleWrapper.active {
+    z-index: 1002;
+}
+
+.searchModule {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 56px;
+    padding: 0px 18px 0px 22px;
+    border-radius: 28px;
+    background: #f4f1f6;
+    position: relative;
+    z-index: 1001;
+    transition: opacity 0.2s ease-out;
+}
+
+.searchModuleWrapper.active .searchModule {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.searchInput {
+    flex: 1 1 auto;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #49454f;
+    font-family: Aptos, sans-serif;
+    font-size: 20px;
+    font-weight: 400;
+    padding: 0px;
+    margin: 0px;
+}
+
+.searchInput::placeholder {
+    color: #49454f;
+    opacity: 1;
+}
+
+.searchIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    pointer-events: none;
+}
+
+/* Search Dropdown */
+.searchDropdown {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 500px;
+    height: 56px;
+    background: rgba(200, 150, 210, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 28px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    box-shadow:
+        0 8px 32px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    opacity: 0;
+    visibility: hidden;
+    overflow: hidden;
+    transition:
+        opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        visibility 0.3s ease;
+}
+
+.searchModuleWrapper.active .searchDropdown {
+    opacity: 1;
+    visibility: visible;
+    width: 900px;
+    height: auto;
+}
+
+/* Search Dropdown Header */
+.searchDropdownHeader {
+    display: flex;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e0e0e0;
+    gap: 12px;
+}
+
+.searchDropdownHeader .searchIcon {
+    width: 24px;
+    height: 24px;
+}
+
+.searchDropdownHeader .searchInputLarge {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #49454f;
+    font-family: Aptos, sans-serif;
+    font-size: 18px;
+    font-weight: 400;
+}
+
+.searchDropdownHeader .searchInputLarge::placeholder {
+    color: #49454f;
+    opacity: 1;
+}
+
+/* Search Dropdown Content */
+.searchDropdownContent {
+    padding: 24px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    max-height: 60vh;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.searchDropdownContent::-webkit-scrollbar {
+    display: none;
+}
+
+/* Search Section Headers */
+.searchSectionHeader {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+    letter-spacing: -0.64px;
+}
+
+/* Search Empty State */
+.searchEmptyState {
+    color: #341539;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 19px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+/* Search Section */
+.searchSection {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Search Result Item */
+.searchResultItem {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+    margin: 0 -16px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+    transition:
+        background 0.3s ease,
+        transform 0.2s ease,
+        box-shadow 0.3s ease;
+}
+
+/* Mouse-following light effect */
+.searchResultItem::before {
+    content: "";
+    position: absolute;
+    top: var(--mouse-y, 50%);
+    left: var(--mouse-x, 50%);
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(
+        circle at center,
+        rgba(145, 59, 159, 0.2) 0%,
+        rgba(145, 59, 159, 0.08) 40%,
+        transparent 70%
+    );
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.searchResultItem:hover::before,
+.searchResultItem.selected::before {
+    opacity: 1;
+}
+
+.searchResultItem:hover,
+.searchResultItem.selected {
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.45) 0%,
+        rgba(246, 238, 249, 0.5) 100%
+    );
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow:
+        0 4px 20px rgba(145, 59, 159, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -1px 0 rgba(145, 59, 159, 0.03);
+}
+
+.searchResultItem.selected {
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.55) 0%,
+        rgba(236, 230, 240, 0.6) 100%
+    );
+    box-shadow:
+        0 6px 24px rgba(145, 59, 159, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6),
+        inset 0 -1px 0 rgba(145, 59, 159, 0.05);
+}
+
+/* Ensure content is above the light effect */
+.searchResultItem > * {
+    position: relative;
+    z-index: 1;
+}
+
+.searchResultImage {
+    width: 65px;
+    height: 65px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.searchResultImage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.searchResultImage.searchResultIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+}
+
+.searchResultImage.searchResultIcon img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+.searchResultInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.searchResultName {
+    color: #341539;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 19px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.searchResultMeta {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #595959;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.searchResultMeta.history::before {
+    content: "•";
+    margin-right: 4px;
+}
