@@ -1,13 +1,29 @@
 // ============================================
+// IMPORTS
+// ============================================
+
+import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
+import { auth, db } from "../../firebase/config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  doc,
+  getDoc,
+  updateDoc,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// ============================================
 // MOCK USER DATA
 // ============================================
+
+// Current user ID (set on auth)
+let currentUserId = null;
 
 const mockUserData = {
   name: "Jane Doe",
   password: "••••••••••",
   email: "janedoelovesyou@hotmail.com",
   phoneNumber: "+65 8793 9383",
-  telegramConnected: false,
+  telegramLinked: false,
   browserNotifications: true,
   paymentMethods: [
     {
@@ -111,29 +127,40 @@ function renderPersonalDetails(user) {
 }
 
 function renderNotificationsSection(user) {
-  const telegramHTML = user.telegramConnected
-    ? `<span class="telegramStatus">Telegram is connected</span>`
-    : `
-      <div class="notificationMethodRight">
-        <span class="telegramStatus">Telegram isn't connected</span>
-        <button class="telegramButton" id="telegramLogin">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM16.64 8.8C16.49 10.38 15.84 14.22 15.51 15.99C15.37 16.74 15.09 16.99 14.83 17.02C14.25 17.07 13.81 16.64 13.25 16.27C12.37 15.69 11.87 15.33 11.02 14.77C10.03 14.12 10.67 13.76 11.24 13.18C11.39 13.03 13.95 10.7 14 10.49C14.0069 10.4582 14.0038 10.4252 13.9912 10.395C13.9786 10.3648 13.957 10.3386 13.93 10.32C13.88 10.28 13.81 10.29 13.76 10.3C13.69 10.31 12.25 11.24 9.44 13.08C9.04 13.35 8.68 13.49 8.36 13.48C8.01 13.47 7.33 13.28 6.82 13.11C6.19 12.91 5.7 12.8 5.74 12.45C5.76 12.27 6.01 12.09 6.49 11.9C9.51 10.58 11.53 9.71 12.55 9.29C15.41 8.07 15.96 7.86 16.34 7.86C16.42 7.86 16.6 7.88 16.72 7.98C16.82 8.06 16.85 8.17 16.86 8.25C16.85 8.31 16.87 8.48 16.86 8.6L16.64 8.8Z" fill="white"/>
+  let telegramHTML;
+
+  if (user.telegramLinked) {
+    // Telegram is connected - show connected status and unlink option
+    telegramHTML = `
+      <div class="notificationMethodRight telegramConnected">
+        <span class="telegramStatus connected">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13.5 4.5L6.5 11.5L3 8" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          Log in with Telegram
-        </button>
+          Telegram connected
+        </span>
+        <button class="telegramUnlinkButton" id="telegramUnlink">Unlink</button>
       </div>
     `;
+  } else {
+    // Not connected - show Telegram Login Widget
+    telegramHTML = `
+      <div class="notificationMethodRight">
+        <span class="telegramStatus">Telegram isn't connected</span>
+        <div id="telegramLoginWidget"></div>
+      </div>
+    `;
+  }
 
   return `
     <div class="settingsSection">
       <span class="sectionTitle">Notifications</span>
       <span class="notificationsDescription">Hawkr believes clear, transparent communication makes everything nicer. Choose how you'd like updates.</span>
       <div class="notificationMethods">
-        <div class="notificationMethod">
+        <div class="notificationMethod" id="telegramNotificationMethod">
           <div class="notificationMethodLeft">
             <span class="notificationMethodTitle">Telegram</span>
-            <span class="notificationMethodDescription">We like keeping you in the loop. Hawkr doesn't send spammy marketing stuff. We don't swing that way.</span>
+            <span class="notificationMethodDescription">Get instant order updates on Telegram. We'll notify you when your order is confirmed, ready, and complete.</span>
           </div>
           ${telegramHTML}
         </div>
@@ -644,6 +671,115 @@ function confirmRemoveCard() {
 // EVENT HANDLERS
 // ============================================
 
+// ============================================
+// TELEGRAM LOGIN WIDGET HANDLERS
+// ============================================
+
+/**
+ * Initialize the Telegram Login Widget
+ * This creates the official "Log in with Telegram" button
+ */
+function initTelegramLoginWidget() {
+  const container = document.getElementById("telegramLoginWidget");
+  if (!container) return;
+
+  // Clear any existing content
+  container.innerHTML = "";
+
+  // Create the Telegram Login Widget script
+  const script = document.createElement("script");
+  script.async = true;
+  script.src = "https://telegram.org/js/telegram-widget.js?22";
+  script.setAttribute("data-telegram-login", "hawkrOrgBot");
+  script.setAttribute("data-size", "large");
+  script.setAttribute("data-onauth", "onTelegramAuth(user)");
+  script.setAttribute("data-request-access", "write");
+
+  container.appendChild(script);
+}
+
+/**
+ * Callback function when user authenticates with Telegram
+ * This is called by the Telegram Login Widget
+ */
+window.onTelegramAuth = async function (user) {
+  if (!currentUserId) {
+    console.error("User not authenticated");
+    alert("Please log in to link your Telegram account.");
+    return;
+  }
+
+  try {
+    // Save Telegram user data to Firestore
+    await updateDoc(doc(db, "customers", currentUserId), {
+      telegramChatId: user.id.toString(),
+      telegramLinked: true,
+      telegramUsername: user.username || null,
+      telegramFirstName: user.first_name || null,
+      telegramLastName: user.last_name || null,
+      telegramPhotoUrl: user.photo_url || null,
+      telegramAuthDate: user.auth_date,
+    });
+
+    // Update local state
+    mockUserData.telegramLinked = true;
+
+    // Re-render the page to show connected status
+    rerenderTelegramSection();
+
+    console.log("Telegram linked successfully:", user.username || user.id);
+  } catch (error) {
+    console.error("Error linking Telegram:", error);
+    alert("Failed to link Telegram account. Please try again.");
+  }
+};
+
+/**
+ * Handle "Unlink" button click
+ */
+async function handleTelegramUnlink() {
+  if (!currentUserId) return;
+
+  if (
+    !confirm(
+      "Are you sure you want to unlink your Telegram account? You will no longer receive order notifications on Telegram.",
+    )
+  ) {
+    return;
+  }
+
+  try {
+    await updateDoc(doc(db, "customers", currentUserId), {
+      telegramChatId: null,
+      telegramLinked: false,
+      telegramUsername: null,
+      telegramFirstName: null,
+      telegramLastName: null,
+      telegramPhotoUrl: null,
+      telegramAuthDate: null,
+    });
+
+    mockUserData.telegramLinked = false;
+
+    rerenderTelegramSection();
+  } catch (error) {
+    console.error("Error unlinking Telegram:", error);
+    alert("Failed to unlink Telegram. Please try again.");
+  }
+}
+
+/**
+ * Re-render just the Telegram notification method section
+ */
+function rerenderTelegramSection() {
+  // Re-render the entire settings page to update Telegram section
+  renderSettingsPage(mockUserData);
+}
+
+// ============================================
+// PAYMENT LISTENERS
+// ============================================
+
 function attachPaymentListeners() {
   // Edit payment / Save changes toggle
   const editPayment = document.getElementById("editPayment");
@@ -686,13 +822,18 @@ function attachEventListeners() {
     });
   }
 
-  // Telegram login button
-  const telegramLogin = document.getElementById("telegramLogin");
-  if (telegramLogin) {
-    telegramLogin.addEventListener("click", function () {
-      // Placeholder - integrate with Telegram Bot API login widget
-      console.log("Telegram login clicked");
-    });
+  // Telegram unlink button
+  const telegramUnlink = document.getElementById("telegramUnlink");
+  if (telegramUnlink) {
+    telegramUnlink.addEventListener("click", handleTelegramUnlink);
+  }
+
+  // Initialize Telegram Login Widget if not connected
+  const telegramWidgetContainer = document.getElementById(
+    "telegramLoginWidget",
+  );
+  if (telegramWidgetContainer && !mockUserData.telegramLinked) {
+    initTelegramLoginWidget();
   }
 
   // Edit personal details
@@ -745,8 +886,29 @@ function showLoading() {
 async function initializeSettingsPage() {
   showLoading();
 
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 300));
+  // Load customer data from Firebase if authenticated
+  if (currentUserId) {
+    try {
+      const customerDoc = await getDoc(doc(db, "customers", currentUserId));
+      if (customerDoc.exists()) {
+        const customerData = customerDoc.data();
+
+        // Update mock data with Firebase data
+        if (customerData.name) mockUserData.name = customerData.name;
+        if (customerData.phone) mockUserData.phoneNumber = customerData.phone;
+
+        // Telegram status
+        mockUserData.telegramLinked = customerData.telegramLinked || false;
+
+        // Browser notifications
+        if (customerData.browserNotifications !== undefined) {
+          mockUserData.browserNotifications = customerData.browserNotifications;
+        }
+      }
+    } catch (error) {
+      console.error("Error loading customer data:", error);
+    }
+  }
 
   renderSettingsPage(mockUserData);
 }
@@ -756,7 +918,20 @@ async function initializeSettingsPage() {
 // ============================================
 
 document.addEventListener("DOMContentLoaded", function () {
-  initializeSettingsPage();
+  // Initialize navbar (auth, user display, logout)
+  initConsumerNavbar();
+
+  // Wait for auth state before initializing
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      currentUserId = user.uid;
+      mockUserData.email = user.email || mockUserData.email;
+      initializeSettingsPage();
+    } else {
+      // Redirect to login if not authenticated
+      window.location.href = "../Auth/login.html";
+    }
+  });
 
   // Back button handler
   const backButton = document.getElementById("backButton");

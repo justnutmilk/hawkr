@@ -1,4 +1,10 @@
 // ============================================
+// IMPORTS
+// ============================================
+
+import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
+
+// ============================================
 // PAGE DETECTION
 // ============================================
 
@@ -733,6 +739,10 @@ function renderTransactionDetail(transactionId) {
         </div>
       </div>
     </div>
+
+    <div class="feedbackSection">
+      <a href="consumerFeedback.html?order=${encodeURIComponent(transactionId)}" class="leaveFeedbackBtn">Leave feedback</a>
+    </div>
   `;
 }
 
@@ -837,6 +847,9 @@ async function initializePage() {
 // ============================================
 
 document.addEventListener("DOMContentLoaded", function () {
+  // Initialize navbar (auth, user display, logout)
+  initConsumerNavbar();
+
   initializePage();
 
   // Back button handler

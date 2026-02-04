@@ -944,7 +944,7 @@ body {
 }
 
 .hygieneHistory:hover {
-    text-decoration: underline;
+    opacity: 0.7;
 }
 
 /* Document sections */

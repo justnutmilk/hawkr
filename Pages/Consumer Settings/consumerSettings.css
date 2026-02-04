@@ -471,9 +471,191 @@ body {
     background: #006da4;
 }
 
+.telegramButton:disabled {
+    background: #7ec8e8;
+    cursor: not-allowed;
+}
+
 .telegramButton svg {
     width: 20px;
     height: 20px;
+}
+
+.telegramButton .spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Telegram Connected State */
+.telegramConnected {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.telegramStatus.connected {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #22c55e;
+    font-weight: 600;
+}
+
+.telegramUnlinkButton {
+    padding: 6px 16px;
+    border-radius: 6px;
+    border: 1px solid #e5e5e5;
+    background: #fff;
+    color: #666;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.telegramUnlinkButton:hover {
+    border-color: #dc2626;
+    color: #dc2626;
+    background: #fef2f2;
+}
+
+/* Telegram Linking State */
+.telegramLinking {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.telegramLinkBox {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 16px 20px;
+    background: #f8f7fa;
+    border-radius: 12px;
+    border: 1px solid #e5e5e5;
+}
+
+.telegramLinkLabel {
+    font-size: 13px;
+    color: #666;
+}
+
+.telegramLinkCodeRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.telegramLinkCode {
+    font-family: "Geist Mono", monospace;
+    font-size: 24px;
+    font-weight: 700;
+    color: #341539;
+    letter-spacing: 4px;
+    padding: 8px 16px;
+    background: #fff;
+    border-radius: 8px;
+    border: 2px dashed #913b9f;
+}
+
+.telegramCopyBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid #e5e5e5;
+    background: #fff;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.telegramCopyBtn:hover {
+    border-color: #913b9f;
+    color: #913b9f;
+    background: #f8f7fa;
+}
+
+.telegramLinkInstructions {
+    font-size: 13px;
+    color: #666;
+    text-align: right;
+    line-height: 1.5;
+}
+
+.telegramLinkInstructions code {
+    font-family: "Geist Mono", monospace;
+    font-size: 12px;
+    background: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #e5e5e5;
+    color: #341539;
+}
+
+.telegramBotLink {
+    color: #0088cc;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.telegramBotLink:hover {
+    text-decoration: underline;
+}
+
+.telegramLinkExpiry {
+    font-size: 12px;
+    color: #999;
+}
+
+#expiryCountdown {
+    font-family: "Geist Mono", monospace;
+    font-weight: 600;
+    color: #f59e0b;
+}
+
+.telegramCancelBtn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid #e5e5e5;
+    background: #fff;
+    color: #666;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.telegramCancelBtn:hover {
+    border-color: #999;
+    background: #f5f5f5;
+}
+
+/* Telegram Login Widget */
+#telegramLoginWidget {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 40px;
+    margin-top: 8px;
+}
+
+#telegramLoginWidget iframe {
+    border-radius: 8px;
 }
 
 /* Toggle Switch */
@@ -839,7 +1021,7 @@ body {
 }
 
 .dangerItemDescription a:hover {
-    text-decoration: underline;
+    opacity: 0.7;
 }
 
 .deleteButton {
@@ -1282,9 +1464,14 @@ body {
     min-width: 220px;
     padding: 24px;
     border-radius: 24px;
-    background: #fff;
-    border: 2px solid #913b9f;
-    box-shadow: 0 8px 32px rgba(52, 21, 57, 0.15);
+    background: rgba(200, 150, 210, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: none;
+    box-shadow:
+        0 8px 32px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
     gap: 8px;

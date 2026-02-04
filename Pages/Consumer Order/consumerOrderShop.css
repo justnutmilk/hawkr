@@ -434,6 +434,12 @@ body {
     margin-top: 112px;
 }
 
+.ratingsSectionHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
 .sectionHeader {
     color: #913b9f;
     font-family: "Source Serif", Georgia, serif;
@@ -441,6 +447,31 @@ body {
     font-style: normal;
     font-weight: 400;
     line-height: 24px;
+}
+
+.leaveFeedbackBtn {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 24px;
+    border-radius: 48px;
+    background: #913b9f;
+    color: #fffafa;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 19px;
+    font-weight: 600;
+    text-decoration: none;
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.leaveFeedbackBtn:hover {
+    background: #7a3287;
+    transform: scale(1.02);
+}
+
+.leaveFeedbackBtn:active {
+    transform: scale(0.98);
 }
 
 .ratingsOverview {
@@ -626,7 +657,7 @@ body {
 }
 
 .hygieneHistoryLink:hover {
-    text-decoration: underline;
+    opacity: 0.7;
 }
 
 /* Loading Spinner */

@@ -1,4 +1,10 @@
 // ============================================
+// IMPORTS
+// ============================================
+
+import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
+
+// ============================================
 // LOCAL STORAGE FUNCTIONS
 // ============================================
 
@@ -325,6 +331,9 @@ async function initializeConfirmedPage() {
 // ============================================
 
 document.addEventListener("DOMContentLoaded", function () {
+  // Initialize navbar (auth, user display, logout)
+  initConsumerNavbar();
+
   initializeConfirmedPage();
 
   // Back button handler

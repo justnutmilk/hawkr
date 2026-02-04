@@ -1,95 +1,102 @@
 // ============================================
-// MOCK DATA (Simulating Backend Database)
+// FIREBASE IMPORTS
 // ============================================
 
-const mockShopData = {
-  id: 1,
-  name: "Ching Ching Chong Foods Private Limited",
-  cuisines: ["Chinese"],
-  rating: {
-    average: 3.8,
-    count: 20,
-  },
-  reviews: [
-    {
-      id: 1,
-      title: "Chinese Sala nubbad",
-      content:
-        "Ingredients used were fresh, and portion was great too! The real value for money.",
-      rating: 3,
-      date: "2 days ago",
-      author: "Jane Doe",
-    },
-  ],
-  hygieneGrade: {
-    grade: "A",
-    lastUpdated: "15 Jan 2025",
-  },
-  products: [
-    {
-      id: 1,
-      name: "Chinese Sala",
-      image:
-        "../../mock-data/Consumer Dashboard/hawker-center/Maxwell Food Centre.png",
-      rating: 4.5,
-      price: 5.5,
-      allergens: [],
-    },
-    {
-      id: 2,
-      name: "Chinese Salad",
-      image:
-        "../../mock-data/Consumer Dashboard/hawker-center/Maxwell Food Centre.png",
-      rating: 4.5,
-      price: 6.0,
-      allergens: [],
-    },
-    {
-      id: 3,
-      name: "Mala Tang",
-      image:
-        "../../mock-data/Consumer Dashboard/hawker-center/Maxwell Food Centre.png",
-      rating: 4.5,
-      price: 8.9,
-      allergens: ["Seafood"],
-    },
-    {
-      id: 4,
-      name: "Mala Tang",
-      image:
-        "../../mock-data/Consumer Dashboard/hawker-center/Maxwell Food Centre.png",
-      rating: 4.5,
-      price: 8.9,
-      allergens: ["Seafood"],
-    },
-    {
-      id: 5,
-      name: "Mala Tang",
-      image:
-        "../../mock-data/Consumer Dashboard/hawker-center/Maxwell Food Centre.png",
-      rating: 4.5,
-      price: 8.9,
-      allergens: ["Seafood"],
-    },
-  ],
-};
+import { auth, db } from "../../firebase/config.js";
+import { getStallWithMenu } from "../../firebase/services/foodStalls.js";
+import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
 
 // ============================================
-// MOCK API FUNCTIONS (Simulating Backend Calls)
+// API FUNCTIONS (Firebase Backend Calls)
 // ============================================
 
 const api = {
-  async fetchShopData(/* shopId */) {
-    await this.simulateNetworkDelay();
-    // In real implementation, fetch shop by ID from backend
-    return mockShopData;
-  },
+  async fetchShopData(stallId) {
+    try {
+      if (!stallId) {
+        console.error("No stall ID provided");
+        return null;
+      }
 
-  simulateNetworkDelay() {
-    const delay = Math.random() * 300 + 200;
-    return new Promise((resolve) => setTimeout(resolve, delay));
+      const stallData = await getStallWithMenu(String(stallId));
+
+      if (!stallData) {
+        console.error("Stall not found:", stallId);
+        return null;
+      }
+
+      // Transform Firebase data to match expected format
+      return {
+        id: stallData.id,
+        name: stallData.name,
+        cuisines: stallData.cuisineNames || [],
+        rating: {
+          average: stallData.rating || 4.0,
+          count: stallData.reviewCount || 0,
+        },
+        reviews: (stallData.reviews || []).map((review) => ({
+          id: review.id,
+          title: review.title || "Review",
+          content: review.content || review.comment || "",
+          rating: review.rating || 5,
+          date: formatReviewDate(review.createdAt),
+          author: review.authorName || "Anonymous",
+        })),
+        hygieneGrade: {
+          grade: stallData.hygieneGrade || "A",
+          lastUpdated: formatHygieneDate(stallData.hygieneUpdatedAt),
+        },
+        products: (stallData.menuItems || []).map((item) => ({
+          id: item.id,
+          name: item.name,
+          image:
+            item.imageUrl ||
+            "../../mock-data/Consumer Dashboard/hawker-center/Maxwell Food Centre.png",
+          rating: item.rating || 4.5,
+          price: item.price,
+          allergens: item.allergens || [],
+          description: item.description || "",
+          isAvailable: item.isAvailable !== false,
+        })),
+      };
+    } catch (error) {
+      console.error("Error fetching stall data:", error);
+      return null;
+    }
   },
 };
+
+// Helper function to format review date
+function formatReviewDate(timestamp) {
+  if (!timestamp) return "Recently";
+
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+  return date.toLocaleDateString("en-SG", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+// Helper function to format hygiene update date
+function formatHygieneDate(timestamp) {
+  if (!timestamp) return "Not available";
+
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  return date.toLocaleDateString("en-SG", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
 
 // ============================================
 // URL PARAMETER HELPERS
@@ -97,7 +104,9 @@ const api = {
 
 function getShopIdFromUrl() {
   const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get("id") || urlParams.get("shopId") || 1;
+  const id = urlParams.get("id") || urlParams.get("shopId");
+  // Always return as string, or null if not provided
+  return id ? String(id) : null;
 }
 
 // ============================================
@@ -300,7 +309,10 @@ function renderRatingsSection(rating, reviews) {
 
   return `
         <section class="ratingsSection">
-            <h3 class="sectionHeader">Ratings & Reviews</h3>
+            <div class="ratingsSectionHeader">
+                <h3 class="sectionHeader">Ratings & Reviews</h3>
+                <a href="../Consumer Settings/consumerFeedback.html" class="leaveFeedbackBtn">Leave feedback</a>
+            </div>
             <div class="ratingsOverview">
                 <span class="storeRatingNumber">${rating.average}</span>
                 <div class="storeStars">${renderStoreStars(rating.average)}</div>
@@ -334,6 +346,22 @@ function renderHygieneSection(hygieneGrade) {
 function renderShopPage(shop) {
   const container = document.getElementById("shopContent");
   if (!container) return;
+
+  // Handle not found state
+  if (!shop) {
+    container.innerHTML = `
+      <div class="notFoundState">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 8v4M12 16h.01"/>
+        </svg>
+        <p class="notFoundTitle">Stall Not Found</p>
+        <p class="notFoundText">The stall you're looking for doesn't exist or has been removed.</p>
+        <a href="consumerOrder.html" class="backToOrderBtn">Browse Hawker Centres</a>
+      </div>
+    `;
+    return;
+  }
 
   const shopHeaderHTML = renderShopHeader(shop);
   const productsHTML = renderProductsSection(shop.products);
@@ -401,6 +429,9 @@ async function initializeShopPage() {
 // ============================================
 
 document.addEventListener("DOMContentLoaded", function () {
+  // Initialize navbar (auth, user display, logout)
+  initConsumerNavbar();
+
   initializeShopPage();
 
   // Back button handler

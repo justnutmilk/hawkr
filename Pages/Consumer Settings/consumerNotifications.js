@@ -1,4 +1,10 @@
 // ============================================
+// IMPORTS
+// ============================================
+
+import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
+
+// ============================================
 // MOCK NOTIFICATION DATA
 // ============================================
 
@@ -200,6 +206,9 @@ function handleBackClick() {
 // ============================================
 
 document.addEventListener("DOMContentLoaded", function () {
+  // Initialize navbar (auth, user display, logout)
+  initConsumerNavbar();
+
   initializeNotificationsPage();
 
   // Back button handler

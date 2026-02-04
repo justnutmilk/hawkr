@@ -1,4 +1,10 @@
 // ============================================
+// IMPORTS
+// ============================================
+
+import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
+
+// ============================================
 // MOCK DATA (Simulating Backend Database)
 // ============================================
 
@@ -375,6 +381,9 @@ async function initializeItemPage() {
 // ============================================
 
 document.addEventListener("DOMContentLoaded", function () {
+  // Initialize navbar (auth, user display, logout)
+  initConsumerNavbar();
+
   initializeItemPage();
 
   // Back button handler

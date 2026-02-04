@@ -1,3 +1,5 @@
+import { initVendorNavbar } from "../../assets/js/vendorNavbar.js";
+
 const mockNotifications = [
   // Customers
   {
@@ -129,23 +131,10 @@ function renderNotifications(tab) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Initialize vendor navbar (handles auth, vendor name, logout, keyboard shortcuts)
+  initVendorNavbar();
+
   renderNotifications("customers");
-
-  const isMac = window.navigator.userAgentData
-    ? window.navigator.userAgentData.platform === "macOS"
-    : /Mac/i.test(window.navigator.userAgent);
-
-  document.getElementById("searchKeyMod").textContent = isMac
-    ? "\u2318"
-    : "CTRL";
-
-  document.addEventListener("keydown", (e) => {
-    const modifier = isMac ? e.metaKey : e.ctrlKey;
-    if (modifier && e.key === "k") {
-      e.preventDefault();
-      document.getElementById("searchInput").focus();
-    }
-  });
 
   document
     .querySelectorAll('input[name="notificationTab"]')

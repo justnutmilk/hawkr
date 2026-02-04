@@ -494,3 +494,116 @@ body {
     font-weight: 700;
     line-height: normal;
 }
+
+/* ============================================
+   EMPTY ORDER STATE
+   ============================================ */
+
+.emptyOrderState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    min-width: 260px;
+    min-height: 300px;
+    border-radius: 8px;
+    border: 1px dashed #c0c0c0;
+    background: #fafafa;
+    text-align: center;
+}
+
+.emptyOrderIcon {
+    color: #913b9f;
+    opacity: 0.6;
+    margin-bottom: 16px;
+}
+
+.emptyOrderTitle {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.emptyOrderDescription {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    max-width: 200px;
+}
+
+/* ============================================
+   SETTINGS DROPDOWN
+   ============================================ */
+
+.settingsDropdownWrapper {
+    position: relative;
+}
+
+.settingsButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.settingsDropdown {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    min-width: 160px;
+    padding: 16px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease,
+        visibility 0.3s ease;
+    z-index: 100;
+}
+
+.settingsDropdownWrapper:hover .settingsDropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.settingsDropdownItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    text-decoration: none;
+    color: #341539;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    transition: background 0.15s ease;
+}
+
+.settingsDropdownItem:hover {
+    background: #f4f1f6;
+}
+
+.settingsDropdownLogout {
+    color: #eb001b;
+}
+
+.settingsDropdownLogout svg {
+    stroke: #eb001b;
+}

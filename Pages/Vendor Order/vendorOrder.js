@@ -1,138 +1,195 @@
-const mockOrders = [
-  {
-    orderNumber: "8887",
-    customerName: "Jane",
-    date: "23-01-2026",
-    time: "6:07 pm",
-    type: "Takeaway",
-    status: "preparing",
-    items: [
-      {
-        qty: 1,
-        name: "Pad Thai with shrimp",
-        price: 23.9,
-        note: '"sawatdee"',
-      },
-      {
-        qty: 1,
-        name: "Pad Thai with shrimp, extra peanuts, and lime",
-        price: 15.5,
-        note: null,
-      },
-      {
-        qty: 1,
-        name: "Coca-Cola",
-        price: 1.5,
-        note: '"ooh gassy"',
-      },
-    ],
-    total: 32.5,
-    transactionId: "c2b-j29Sksix93Q-FOOD",
-  },
-  {
-    orderNumber: "8886",
-    customerName: "Emily",
-    date: "23-01-2026",
-    time: "6:20 pm",
-    type: "Dine-In",
-    status: "preparing",
-    items: [
-      {
-        qty: 1,
-        name: "Sushi platter",
-        price: 28.0,
-        note: null,
-      },
-      {
-        qty: 1,
-        name: "Sushi platter with tuna, salmon, and eel, served with miso soup",
-        price: 18.8,
-        note: '"UNCLE PLS add extra seafood I promise i will pay you on the spot."',
-      },
-      {
-        qty: 1,
-        name: "Green Tea",
-        price: 2.0,
-        note: null,
-      },
-    ],
-    total: 48.8,
-    transactionId: "c2b-eM4kPq8rW2-FOOD",
-  },
-  {
-    orderNumber: "8885",
-    customerName: "Ahmad",
-    date: "23-01-2026",
-    time: "6:35 pm",
-    type: "Takeaway",
-    status: "preparing",
-    items: [
-      {
-        qty: 2,
-        name: "Nasi Lemak",
-        price: 7.0,
-        note: null,
-      },
-      {
-        qty: 1,
-        name: "Teh Tarik",
-        price: 2.5,
-        note: '"kurang manis"',
-      },
-    ],
-    total: 16.5,
-    transactionId: "c2b-rT5nLx3vQ9-FOOD",
-  },
-  {
-    orderNumber: "8880",
-    customerName: "Sarah",
-    date: "23-01-2026",
-    time: "5:00 pm",
-    type: "Dine-In",
-    status: "complete",
-    items: [
-      {
-        qty: 1,
-        name: "Chicken Rice",
-        price: 5.5,
-        note: null,
-      },
-      {
-        qty: 1,
-        name: "Iced Milo",
-        price: 2.0,
-        note: '"extra milo pls"',
-      },
-    ],
-    total: 7.5,
-    transactionId: "c2b-wK9mHj4sP1-FOOD",
-  },
-  {
-    orderNumber: "8879",
-    customerName: "Ravi",
-    date: "23-01-2026",
-    time: "4:45 pm",
-    type: "Takeaway",
-    status: "complete",
-    items: [
-      {
-        qty: 3,
-        name: "Roti Prata",
-        price: 1.5,
-        note: null,
-      },
-      {
-        qty: 1,
-        name: "Fish Head Curry",
-        price: 18.0,
-        note: '"more spicy"',
-      },
-    ],
-    total: 22.5,
-    transactionId: "c2b-bN6cFd2xA7-FOOD",
-  },
-];
+/**
+ * Hawkr - Vendor Orders Page
+ * Queries Firestore for vendor info and orders
+ */
 
+import { auth, db } from "../../firebase/config.js";
+import {
+  onAuthStateChanged,
+  signOut,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { initVendorNavbar } from "../../assets/js/vendorNavbar.js";
+import {
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  getDocs,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// State
+let currentVendor = null;
+let currentStall = null;
+let orders = [];
+let currentTab = "preparing";
+
+/**
+ * Initialize page when DOM is ready
+ */
+document.addEventListener("DOMContentLoaded", () => {
+  // Initialize vendor navbar (handles auth, vendor name, logout, keyboard shortcuts)
+  initVendorNavbar();
+
+  // Check auth state for loading orders
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      await loadVendorData(user.uid);
+    }
+  });
+
+  // Setup tab switching
+  setupTabSwitching();
+});
+
+/**
+ * Load vendor data from Firestore
+ */
+async function loadVendorData(userId) {
+  try {
+    // Get vendor profile
+    const vendorDoc = await getDoc(doc(db, "vendors", userId));
+
+    if (vendorDoc.exists()) {
+      currentVendor = { id: vendorDoc.id, ...vendorDoc.data() };
+
+      // Update vendor name in sidebar
+      updateVendorName(
+        currentVendor.storeName || currentVendor.displayName || "My Store",
+      );
+
+      // Get vendor's stall
+      const stallsQuery = query(
+        collection(db, "foodStalls"),
+        where("ownerId", "==", userId),
+        limit(1),
+      );
+      const stallsSnapshot = await getDocs(stallsQuery);
+
+      if (!stallsSnapshot.empty) {
+        currentStall = {
+          id: stallsSnapshot.docs[0].id,
+          ...stallsSnapshot.docs[0].data(),
+        };
+
+        // Load orders for this stall
+        await loadOrders(currentStall.id);
+      } else {
+        // No stall found - render with empty orders
+        orders = [];
+        renderOrders(currentTab);
+      }
+    } else {
+      // Vendor profile doesn't exist
+      updateVendorName("My Store");
+      orders = [];
+      renderOrders(currentTab);
+    }
+  } catch (error) {
+    console.error("Error loading vendor data:", error);
+    updateVendorName("My Store");
+    orders = [];
+    renderOrders(currentTab);
+  }
+}
+
+/**
+ * Update vendor name in sidebar
+ */
+function updateVendorName(name) {
+  const vendorNameEl = document.querySelector(".vendorName");
+  if (vendorNameEl) {
+    vendorNameEl.textContent = name;
+  }
+}
+
+/**
+ * Load orders for a stall
+ */
+async function loadOrders(stallId) {
+  try {
+    const ordersQuery = query(
+      collection(db, "orders"),
+      where("stallId", "==", stallId),
+      orderBy("createdAt", "desc"),
+      limit(50),
+    );
+
+    const ordersSnapshot = await getDocs(ordersQuery);
+
+    orders = ordersSnapshot.docs.map((doc) => {
+      const data = doc.data();
+      const createdAt = data.createdAt?.toDate?.() || new Date();
+
+      return {
+        id: doc.id,
+        orderNumber: doc.id.slice(-4).toUpperCase(),
+        customerName: data.customerName || "Customer",
+        date: formatDate(createdAt),
+        time: formatTime(createdAt),
+        type: data.orderType || "Takeaway",
+        status: mapStatus(data.status),
+        items: (data.items || []).map((item) => ({
+          qty: item.quantity || 1,
+          name: item.name || "Item",
+          price: item.totalPrice || item.unitPrice || 0,
+          note: item.notes || null,
+        })),
+        total: data.total || 0,
+        transactionId: data.transactionId || doc.id,
+      };
+    });
+
+    renderOrders(currentTab);
+  } catch (error) {
+    console.error("Error loading orders:", error);
+    orders = [];
+    renderOrders(currentTab);
+  }
+}
+
+/**
+ * Map database status to UI status
+ */
+function mapStatus(status) {
+  const preparingStatuses = ["pending", "confirmed", "preparing", "ready"];
+  const completeStatuses = ["completed", "cancelled"];
+
+  if (completeStatuses.includes(status)) {
+    return "complete";
+  }
+  return "preparing";
+}
+
+/**
+ * Format date for display
+ */
+function formatDate(date) {
+  return date
+    .toLocaleDateString("en-SG", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    })
+    .replace(/\//g, "-");
+}
+
+/**
+ * Format time for display
+ */
+function formatTime(date) {
+  return date.toLocaleTimeString("en-SG", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
+/**
+ * Render order entry (item within an order)
+ */
 function renderOrderEntry(item) {
   return `
     <div class="orderEntry">
@@ -146,6 +203,9 @@ function renderOrderEntry(item) {
   `;
 }
 
+/**
+ * Render order line item
+ */
 function renderOrderLineItem(order) {
   return `
     <div class="orderLineItem">
@@ -171,9 +231,39 @@ function renderOrderLineItem(order) {
   `;
 }
 
+/**
+ * Render empty order state
+ */
+function renderEmptyOrderState(tab) {
+  const message =
+    tab === "preparing"
+      ? "No orders being prepared right now."
+      : "No completed orders yet.";
+
+  return `
+    <div class="emptyOrderState">
+      <svg class="emptyOrderIcon" xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+        <path d="M9 14l2 2 4-4"></path>
+      </svg>
+      <h3 class="emptyOrderTitle">No orders</h3>
+      <p class="emptyOrderDescription">${message}</p>
+    </div>
+  `;
+}
+
+/**
+ * Render orders
+ */
 function renderOrders(tab) {
   const container = document.getElementById("orderContent");
-  const filtered = mockOrders.filter((o) => o.status === tab);
+  const filtered = orders.filter((o) => o.status === tab);
+
+  const orderContent =
+    filtered.length > 0
+      ? filtered.map(renderOrderLineItem).join("")
+      : renderEmptyOrderState(tab);
 
   container.innerHTML = `
     <div class="orderLineHeader">
@@ -184,35 +274,44 @@ function renderOrders(tab) {
       </a>
     </div>
     <div class="orderLineCards">
-      ${filtered.map(renderOrderLineItem).join("")}
+      ${orderContent}
     </div>
   `;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  // Check for new order from Create Order page (via sessionStorage)
-  const newOrderData = sessionStorage.getItem("newOrder");
-  if (newOrderData) {
-    sessionStorage.removeItem("newOrder");
-    const newOrder = JSON.parse(newOrderData);
-    mockOrders.unshift(newOrder);
-  }
+/**
+ * Setup tab switching
+ */
+function setupTabSwitching() {
+  document.querySelectorAll('input[name="orderTab"]').forEach((radio) => {
+    radio.addEventListener("change", () => {
+      currentTab = radio.value;
+      renderOrders(currentTab);
+    });
+  });
+}
 
-  renderOrders("preparing");
-
+/**
+ * Setup keyboard shortcuts
+ */
+function setupKeyboardShortcuts() {
   const isMac = window.navigator.userAgentData
     ? window.navigator.userAgentData.platform === "macOS"
     : /Mac/i.test(window.navigator.userAgent);
 
-  document.getElementById("searchKeyMod").textContent = isMac
-    ? "\u2318"
-    : "CTRL";
+  const searchKeyModEl = document.getElementById("searchKeyMod");
+  if (searchKeyModEl) {
+    searchKeyModEl.textContent = isMac ? "\u2318" : "CTRL";
+  }
 
   document.addEventListener("keydown", (e) => {
     const modifier = isMac ? e.metaKey : e.ctrlKey;
     if (modifier && e.key === "k") {
       e.preventDefault();
-      document.getElementById("searchInput").focus();
+      const searchInput = document.getElementById("searchInput");
+      if (searchInput) {
+        searchInput.focus();
+      }
     }
     // "n" key navigates to create order page (only when not typing in an input)
     if (
@@ -225,10 +324,27 @@ document.addEventListener("DOMContentLoaded", () => {
       window.location.href = "vendorCreateOrder.html";
     }
   });
+}
 
-  document.querySelectorAll('input[name="orderTab"]').forEach((radio) => {
-    radio.addEventListener("change", () => {
-      renderOrders(radio.value);
-    });
-  });
-});
+/**
+ * Setup logout button handler
+ */
+function setupLogoutButton() {
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", handleLogout);
+  }
+}
+
+/**
+ * Handle user logout
+ */
+async function handleLogout() {
+  try {
+    await signOut(auth);
+    // Redirect will be handled by onAuthStateChanged
+  } catch (error) {
+    console.error("Logout error:", error);
+    alert("Failed to logout. Please try again.");
+  }
+}

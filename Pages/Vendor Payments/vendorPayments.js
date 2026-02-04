@@ -1,11 +1,8 @@
+import { initVendorNavbar } from "../../assets/js/vendorNavbar.js";
+
 document.addEventListener("DOMContentLoaded", () => {
-  // Search key modifier
-  const isMac =
-    navigator.platform.toUpperCase().indexOf("MAC") >= 0 ||
-    navigator.userAgent.toUpperCase().indexOf("MAC") >= 0;
-  document.getElementById("searchKeyMod").textContent = isMac
-    ? "\u2318"
-    : "CTRL";
+  // Initialize vendor navbar (handles auth, vendor name, logout)
+  initVendorNavbar();
 
   const paymentMethodsBasePath = "../../Payment Methods/";
   const iconsBasePath = "../../assets/icons/";

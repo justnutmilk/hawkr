@@ -1,3 +1,5 @@
+import { initVendorNavbar } from "../../assets/js/vendorNavbar.js";
+
 const menuItems = [
   {
     id: "001",
@@ -406,8 +408,8 @@ function placeOrder() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const isMac = /Mac|iPhone|iPad/.test(navigator.userAgent);
-  document.getElementById("searchKeyMod").textContent = isMac ? "⌘" : "CTRL";
+  // Initialize vendor navbar (handles auth, vendor name, logout, keyboard shortcuts)
+  initVendorNavbar();
 
   menuItems.forEach((item) => (orderQuantities[item.id] = 0));
   renderMenuItems();

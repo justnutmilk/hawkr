@@ -1,93 +1,77 @@
 // ============================================
-// MOCK DATA (Simulating Backend Database)
+// FIREBASE IMPORTS
 // ============================================
 
-const mockData = {
-  hawkerCenters: [
-    {
-      id: 1,
-      name: "Maxwell Food Centre",
-      stalls: [
-        {
-          id: 1,
-          name: "Chinese Foods Private Limited",
-          image:
-            "../../mock-data/Consumer Dashboard/hawker-center/Maxwell Food Centre.png",
-          cuisines: ["Chinese"],
-          rating: 4.5,
-          hours: "Mon-Sun: 08:00 - 02:00",
-        },
-        {
-          id: 2,
-          name: "Lalithambigai Saravanan KevyTan Cavan Xie Yu...",
-          image:
-            "../../mock-data/Consumer Dashboard/hawker-center/Thambigai Market.png",
-          cuisines: ["Halal", "Chinese", "Malay"],
-          rating: 4.5,
-          hours: "Mon-Sun: 08:00 - 02:00",
-        },
-        {
-          id: 3,
-          name: "Lalithambigai Saravanan KevyTan Cavan Xie Yu...",
-          image:
-            "../../mock-data/Consumer Dashboard/hawker-center/Saravanan Hawker.png",
-          cuisines: ["Halal", "Chinese", "Malay"],
-          rating: 4.5,
-          hours: "Mon-Sun: 08:00 - 02:00",
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: "Thambigai Market",
-      stalls: [
-        {
-          id: 4,
-          name: "Chinese Foods Private Limited",
-          image:
-            "../../mock-data/Consumer Dashboard/hawker-center/Maxwell Food Centre.png",
-          cuisines: ["Chinese"],
-          rating: 4.5,
-          hours: "Mon-Sun: 08:00 - 02:00",
-        },
-        {
-          id: 5,
-          name: "Lalithambigai Saravanan",
-          image:
-            "../../mock-data/Consumer Dashboard/hawker-center/Thambigai Market.png",
-          cuisines: ["Halal", "Chinese", "Malay"],
-          rating: 4.5,
-          hours: "Mon-Sun: 08:00 - 02:00",
-        },
-        {
-          id: 6,
-          name: "Lalithambigai Saravanan",
-          image:
-            "../../mock-data/Consumer Dashboard/hawker-center/Saravanan Hawker.png",
-          cuisines: ["Halal", "Chinese", "Malay"],
-          rating: 4.5,
-          hours: "Mon-Sun: 08:00 - 02:00",
-        },
-      ],
-    },
-  ],
-};
+import { auth, db } from "../../firebase/config.js";
+import {
+  getAllHawkerCentres,
+  getHawkerCentreWithStalls,
+} from "../../firebase/services/hawkerCentres.js";
+import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
 
 // ============================================
-// MOCK API FUNCTIONS (Simulating Backend Calls)
+// API FUNCTIONS (Firebase Backend Calls)
 // ============================================
 
 const api = {
   async fetchHawkerCenters() {
-    await this.simulateNetworkDelay();
-    return mockData.hawkerCenters;
-  },
+    try {
+      // Get all hawker centres with their stalls
+      const hawkerCentres = await getAllHawkerCentres();
 
-  simulateNetworkDelay() {
-    const delay = Math.random() * 300 + 200;
-    return new Promise((resolve) => setTimeout(resolve, delay));
+      // Fetch stalls for each hawker centre
+      const centresWithStalls = await Promise.all(
+        hawkerCentres.map(async (centre) => {
+          const centreWithStalls = await getHawkerCentreWithStalls(centre.id);
+          return {
+            id: centre.id,
+            name: centre.name,
+            stalls: (centreWithStalls?.stalls || []).map((stall) => ({
+              id: stall.id,
+              name: stall.name,
+              image:
+                stall.imageUrl ||
+                `../../mock-data/Consumer Dashboard/hawker-center/${centre.name}.png`,
+              cuisines: stall.cuisineNames || [],
+              rating: stall.rating || 4.5,
+              hours: formatStallHours(stall.operatingHours),
+              isHalal: stall.isHalal || false,
+            })),
+          };
+        }),
+      );
+
+      // Filter out centres with no stalls
+      return centresWithStalls.filter((centre) => centre.stalls.length > 0);
+    } catch (error) {
+      console.error("Error fetching hawker centers:", error);
+      return [];
+    }
   },
 };
+
+// Helper function to format stall operating hours
+function formatStallHours(hours) {
+  if (!hours) return "Hours vary";
+
+  const days = [
+    "sunday",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+  ];
+  const today = days[new Date().getDay()];
+  const todayHours = hours[today];
+
+  if (!todayHours || todayHours.isClosed) {
+    return "Closed today";
+  }
+
+  return `${todayHours.open || "08:00"} - ${todayHours.close || "22:00"}`;
+}
 
 // ============================================
 // ICON SVG TEMPLATES
@@ -177,6 +161,23 @@ function renderOrderPage(hawkerCenters) {
   if (!container) return;
 
   const nowBrowsingHTML = renderNowBrowsingHelper();
+
+  // Handle empty state
+  if (!hawkerCenters || hawkerCenters.length === 0) {
+    container.innerHTML =
+      nowBrowsingHTML +
+      `
+      <div class="emptyState">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5">
+          <path d="M3 3h18v18H3zM12 8v8M8 12h8"/>
+        </svg>
+        <p class="emptyStateTitle">No hawker centres found</p>
+        <p class="emptyStateText">Check back later for available hawker centres.</p>
+      </div>
+    `;
+    return;
+  }
+
   const sectionsHTML = hawkerCenters
     .map((center) => renderHawkerCenterSection(center))
     .join("");
@@ -193,8 +194,8 @@ function renderOrderPage(hawkerCenters) {
 }
 
 function handleStallClick(stallId) {
-  // Navigate to stall detail page with stall ID
-  window.location.href = `stallDetail.html?id=${stallId}`;
+  // Navigate to store profile page with stall ID
+  window.location.href = `consumerOrderShop?id=${stallId}`;
 }
 
 // ============================================
@@ -228,6 +229,9 @@ async function initializeOrderPage() {
 // ============================================
 
 document.addEventListener("DOMContentLoaded", function () {
+  // Initialize navbar (auth, user display, logout)
+  initConsumerNavbar();
+
   initializeOrderPage();
 
   // Search input focus shortcut

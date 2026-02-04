@@ -1,15 +1,28 @@
 // ============================================
-// LOCAL STORAGE CART FUNCTIONS
+// FIREBASE IMPORTS
 // ============================================
 
-function getCartFromStorage() {
-  const cart = localStorage.getItem("hawkrCart");
-  return cart ? JSON.parse(cart) : [];
-}
+import { auth, db } from "../../firebase/config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getCart,
+  getCartWithTotals,
+  updateCartItemQuantity,
+  clearCart,
+} from "../../firebase/services/orders.js";
+import { getHawkerCentreById } from "../../firebase/services/hawkerCentres.js";
+import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
 
-function saveCartToStorage(cart) {
-  localStorage.setItem("hawkrCart", JSON.stringify(cart));
-}
+// Check authentication state
+let currentUser = null;
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    // User is not signed in - redirect to login
+    window.location.href = "../Auth/login.html";
+  } else {
+    currentUser = user;
+  }
+});
 
 // ============================================
 // DEFAULT DATA (For collection/payment details)
@@ -30,75 +43,83 @@ const defaultPaymentMethod = {
 };
 
 // ============================================
-// MOCK CART ITEMS (For testing/demo purposes)
-// ============================================
-
-const mockCartItems = [
-  {
-    id: 1,
-    name: "Mala Tang with soup and no soup",
-    price: 23.9,
-    image:
-      "../../mock-data/Consumer Dashboard/hawker-center/Maxwell Food Centre.png",
-    quantity: 2,
-    stall: {
-      id: 1,
-      name: "Chinese Foods Private Limited",
-    },
-  },
-  {
-    id: 2,
-    name: "Chicken Rice",
-    price: 5.5,
-    image:
-      "../../mock-data/Consumer Dashboard/hawker-center/Maxwell Food Centre.png",
-    quantity: 1,
-    stall: {
-      id: 2,
-      name: "Tian Tian Hainanese",
-    },
-  },
-  {
-    id: 3,
-    name: "Laksa",
-    price: 8.0,
-    image:
-      "../../mock-data/Consumer Dashboard/hawker-center/Maxwell Food Centre.png",
-    quantity: 3,
-    stall: {
-      id: 3,
-      name: "328 Katong Laksa",
-    },
-  },
-];
-
-// ============================================
-// MOCK API FUNCTIONS (Simulating Backend Calls)
+// API FUNCTIONS (Firebase Backend Calls)
 // ============================================
 
 const api = {
   async fetchCartData() {
-    await this.simulateNetworkDelay();
+    try {
+      const cart = await getCartWithTotals();
 
-    // Get items from localStorage
-    let cartItems = getCartFromStorage();
+      // Transform Firebase cart data to match expected format
+      const items = (cart.items || []).map((item, index) => ({
+        id: index, // Use index as ID for cart operations
+        menuItemId: item.menuItemId,
+        name: item.name,
+        price: item.unitPrice,
+        image:
+          item.imageUrl ||
+          "../../mock-data/Consumer Dashboard/hawker-center/Maxwell Food Centre.png",
+        quantity: item.quantity,
+        stall: {
+          id: item.stallId,
+          name: item.stallName || "Unknown Stall",
+        },
+        specialRequest: item.notes || "",
+      }));
 
-    // If cart is empty, load mock items for demo
-    if (cartItems.length === 0) {
-      cartItems = mockCartItems;
-      saveCartToStorage(cartItems);
+      // Get collection details from first item's stall (if available)
+      let collectionDetails = defaultCollectionDetails;
+      if (items.length > 0 && items[0].stall.id) {
+        try {
+          // Try to get hawker centre info for the stall
+          // For now, use default collection details
+          collectionDetails = {
+            ...defaultCollectionDetails,
+            // Could be enhanced to get actual hawker centre details
+          };
+        } catch (e) {
+          console.log("Using default collection details");
+        }
+      }
+
+      return {
+        items,
+        collectionDetails,
+        paymentMethod: defaultPaymentMethod,
+        subtotal: cart.subtotal || 0,
+        total: cart.total || 0,
+      };
+    } catch (error) {
+      console.error("Error fetching cart data:", error);
+      return {
+        items: [],
+        collectionDetails: defaultCollectionDetails,
+        paymentMethod: defaultPaymentMethod,
+        subtotal: 0,
+        total: 0,
+      };
     }
-
-    return {
-      items: cartItems,
-      collectionDetails: defaultCollectionDetails,
-      paymentMethod: defaultPaymentMethod,
-    };
   },
 
-  simulateNetworkDelay() {
-    const delay = Math.random() * 300 + 200;
-    return new Promise((resolve) => setTimeout(resolve, delay));
+  async updateItemQuantity(itemIndex, newQuantity) {
+    try {
+      await updateCartItemQuantity(itemIndex, newQuantity);
+      return true;
+    } catch (error) {
+      console.error("Error updating cart item quantity:", error);
+      return false;
+    }
+  },
+
+  async clearCart() {
+    try {
+      await clearCart();
+      return true;
+    } catch (error) {
+      console.error("Error clearing cart:", error);
+      return false;
+    }
   },
 };
 
@@ -364,19 +385,23 @@ function handleCartClick(e) {
   }
 }
 
-function updateQuantity(itemId, delta) {
+async function updateQuantity(itemId, delta) {
   const itemIndex = cartState.items.findIndex((i) => i.id === itemId);
   if (itemIndex === -1) return;
 
   const item = cartState.items[itemIndex];
   const newQuantity = item.quantity + delta;
 
-  if (newQuantity < 1) {
-    // Remove item from cart
-    cartState.items.splice(itemIndex, 1);
+  // Update Firebase
+  const success = await api.updateItemQuantity(itemIndex, newQuantity);
+  if (!success) {
+    console.error("Failed to update quantity in Firebase");
+    return;
+  }
 
-    // Save to localStorage
-    saveCartToStorage(cartState.items);
+  if (newQuantity < 1) {
+    // Remove item from cart state
+    cartState.items.splice(itemIndex, 1);
 
     // Remove item element from DOM
     const itemElement = document.querySelector(
@@ -397,9 +422,6 @@ function updateQuantity(itemId, delta) {
   }
 
   item.quantity = newQuantity;
-
-  // Save to localStorage
-  saveCartToStorage(cartState.items);
 
   // Update UI
   const itemElement = document.querySelector(
@@ -477,7 +499,7 @@ function closeEditPopup() {
   currentEditItemId = null;
 }
 
-function saveEditPopup() {
+async function saveEditPopup() {
   if (currentEditItemId === null) return;
 
   const item = cartState.items.find((i) => i.id === currentEditItemId);
@@ -489,11 +511,11 @@ function saveEditPopup() {
     ? specialRequestInput.value.trim()
     : "";
 
-  // Update item
+  // Update item locally
   item.specialRequest = specialRequest;
 
-  // Save to localStorage
-  saveCartToStorage(cartState.items);
+  // Note: Special requests are saved with the order, not separately in the cart
+  // The cart item notes will be included when placing the order
 
   // Close popup
   closeEditPopup();
@@ -503,10 +525,21 @@ function handleEdit(itemId) {
   openEditPopup(itemId);
 }
 
-function handlePlaceOrder() {
+async function handlePlaceOrder() {
   console.log("Place order:", cartState);
-  // Clear any existing confirmed order to create a new one
-  localStorage.removeItem("hawkrConfirmedOrder");
+
+  // Store order details in sessionStorage for the confirmation page
+  sessionStorage.setItem(
+    "hawkrPendingOrder",
+    JSON.stringify({
+      items: cartState.items,
+      collectionDetails: cartState.collectionDetails,
+      paymentMethod: cartState.paymentMethod,
+      subtotal: calculateSubtotal(cartState.items),
+      total: calculateSubtotal(cartState.items),
+    }),
+  );
+
   // Navigate to order confirmed page
   window.location.href = "consumerOrderConfirmed.html";
 }
@@ -554,6 +587,9 @@ async function initializeCartPage() {
 // ============================================
 
 document.addEventListener("DOMContentLoaded", function () {
+  // Initialize navbar (auth, user display, logout)
+  initConsumerNavbar();
+
   initializeCartPage();
 
   // Back button handler

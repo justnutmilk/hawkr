@@ -1,19 +1,8 @@
-document.addEventListener("DOMContentLoaded", () => {
-  // Search key modifier
-  const isMac =
-    navigator.platform.toUpperCase().indexOf("MAC") >= 0 ||
-    navigator.userAgent.toUpperCase().indexOf("MAC") >= 0;
-  document.getElementById("searchKeyMod").textContent = isMac
-    ? "\u2318"
-    : "CTRL";
+import { initVendorNavbar } from "../../assets/js/vendorNavbar.js";
 
-  // Ctrl/Cmd+K focus search
-  document.addEventListener("keydown", (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === "k") {
-      e.preventDefault();
-      document.getElementById("searchInput").focus();
-    }
-  });
+document.addEventListener("DOMContentLoaded", () => {
+  // Initialize vendor navbar (handles auth, vendor name, logout, keyboard shortcuts)
+  initVendorNavbar();
 
   const pmBase = "../../Payment Methods/";
   const iconsBase = "../../assets/icons/";
