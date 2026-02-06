@@ -160,45 +160,6 @@ body {
     gap: 3em;
 }
 
-.searchModule {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    max-width: 500px;
-    height: 56px;
-    padding: 0px 18px 0px 22px;
-    border-radius: 28px;
-    background: #f4f1f6;
-}
-
-.searchInput {
-    flex: 1 1 auto;
-    border: none;
-    outline: none;
-    background: transparent;
-    color: #49454f;
-    font-family: Aptos;
-    font-size: 20px;
-    font-weight: 400;
-    padding: 0px;
-    margin: 0px;
-}
-
-.searchInput::placeholder {
-    color: #49454f;
-    opacity: 1;
-}
-
-.searchIcon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    pointer-events: none;
-}
-
 /* Cart Content */
 .cartContent {
     display: flex;
@@ -1422,10 +1383,10 @@ body {
         gap: 12px;
     }
 
-    .searchModule {
-        max-width: none;
-        flex: 1;
-        height: 48px;
+    .cartContent {
+        padding-left: 5%;
+        padding-right: 5%;
+        gap: 32px;
     }
 
     .topActionButtons {
@@ -1469,6 +1430,18 @@ body {
         font-size: 20px;
         padding: 14px 24px;
     }
+
+    /* Remove desktop left-padding alignment */
+    .subtotalRow,
+    .collectionDetailsSection,
+    .paymentDetailsSection,
+    .checkoutSection {
+        padding-left: 0;
+    }
+
+    .digitalWallets {
+        flex-wrap: wrap;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1479,6 +1452,7 @@ body {
     .cartContent {
         padding-left: 4%;
         padding-right: 4%;
+        gap: 28px;
     }
 
     .backButton {
@@ -1491,10 +1465,6 @@ body {
         height: 20px;
     }
 
-    .searchInput {
-        font-size: 16px;
-    }
-
     .topActionButtons {
         gap: 0.75em;
     }
@@ -1502,6 +1472,16 @@ body {
     .topActionButtons svg {
         width: 20px;
         height: 20px;
+    }
+
+    .cartItem {
+        gap: 12px;
+    }
+
+    .cartItemImage {
+        width: 70px;
+        height: 70px;
+        border-radius: 12px;
     }
 
     .cartItemTop {
@@ -1517,15 +1497,30 @@ body {
 
     .qtyControls {
         align-self: flex-end;
+        gap: 16px;
+    }
+
+    .qtyCount {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
     }
 
     .foodName {
         font-size: 18px;
     }
 
+    .storeName {
+        font-size: 14px;
+    }
+
     .price,
     .subtotalPrice {
         font-size: 18px;
+    }
+
+    .sectionLabel {
+        font-size: 20px;
     }
 
     .totalPrice,
@@ -1536,6 +1531,27 @@ body {
     .placeOrderBtn {
         font-size: 18px;
         padding: 12px 20px;
+    }
+
+    .paymentOption {
+        padding: 10px 12px;
+        gap: 12px;
+    }
+
+    .walletBtn {
+        padding: 12px 16px;
+    }
+
+    .collectionTitle {
+        font-size: 17px;
+    }
+
+    .collectionSubtitle {
+        font-size: 14px;
+    }
+
+    .orderSummarySection {
+        gap: 32px;
     }
 }
 
@@ -1777,4 +1793,170 @@ body {
     font-family: inherit;
     font-size: inherit;
     font-weight: inherit;
+}
+
+/* ============================================
+   VOUCHER SECTION
+   ============================================ */
+
+.voucherSection {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-left: 124px;
+}
+
+.voucherInputRow {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.voucherInput {
+    flex: 1;
+    border-radius: 8px;
+    border: 1px solid #d0d0d0;
+    padding: 10px 14px;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: #341539;
+    letter-spacing: 0.5px;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.voucherInput::placeholder {
+    font-family: Aptos, sans-serif;
+    font-weight: 400;
+    color: #808080;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.voucherInput:focus {
+    border-color: #913b9f;
+}
+
+.voucherApplyBtn {
+    display: flex;
+    padding: 10px 20px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: none;
+    background: #913b9f;
+    color: #fff;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    white-space: nowrap;
+}
+
+.voucherApplyBtn:hover {
+    background: #7a3286;
+}
+
+.voucherApplyBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.voucherError {
+    color: #dc3545;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+}
+
+.voucherApplied {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: #eaf5e9;
+    border: 1px solid #c8e6c9;
+}
+
+.voucherAppliedInfo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.voucherAppliedCode {
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: #2e7d32;
+    letter-spacing: 0.5px;
+}
+
+.voucherAppliedDiscount {
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #2e7d32;
+}
+
+.voucherRemoveBtn {
+    background: none;
+    border: none;
+    color: #808080;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+    transition: color 0.15s ease;
+}
+
+.voucherRemoveBtn:hover {
+    color: #dc3545;
+}
+
+/* Discount Row in Checkout */
+.discountRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.discountLabel {
+    color: #2e7d32;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.discountPrice {
+    color: #2e7d32;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* ============================================
+   VOUCHER RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    .voucherSection {
+        padding-left: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .voucherApplyBtn {
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+
+    .voucherInput {
+        font-size: 13px;
+        padding: 9px 12px;
+    }
 }

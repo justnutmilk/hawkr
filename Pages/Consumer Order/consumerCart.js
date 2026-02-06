@@ -13,6 +13,10 @@ import {
   clearCart,
 } from "../../firebase/services/customers.js";
 import { createOrder } from "../../firebase/services/orders.js";
+import {
+  validateVoucher,
+  recordVoucherUsage,
+} from "../../firebase/services/vouchers.js";
 import { getMenuItem } from "../../firebase/services/foodStalls.js";
 import {
   loadStripe,
@@ -30,7 +34,7 @@ import {
   processAliPayPayment,
 } from "../../firebase/services/stripe.js";
 import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
-import { initMobileMenu } from "../../assets/js/mobileMenu.js";
+import { injectMobileMenu } from "../../assets/js/mobileMenu.js";
 
 // Check authentication state
 let currentUser = null;
@@ -59,6 +63,10 @@ let savedPaymentMethods = [];
 // Selected payment method state
 let selectedPaymentMethod = null;
 let selectedWallet = null; // 'grabpay', 'paynow', 'alipay', or null
+
+// Voucher state
+let appliedVoucher = null; // { voucher, discount }
+let voucherError = null;
 
 // Stripe state
 let stripeInstance = null;
@@ -337,6 +345,43 @@ function renderOrderSummary(items) {
     `;
 }
 
+function renderVoucherSection() {
+  const appliedHTML = appliedVoucher
+    ? `<div class="voucherApplied">
+        <div class="voucherAppliedInfo">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M20 6L9 17L4 12" stroke="#2e7d32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="voucherAppliedCode">${appliedVoucher.voucher.code}</span>
+          <span class="voucherAppliedDiscount">-${formatPrice(appliedVoucher.discount)}</span>
+        </div>
+        <button class="voucherRemoveBtn" id="voucherRemoveBtn" type="button">&times;</button>
+      </div>`
+    : "";
+
+  const errorHTML = voucherError
+    ? `<span class="voucherError">${voucherError}</span>`
+    : "";
+
+  return `
+    <section class="voucherSection">
+      <div class="voucherInputRow" ${appliedVoucher ? 'style="display:none"' : ""}>
+        <input
+          type="text"
+          class="voucherInput"
+          id="voucherCodeInput"
+          placeholder="Enter voucher code"
+          autocomplete="off"
+          style="text-transform: uppercase"
+        />
+        <button class="voucherApplyBtn" id="voucherApplyBtn" type="button">Apply</button>
+      </div>
+      ${errorHTML}
+      ${appliedHTML}
+    </section>
+  `;
+}
+
 function renderCollectionDetails(details) {
   return `
         <section class="collectionDetailsSection">
@@ -437,10 +482,21 @@ function renderPaymentDetails() {
 }
 
 function renderCheckoutSection(items) {
-  const total = calculateSubtotal(items);
+  const subtotal = calculateSubtotal(items);
+  const discount = appliedVoucher ? appliedVoucher.discount : 0;
+  const total = Math.max(0, subtotal - discount);
+
+  const discountRow =
+    discount > 0
+      ? `<div class="discountRow">
+        <span class="discountLabel">Voucher discount</span>
+        <span class="discountPrice" id="discountPrice">-${formatPrice(discount)}</span>
+      </div>`
+      : "";
 
   return `
         <section class="checkoutSection">
+            ${discountRow}
             <div class="totalRow">
                 <span class="totalLabel">Total</span>
                 <span class="totalPrice" id="totalPrice">${formatPrice(total)}</span>
@@ -483,6 +539,7 @@ function renderCartPage(cartData) {
   }
 
   const orderSummaryHTML = renderOrderSummary(cartData.items);
+  const voucherSectionHTML = renderVoucherSection();
   const collectionDetailsHTML = renderCollectionDetails(
     cartData.collectionDetails,
   );
@@ -491,6 +548,7 @@ function renderCartPage(cartData) {
 
   container.innerHTML =
     orderSummaryHTML +
+    voucherSectionHTML +
     collectionDetailsHTML +
     paymentDetailsHTML +
     checkoutSectionHTML;
@@ -513,6 +571,27 @@ function attachEventListeners() {
   const placeOrderBtn = document.getElementById("placeOrderBtn");
   if (placeOrderBtn) {
     placeOrderBtn.addEventListener("click", handlePlaceOrder);
+  }
+
+  // Voucher apply button
+  const voucherApplyBtn = document.getElementById("voucherApplyBtn");
+  if (voucherApplyBtn) {
+    voucherApplyBtn.addEventListener("click", handleApplyVoucher);
+  }
+  // Voucher input enter key
+  const voucherCodeInput = document.getElementById("voucherCodeInput");
+  if (voucherCodeInput) {
+    voucherCodeInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleApplyVoucher();
+      }
+    });
+  }
+  // Voucher remove button
+  const voucherRemoveBtn = document.getElementById("voucherRemoveBtn");
+  if (voucherRemoveBtn) {
+    voucherRemoveBtn.addEventListener("click", handleRemoveVoucher);
   }
 
   // Edit button mouse tracking for subtle purple glow
@@ -620,15 +699,116 @@ async function updateQuantity(itemId, delta) {
 
 function updateTotals() {
   const subtotal = calculateSubtotal(cartState.items);
+  const discount = appliedVoucher ? appliedVoucher.discount : 0;
+  const total = Math.max(0, subtotal - discount);
 
   const subtotalElement = document.getElementById("subtotalPrice");
   if (subtotalElement) {
     subtotalElement.textContent = formatPrice(subtotal);
   }
 
+  const discountElement = document.getElementById("discountPrice");
+  if (discountElement) {
+    discountElement.textContent = `-${formatPrice(discount)}`;
+  }
+
   const totalElement = document.getElementById("totalPrice");
   if (totalElement) {
-    totalElement.textContent = formatPrice(subtotal);
+    totalElement.textContent = formatPrice(total);
+  }
+}
+
+// ============================================
+// VOUCHER HANDLERS
+// ============================================
+
+async function handleApplyVoucher() {
+  const input = document.getElementById("voucherCodeInput");
+  const btn = document.getElementById("voucherApplyBtn");
+  if (!input) return;
+
+  const code = input.value.trim();
+  if (!code) {
+    voucherError = "Please enter a voucher code";
+    refreshVoucherSection();
+    return;
+  }
+
+  if (!cartState || !cartState.items || cartState.items.length === 0) return;
+
+  // Get the stall ID from cart items (vouchers are per-stall)
+  const stallId = cartState.items[0].stall?.id || cartState.items[0].stallId;
+  if (!stallId) {
+    voucherError = "Unable to verify voucher";
+    refreshVoucherSection();
+    return;
+  }
+
+  const subtotal = calculateSubtotal(cartState.items);
+
+  btn.disabled = true;
+  btn.textContent = "...";
+  voucherError = null;
+
+  try {
+    const result = await validateVoucher(code, stallId, subtotal);
+
+    if (result.valid) {
+      appliedVoucher = { voucher: result.voucher, discount: result.discount };
+      voucherError = null;
+    } else {
+      appliedVoucher = null;
+      voucherError = result.error;
+    }
+  } catch (error) {
+    console.error("Error validating voucher:", error);
+    voucherError = "Failed to validate voucher";
+  }
+
+  btn.disabled = false;
+  btn.textContent = "Apply";
+  refreshVoucherSection();
+  updateTotals();
+  // Re-render checkout section to show/hide discount row
+  refreshCheckoutSection();
+}
+
+function handleRemoveVoucher() {
+  appliedVoucher = null;
+  voucherError = null;
+  refreshVoucherSection();
+  updateTotals();
+  refreshCheckoutSection();
+}
+
+function refreshVoucherSection() {
+  const section = document.querySelector(".voucherSection");
+  if (section) {
+    section.outerHTML = renderVoucherSection();
+    // Re-attach event listeners
+    const applyBtn = document.getElementById("voucherApplyBtn");
+    if (applyBtn) applyBtn.addEventListener("click", handleApplyVoucher);
+    const codeInput = document.getElementById("voucherCodeInput");
+    if (codeInput) {
+      codeInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          handleApplyVoucher();
+        }
+      });
+    }
+    const removeBtn = document.getElementById("voucherRemoveBtn");
+    if (removeBtn) removeBtn.addEventListener("click", handleRemoveVoucher);
+  }
+}
+
+function refreshCheckoutSection() {
+  const section = document.querySelector(".checkoutSection");
+  if (section && cartState) {
+    section.outerHTML = renderCheckoutSection(cartState.items);
+    const placeOrderBtn = document.getElementById("placeOrderBtn");
+    if (placeOrderBtn)
+      placeOrderBtn.addEventListener("click", handlePlaceOrder);
   }
 }
 
@@ -1669,7 +1849,9 @@ async function handlePlaceOrder() {
     return;
   }
 
-  const total = calculateSubtotal(cartState.items);
+  const subtotal = calculateSubtotal(cartState.items);
+  const discount = appliedVoucher ? appliedVoucher.discount : 0;
+  const total = Math.max(0, subtotal - discount);
 
   // Handle wallet payments (GrabPay, PayNow, AliPay)
   if (selectedWallet) {
@@ -1789,6 +1971,13 @@ async function createOrderInFirebase(
       0,
     );
 
+    // Calculate voucher discount for this stall's portion
+    const voucherDiscount =
+      appliedVoucher && appliedVoucher.voucher.stallId === stallId
+        ? appliedVoucher.discount
+        : 0;
+    const stallTotal = Math.max(0, stallSubtotal - voucherDiscount);
+
     const orderData = {
       stallId: stallId,
       stallName: stallData.stallName,
@@ -1805,7 +1994,9 @@ async function createOrderInFirebase(
       })),
       subtotal: stallSubtotal,
       serviceFee: 0,
-      total: stallSubtotal,
+      voucherCode: voucherDiscount > 0 ? appliedVoucher.voucher.code : null,
+      voucherDiscount: voucherDiscount,
+      total: stallTotal,
       paymentMethod: paymentType,
       paymentStatus: "paid",
       paymentIntentId: paymentIntentId,
@@ -1833,6 +2024,20 @@ async function createOrderInFirebase(
   // Verify we got an order ID
   if (orderIds.length === 0) {
     throw new Error("No orders were created");
+  }
+
+  // Record voucher usage if a voucher was applied
+  if (appliedVoucher && orderIds.length > 0) {
+    try {
+      await recordVoucherUsage(
+        appliedVoucher.voucher.id,
+        orderIds[0],
+        appliedVoucher.discount,
+      );
+      appliedVoucher = null;
+    } catch (voucherError) {
+      console.error("Error recording voucher usage (non-fatal):", voucherError);
+    }
   }
 
   // Clear the cart after order creation
@@ -2191,7 +2396,7 @@ document.addEventListener("DOMContentLoaded", function () {
   initConsumerNavbar();
 
   // Initialize mobile menu
-  initMobileMenu();
+  injectMobileMenu({ activePage: "cart" });
 
   // Listen for auth state changes and then initialize cart
   onAuthStateChanged(auth, async (user) => {

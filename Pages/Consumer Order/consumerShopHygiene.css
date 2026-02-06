@@ -160,46 +160,6 @@ body {
     gap: 3em;
 }
 
-.searchModule {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    max-width: 500px;
-    height: 56px;
-    padding: 0px 18px 0px 22px;
-    border-radius: 28px;
-    background: #f4f1f6;
-    gap: 12px;
-}
-
-.searchInput {
-    flex: 1 1 auto;
-    border: none;
-    outline: none;
-    background: transparent;
-    color: #49454f;
-    font-family: Aptos;
-    font-size: 20px;
-    font-weight: 400;
-    padding: 0px;
-    margin: 0px;
-}
-
-.searchInput::placeholder {
-    color: #49454f;
-    opacity: 1;
-}
-
-.searchIcon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    pointer-events: none;
-    flex-shrink: 0;
-}
-
 /* Main Content */
 .hygienePageContent {
     display: flex;
@@ -665,12 +625,6 @@ body {
         height: 48px;
     }
 
-    .searchModule {
-        max-width: none;
-        flex: 1;
-        height: 48px;
-    }
-
     .segmentedButton {
         width: 140px;
         font-size: 14px;
@@ -714,10 +668,6 @@ body {
     .homeIcon {
         width: 20px;
         height: 20px;
-    }
-
-    .searchInput {
-        font-size: 16px;
     }
 
     .hygieneCurrentCard {

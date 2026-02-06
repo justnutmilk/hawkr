@@ -21,7 +21,7 @@ import {
   getStallsByHawkerCentre,
 } from "../../firebase/services/foodStalls.js";
 import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
-import { initMobileMenu } from "../../assets/js/mobileMenu.js";
+import { injectMobileMenu } from "../../assets/js/mobileMenu.js";
 
 // ============================================
 // MOCK DATA (Simulating Backend Database)
@@ -1270,7 +1270,7 @@ document.addEventListener("DOMContentLoaded", function () {
   initConsumerNavbar();
 
   // Initialize mobile menu
-  initMobileMenu();
+  injectMobileMenu();
 
   // Initialize dashboard with dynamic content
   initializeDashboard();

@@ -91,5 +91,18 @@ service cloud.firestore {
     match /operators/{operatorId} {
       allow read, write: if request.auth != null && request.auth.uid == operatorId;
     }
+
+    // Vouchers collection
+    match /vouchers/{voucherId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && resource.data.vendorId == request.auth.uid;
+    }
+
+    // Voucher usage tracking
+    match /voucherUsage/{usageId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+    }
   }
 }

@@ -3,7 +3,7 @@
 // ============================================
 
 import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
-import { initMobileMenu } from "../../assets/js/mobileMenu.js";
+import { injectMobileMenu } from "../../assets/js/mobileMenu.js";
 
 // ============================================
 // PAGE INITIALIZATION
@@ -82,7 +82,7 @@ function renderUnsuccessfulPage() {
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize navbar
   initConsumerNavbar();
-  initMobileMenu();
+  injectMobileMenu();
 
   // Render the page
   renderUnsuccessfulPage();

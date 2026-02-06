@@ -23,6 +23,14 @@ import {
   updateMenuItem as firebaseUpdateMenuItem,
   deleteMenuItem as firebaseDeleteMenuItem,
 } from "../../firebase/services/foodStalls.js";
+import {
+  createVoucher,
+  getStallVouchers,
+  updateVoucher,
+  deleteVoucher as firebaseDeleteVoucher,
+  toggleVoucher,
+  checkVoucherCodeExists,
+} from "../../firebase/services/vouchers.js";
 import { initMiniLiquidGlassToggle } from "../../assets/js/liquidGlassToggle.js";
 import Snap from "../../drag and drop/snap.esm.js";
 
@@ -35,11 +43,17 @@ let currentStallId = null;
 let currentUser = null;
 let editingItemId = null;
 let selectedImageFile = null;
+let editSelectedImageFile = null;
 let addVariants = []; // Variants for add form
 let editVariants = []; // Variants for edit form
 let addAllergens = []; // Allergens for add form
 let editAllergens = []; // Allergens for edit form
 let isLoading = true; // Track loading state
+let vouchers = []; // Voucher list
+let editingVoucherId = null; // Currently editing voucher
+let currentView = "products"; // "products" or "vouchers"
+let voucherCodeDuplicateFlag = false; // Tracks if current code is a duplicate
+let voucherCodeCheckTimer = null; // Debounce timer for code check
 
 // Check authentication state
 onAuthStateChanged(auth, async (user) => {
@@ -311,6 +325,22 @@ function openEditPopup(itemId) {
   updateAllergenSuggestionStates("editAllergenSuggestions", editAllergens);
   initAllergenInput("edit");
 
+  // Reset and show existing image if available
+  editSelectedImageFile = null;
+  const editImageInput = document.getElementById("editImageInput");
+  if (editImageInput) editImageInput.value = "";
+  const editImagePreview = document.getElementById("editImagePreview");
+  const editImagePreviewImg = document.getElementById("editImagePreviewImg");
+  const editImageUploadZone = document.getElementById("editImageUploadZone");
+  if (item.imageUrl) {
+    editImagePreviewImg.src = item.imageUrl;
+    editImagePreview.style.display = "block";
+    editImageUploadZone.style.display = "none";
+  } else {
+    editImagePreview.style.display = "none";
+    editImageUploadZone.style.display = "";
+  }
+
   document.getElementById("editPanelOverlay").classList.add("active");
   document.getElementById("editPanel").classList.add("active");
   document.body.style.overflow = "hidden";
@@ -328,6 +358,11 @@ function closeEditPopup() {
   document.getElementById("editPanelOverlay").classList.remove("active");
   document.getElementById("editPanel").classList.remove("active");
   document.body.style.overflow = "";
+
+  // Reset edit image state
+  editSelectedImageFile = null;
+  const editImageInput = document.getElementById("editImageInput");
+  if (editImageInput) editImageInput.value = "";
 }
 
 // ============================================
@@ -385,7 +420,22 @@ async function saveMenuItem() {
       customizations: getCleanVariants(editVariants),
     };
 
+    // Upload new image if selected
+    if (editSelectedImageFile) {
+      saveBtn.textContent = "Uploading image...";
+      const imageUrl = await uploadImage(
+        editSelectedImageFile,
+        currentStallId,
+        editingItemId,
+      );
+      if (imageUrl) {
+        updates.imageUrl = imageUrl;
+      }
+    }
+
     await firebaseUpdateMenuItem(currentStallId, editingItemId, updates);
+
+    editSelectedImageFile = null;
 
     // Reload menu items
     await loadMenuItems();
@@ -415,7 +465,7 @@ function openAddPanel() {
   selectedImageFile = null;
   document.getElementById("addImageInput").value = "";
   document.getElementById("addImagePreview").style.display = "none";
-  document.getElementById("addImageBtnText").textContent = "Upload";
+  document.getElementById("addImageUploadZone").style.display = "";
 
   // Reset variants
   addVariants = [];
@@ -444,7 +494,7 @@ function closeAddPanel() {
   selectedImageFile = null;
   document.getElementById("addImageInput").value = "";
   document.getElementById("addImagePreview").style.display = "none";
-  document.getElementById("addImageBtnText").textContent = "Upload";
+  document.getElementById("addImageUploadZone").style.display = "";
 }
 
 async function uploadImage(file, stallId, itemId) {
@@ -1028,6 +1078,379 @@ function initScrollSpy() {
 }
 
 // ============================================
+// VOUCHER MANAGEMENT
+// ============================================
+
+function switchView(view) {
+  currentView = view;
+  const menuContent = document.getElementById("menuContent");
+  const vouchersView = document.getElementById("vouchersView");
+  const productsNav = document.querySelector(
+    '.navSubItem[href="vendorMenu.html"]',
+  );
+  const vouchersNav = document.getElementById("vouchersNavItem");
+
+  if (view === "vouchers") {
+    menuContent.style.display = "none";
+    vouchersView.style.display = "flex";
+    productsNav?.classList.remove("active");
+    vouchersNav?.classList.add("active");
+    loadVouchers();
+  } else {
+    menuContent.style.display = "";
+    vouchersView.style.display = "none";
+    productsNav?.classList.add("active");
+    vouchersNav?.classList.remove("active");
+  }
+}
+
+async function loadVouchers() {
+  if (!currentStallId) return;
+  const list = document.getElementById("vouchersList");
+  list.innerHTML =
+    '<div class="loadingSpinner" style="margin:48px auto"></div>';
+
+  try {
+    vouchers = await getStallVouchers(currentStallId);
+    renderVouchers();
+  } catch (error) {
+    console.error("Error loading vouchers:", error);
+    list.innerHTML =
+      '<p style="color:#808080;text-align:center;padding:48px 0">Failed to load vouchers.</p>';
+  }
+}
+
+function renderVouchers() {
+  const list = document.getElementById("vouchersList");
+
+  if (vouchers.length === 0) {
+    list.innerHTML = `
+      <div class="vouchersEmpty">
+        <p class="vouchersEmptyTitle">No vouchers yet</p>
+        <p class="vouchersEmptyText">Create your first voucher to offer discounts to customers.</p>
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = vouchers
+    .map((v) => {
+      const isExpired =
+        v.expiryDate &&
+        new Date() > (v.expiryDate.toDate?.() || new Date(v.expiryDate));
+      const usageFull = v.usageLimit !== null && v.usedCount >= v.usageLimit;
+      let statusClass = "active";
+      let statusText = "Active";
+      if (!v.isActive) {
+        statusClass = "inactive";
+        statusText = "Paused";
+      } else if (isExpired) {
+        statusClass = "expired";
+        statusText = "Expired";
+      } else if (usageFull) {
+        statusClass = "expired";
+        statusText = "Limit reached";
+      }
+
+      const valueNum = parseFloat(v.value) || 0;
+      const minOrderNum = parseFloat(v.minOrderAmount) || 0;
+      const maxDiscountNum =
+        v.maxDiscount != null ? parseFloat(v.maxDiscount) : null;
+
+      const discountDisplay =
+        v.type === "percentage"
+          ? `${valueNum}% off`
+          : `$${valueNum.toFixed(2)} off`;
+
+      const expiryDisplay = v.expiryDate
+        ? `Expires ${(v.expiryDate.toDate?.() || new Date(v.expiryDate)).toLocaleDateString()}`
+        : "No expiry";
+
+      const usageDisplay =
+        v.usageLimit !== null
+          ? `${v.usedCount || 0}/${v.usageLimit} used`
+          : `${v.usedCount || 0} used`;
+
+      return `
+        <div class="voucherCard" data-voucher-id="${v.id}">
+          <div class="voucherCardTop">
+            <div class="voucherCardInfo">
+              <span class="voucherCode">${v.code}</span>
+              <span class="voucherDiscount">${discountDisplay}</span>
+            </div>
+            <span class="voucherStatus ${statusClass}">${statusText}</span>
+          </div>
+          <div class="voucherCardMeta">
+            ${minOrderNum > 0 ? `<span>Min order: $${minOrderNum.toFixed(1)}</span>` : ""}
+            ${maxDiscountNum !== null && !isNaN(maxDiscountNum) ? `<span>Max discount: $${maxDiscountNum.toFixed(2)}</span>` : ""}
+            <span>${expiryDisplay}</span>
+            <span>${usageDisplay}</span>
+          </div>
+          <div class="voucherCardActions">
+            <button class="menuItemEdit voucherEditBtn" data-voucher-id="${v.id}">Edit</button>
+            <label class="liquidGlassToggle voucherToggle" data-voucher-id="${v.id}">
+              <input type="checkbox" ${v.isActive ? "checked" : ""} />
+              <span class="toggleTrack">
+                <span class="toggleThumb"></span>
+              </span>
+            </label>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  // Bind edit buttons
+  list.querySelectorAll(".voucherEditBtn").forEach((btn) => {
+    btn.addEventListener("click", () =>
+      openVoucherPanel(btn.dataset.voucherId),
+    );
+  });
+
+  // Initialize liquid glass toggles with onChange callback for voucher cards
+  list.querySelectorAll(".voucherToggle").forEach((toggleLabel) => {
+    const voucherId = toggleLabel.dataset.voucherId;
+    initMiniLiquidGlassToggle(toggleLabel, async (isChecked) => {
+      try {
+        await toggleVoucher(voucherId, isChecked);
+        await loadVouchers();
+      } catch (error) {
+        console.error("Error toggling voucher:", error);
+        // Revert visual state by re-rendering
+        await loadVouchers();
+      }
+    });
+  });
+}
+
+function openVoucherPanel(voucherId = null) {
+  editingVoucherId = voucherId;
+  const panel = document.getElementById("voucherPanel");
+  const overlay = document.getElementById("voucherPanelOverlay");
+  const title = document.getElementById("voucherPanelTitle");
+  const saveBtn = document.getElementById("voucherSaveBtn");
+  const deleteBtn = document.getElementById("voucherDeleteBtn");
+
+  // Reset form
+  document.getElementById("voucherCode").value = "";
+  document.getElementById("voucherType").value = "percentage";
+  document.getElementById("voucherValue").value = "";
+  document.getElementById("voucherMaxDiscount").value = "";
+  document.getElementById("voucherMinOrder").value = "";
+  document.getElementById("voucherUsageLimit").value = "";
+  document.getElementById("voucherPerUser").value = "1";
+  document.getElementById("voucherExpiry").value = "";
+  clearVoucherCodeError();
+  updateVoucherTypeUI();
+
+  if (voucherId) {
+    // Edit mode
+    const voucher = vouchers.find((v) => v.id === voucherId);
+    if (!voucher) return;
+    title.textContent = "Edit Voucher";
+    saveBtn.textContent = "Save changes";
+    deleteBtn.style.display = "";
+
+    document.getElementById("voucherCode").value = voucher.code;
+    document.getElementById("voucherType").value = voucher.type;
+    document.getElementById("voucherValue").value = voucher.value;
+    if (voucher.maxDiscount !== null)
+      document.getElementById("voucherMaxDiscount").value = voucher.maxDiscount;
+    if (voucher.minOrderAmount > 0)
+      document.getElementById("voucherMinOrder").value = voucher.minOrderAmount;
+    if (voucher.usageLimit !== null)
+      document.getElementById("voucherUsageLimit").value = voucher.usageLimit;
+    document.getElementById("voucherPerUser").value = voucher.usagePerUser || 1;
+    if (voucher.expiryDate) {
+      const d = voucher.expiryDate.toDate?.() || new Date(voucher.expiryDate);
+      document.getElementById("voucherExpiry").value = d
+        .toISOString()
+        .split("T")[0];
+    }
+    updateVoucherTypeUI();
+  } else {
+    title.textContent = "Add Voucher";
+    saveBtn.textContent = "Add Voucher";
+    deleteBtn.style.display = "none";
+  }
+
+  panel.classList.add("active");
+  overlay.classList.add("active");
+}
+
+function closeVoucherPanel() {
+  document.getElementById("voucherPanel").classList.remove("active");
+  document.getElementById("voucherPanelOverlay").classList.remove("active");
+  editingVoucherId = null;
+}
+
+function updateVoucherTypeUI() {
+  const type = document.getElementById("voucherType").value;
+  const prefix = document.getElementById("voucherValuePrefix");
+  const hint = document.getElementById("voucherValueHint");
+  const maxGroup = document.getElementById("maxDiscountGroup");
+
+  if (type === "percentage") {
+    prefix.textContent = "%";
+    hint.textContent = "Percentage off the order subtotal.";
+    maxGroup.style.display = "";
+  } else {
+    prefix.textContent = "S$";
+    hint.textContent = "Fixed dollar amount off the order.";
+    maxGroup.style.display = "none";
+  }
+}
+
+function showVoucherCodeError(message) {
+  const errorEl = document.getElementById("voucherCodeError");
+  const inputEl = document.getElementById("voucherCode");
+  errorEl.textContent = message;
+  errorEl.hidden = false;
+  inputEl.classList.add("error");
+  voucherCodeDuplicateFlag = true;
+}
+
+function clearVoucherCodeError() {
+  const errorEl = document.getElementById("voucherCodeError");
+  const inputEl = document.getElementById("voucherCode");
+  errorEl.textContent = "";
+  errorEl.hidden = true;
+  inputEl.classList.remove("error");
+  voucherCodeDuplicateFlag = false;
+}
+
+function handleVoucherCodeInput() {
+  const code = document
+    .getElementById("voucherCode")
+    .value.trim()
+    .toUpperCase();
+
+  // Clear previous timer
+  if (voucherCodeCheckTimer) clearTimeout(voucherCodeCheckTimer);
+
+  // Clear error if empty
+  if (!code) {
+    clearVoucherCodeError();
+    return;
+  }
+
+  // Debounce the Firebase check (400ms)
+  voucherCodeCheckTimer = setTimeout(async () => {
+    if (!currentStallId) return;
+    try {
+      const exists = await checkVoucherCodeExists(
+        currentStallId,
+        code,
+        editingVoucherId,
+      );
+      // Re-check current value hasn't changed during async call
+      const currentCode = document
+        .getElementById("voucherCode")
+        .value.trim()
+        .toUpperCase();
+      if (currentCode !== code) return;
+
+      if (exists) {
+        showVoucherCodeError("This voucher code already exists for your stall");
+      } else {
+        clearVoucherCodeError();
+      }
+    } catch (error) {
+      console.error("Error checking voucher code:", error);
+    }
+  }, 400);
+}
+
+async function saveVoucher() {
+  const code = document.getElementById("voucherCode").value.trim();
+  const type = document.getElementById("voucherType").value;
+  const value = document.getElementById("voucherValue").value;
+
+  if (!code) {
+    alert("Voucher code is required");
+    return;
+  }
+  if (!value || parseFloat(value) <= 0) {
+    alert("Please enter a valid discount value");
+    return;
+  }
+  if (type === "percentage" && parseFloat(value) > 100) {
+    alert("Percentage cannot exceed 100%");
+    return;
+  }
+
+  // Block save if duplicate flag is set
+  if (voucherCodeDuplicateFlag) {
+    return;
+  }
+
+  // Final check before saving (in case debounce hasn't fired yet)
+  if (currentStallId) {
+    const exists = await checkVoucherCodeExists(
+      currentStallId,
+      code,
+      editingVoucherId,
+    );
+    if (exists) {
+      showVoucherCodeError("This voucher code already exists for your stall");
+      return;
+    }
+  }
+
+  const voucherData = {
+    code,
+    type,
+    value,
+    minOrderAmount: document.getElementById("voucherMinOrder").value || 0,
+    maxDiscount:
+      type === "percentage"
+        ? document.getElementById("voucherMaxDiscount").value || null
+        : null,
+    usageLimit: document.getElementById("voucherUsageLimit").value || null,
+    usagePerUser: document.getElementById("voucherPerUser").value || 1,
+    expiryDate: document.getElementById("voucherExpiry").value
+      ? new Date(document.getElementById("voucherExpiry").value + "T23:59:59")
+      : null,
+  };
+
+  try {
+    if (editingVoucherId) {
+      await updateVoucher(editingVoucherId, voucherData);
+    } else {
+      await createVoucher(currentStallId, voucherData);
+    }
+    closeVoucherPanel();
+    await loadVouchers();
+  } catch (error) {
+    console.error("Error saving voucher:", error);
+    alert("Failed to save voucher. Please try again.");
+  }
+}
+
+function openDeleteVoucherModal() {
+  document.getElementById("deleteVoucherModalOverlay").classList.add("active");
+}
+
+function closeDeleteVoucherModal() {
+  document
+    .getElementById("deleteVoucherModalOverlay")
+    .classList.remove("active");
+}
+
+async function confirmDeleteVoucher() {
+  if (!editingVoucherId) return;
+  try {
+    await firebaseDeleteVoucher(editingVoucherId);
+    closeDeleteVoucherModal();
+    closeVoucherPanel();
+    await loadVouchers();
+  } catch (error) {
+    console.error("Error deleting voucher:", error);
+    alert("Failed to delete voucher.");
+  }
+}
+
+// ============================================
 // EVENT LISTENERS
 // ============================================
 
@@ -1065,55 +1488,118 @@ document.addEventListener("DOMContentLoaded", () => {
     e.target.classList.remove("error");
   });
 
-  // Image upload handlers
-  const addImageBtn = document.getElementById("addImageBtn");
-  const addImageInput = document.getElementById("addImageInput");
-  const addImagePreview = document.getElementById("addImagePreview");
-  const addImagePreviewImg = document.getElementById("addImagePreviewImg");
-  const addImageRemoveBtn = document.getElementById("addImageRemoveBtn");
-  const addImageBtnText = document.getElementById("addImageBtnText");
+  // Shared image validation
+  const allowedTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/svg+xml",
+  ];
+  const maxSize = 10 * 1024 * 1024;
 
-  addImageBtn.addEventListener("click", () => {
-    addImageInput.click();
-  });
-
-  addImageInput.addEventListener("change", (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // Validate file size (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
+  function validateImageFile(file) {
+    if (file.size > maxSize) {
       alert("Image must be under 10MB");
-      addImageInput.value = "";
-      return;
+      return false;
     }
-
-    // Validate file type
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      alert("Please upload a JPEG, PNG, or WEBP image");
-      addImageInput.value = "";
-      return;
+    if (!allowedTypes.includes(file.type)) {
+      alert("Please upload a PNG, JPG, WEBP, or SVG image");
+      return false;
     }
+    return true;
+  }
 
-    selectedImageFile = file;
-    addImageBtnText.textContent =
-      file.name.length > 15 ? file.name.substring(0, 15) + "..." : file.name;
-
-    // Show preview
+  function handleImageSelect(
+    file,
+    previewEl,
+    previewImgEl,
+    uploadZoneEl,
+    setFileCallback,
+  ) {
+    if (!validateImageFile(file)) return;
+    setFileCallback(file);
     const reader = new FileReader();
     reader.onload = (event) => {
-      addImagePreviewImg.src = event.target.result;
-      addImagePreview.style.display = "block";
+      previewImgEl.src = event.target.result;
+      previewEl.style.display = "block";
+      uploadZoneEl.style.display = "none";
     };
     reader.readAsDataURL(file);
-  });
+  }
 
-  addImageRemoveBtn.addEventListener("click", () => {
-    selectedImageFile = null;
-    addImageInput.value = "";
-    addImagePreview.style.display = "none";
-    addImageBtnText.textContent = "Upload";
-  });
+  function setupImageUploadZone(
+    zoneId,
+    inputId,
+    previewId,
+    previewImgId,
+    removeBtnId,
+    setFileCallback,
+    clearFileCallback,
+  ) {
+    const zone = document.getElementById(zoneId);
+    const input = document.getElementById(inputId);
+    const preview = document.getElementById(previewId);
+    const previewImg = document.getElementById(previewImgId);
+    const removeBtn = document.getElementById(removeBtnId);
+
+    zone.addEventListener("click", () => input.click());
+
+    zone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      zone.classList.add("dragover");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("dragover"));
+    zone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      zone.classList.remove("dragover");
+      const file = e.dataTransfer.files[0];
+      if (file)
+        handleImageSelect(file, preview, previewImg, zone, setFileCallback);
+    });
+
+    input.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file)
+        handleImageSelect(file, preview, previewImg, zone, setFileCallback);
+    });
+
+    removeBtn.addEventListener("click", () => {
+      clearFileCallback();
+      input.value = "";
+      preview.style.display = "none";
+      zone.style.display = "";
+    });
+  }
+
+  // Add panel image upload
+  setupImageUploadZone(
+    "addImageUploadZone",
+    "addImageInput",
+    "addImagePreview",
+    "addImagePreviewImg",
+    "addImageRemoveBtn",
+    (file) => {
+      selectedImageFile = file;
+    },
+    () => {
+      selectedImageFile = null;
+    },
+  );
+
+  // Edit panel image upload
+  setupImageUploadZone(
+    "editImageUploadZone",
+    "editImageInput",
+    "editImagePreview",
+    "editImagePreviewImg",
+    "editImageRemoveBtn",
+    (file) => {
+      editSelectedImageFile = file;
+    },
+    () => {
+      editSelectedImageFile = null;
+    },
+  );
 
   // Edit panel close handlers
   document
@@ -1145,6 +1631,75 @@ document.addEventListener("DOMContentLoaded", () => {
       if (e.target === e.currentTarget) closeDeleteModal();
     });
 
+  // Sidebar dropdown toggle
+  const menuDropdownToggle = document.getElementById("menuDropdownToggle");
+  const menuSubItems = document.getElementById("menuSubItems");
+  if (menuDropdownToggle) {
+    menuDropdownToggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      menuSubItems.classList.toggle("open");
+      menuDropdownToggle.classList.toggle("expanded");
+    });
+    // Start expanded since we're on the menu page
+    menuSubItems.classList.add("open");
+  }
+
+  // Vouchers nav item
+  const vouchersNavItem = document.getElementById("vouchersNavItem");
+  if (vouchersNavItem) {
+    vouchersNavItem.addEventListener("click", (e) => {
+      e.preventDefault();
+      switchView("vouchers");
+    });
+  }
+  // Products nav item
+  const productsNavItem = document.querySelector(
+    '.navSubItem[href="vendorMenu.html"]',
+  );
+  if (productsNavItem) {
+    productsNavItem.addEventListener("click", (e) => {
+      e.preventDefault();
+      switchView("products");
+    });
+  }
+
+  // Voucher panel handlers
+  document
+    .getElementById("addVoucherBtn")
+    .addEventListener("click", () => openVoucherPanel());
+  document
+    .getElementById("voucherPanelClose")
+    .addEventListener("click", closeVoucherPanel);
+  document
+    .getElementById("voucherCancelBtn")
+    .addEventListener("click", closeVoucherPanel);
+  document
+    .getElementById("voucherSaveBtn")
+    .addEventListener("click", saveVoucher);
+  document
+    .getElementById("voucherCode")
+    .addEventListener("input", handleVoucherCodeInput);
+  document
+    .getElementById("voucherPanelOverlay")
+    .addEventListener("click", closeVoucherPanel);
+  document
+    .getElementById("voucherDeleteBtn")
+    .addEventListener("click", openDeleteVoucherModal);
+  document
+    .getElementById("deleteVoucherCancelBtn")
+    .addEventListener("click", closeDeleteVoucherModal);
+  document
+    .getElementById("deleteVoucherConfirmBtn")
+    .addEventListener("click", confirmDeleteVoucher);
+  document
+    .getElementById("deleteVoucherModalOverlay")
+    .addEventListener("click", (e) => {
+      if (e.target === e.currentTarget) closeDeleteVoucherModal();
+    });
+  document
+    .getElementById("voucherType")
+    .addEventListener("change", updateVoucherTypeUI);
+
   // Variant group buttons
   document
     .getElementById("addVariantGroupBtn")
@@ -1157,6 +1712,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.key === "Escape") {
       closeEditPopup();
       closeAddPanel();
+      closeVoucherPanel();
+      closeDeleteVoucherModal();
     }
 
     const modifier = isMac ? e.metaKey : e.ctrlKey;
@@ -1169,7 +1726,7 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       openAddPanel();
     }
-    // Ctrl+Enter to save when add/edit panel is open
+    // Ctrl+Enter to save when add/edit/voucher panel is open
     if (modifier && e.key === "Enter") {
       const addPanelActive = document
         .getElementById("addPanel")
@@ -1177,23 +1734,35 @@ document.addEventListener("DOMContentLoaded", () => {
       const editPanelActive = document
         .getElementById("editPanel")
         ?.classList.contains("active");
+      const voucherPanelActive = document
+        .getElementById("voucherPanel")
+        ?.classList.contains("active");
       if (addPanelActive) {
         e.preventDefault();
         addMenuItem();
       } else if (editPanelActive) {
         e.preventDefault();
         saveMenuItem();
+      } else if (voucherPanelActive) {
+        e.preventDefault();
+        saveVoucher();
       }
     }
     // "n" key (no modifier) navigates to create order page
     if (
-      e.key === "n" &&
       !modifier &&
       !e.altKey &&
       e.target.tagName !== "INPUT" &&
       e.target.tagName !== "TEXTAREA"
     ) {
-      window.location.href = "../Vendor Order/vendorCreateOrder.html";
+      if (e.key === "n") {
+        window.location.href = "../Vendor Order/vendorCreateOrder.html";
+      }
+      // "v" key opens add voucher panel when in vouchers view
+      if (e.key === "v" && currentView === "vouchers") {
+        e.preventDefault();
+        openVoucherPanel();
+      }
     }
   });
 });

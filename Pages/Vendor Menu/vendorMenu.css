@@ -772,6 +772,18 @@ body {
     display: block;
 }
 
+.voucherCodeError {
+    color: #eb001b;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 12px;
+    background: #fff0f2;
+    border: 1px solid #ffdde1;
+    border-radius: 8px;
+    margin-top: 4px;
+}
+
 .addFormCustomCategory,
 .editFormCustomCategory {
     display: none;
@@ -814,38 +826,74 @@ body {
     color: #341539;
 }
 
-.addFormUploadBtn {
+/* Image Upload Zone */
+.imageUploadZone {
     display: flex;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    padding: 8px 16px;
-    border-radius: 8px;
-    border: 1px solid #808080;
-    background: transparent;
+    padding: 32px 16px;
+    border-radius: 12px;
+    border: 2px dashed #d0d0d0;
+    background: #fafafa;
+    cursor: pointer;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+.imageUploadZone:hover {
+    border-color: #913b9f;
+    background: #f9f5fa;
+}
+
+.imageUploadZone.dragover {
+    border-color: #913b9f;
+    background: #f4edf6;
+    border-style: solid;
+}
+
+.imageUploadIcon {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    opacity: 0.6;
+}
+
+.imageUploadZone:hover .imageUploadIcon,
+.imageUploadZone.dragover .imageUploadIcon {
+    opacity: 1;
+}
+
+.imageUploadText {
     color: #341539;
     font-family: Aptos, sans-serif;
     font-size: 14px;
+    font-weight: 500;
+    line-height: normal;
+}
+
+.imageUploadFormats {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
     font-weight: 400;
-    cursor: pointer;
-    transition: background 0.2s ease;
-    width: fit-content;
+    line-height: normal;
 }
 
-.addFormUploadBtn:hover {
-    background: #f4f1f6;
-}
-
-.imagePreview {
+/* Image Preview Card */
+.imagePreviewCard {
     position: relative;
-    width: 120px;
-    height: 120px;
-    margin-top: 8px;
-    border-radius: 8px;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 12px;
     overflow: hidden;
     border: 1px solid #e0e0e0;
+    background: #f0f0f0;
 }
 
-.imagePreview img {
+.imagePreviewCard img {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -853,20 +901,21 @@ body {
 
 .imageRemoveBtn {
     position: absolute;
-    top: 4px;
-    right: 4px;
-    width: 24px;
-    height: 24px;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     border: none;
     background: rgba(0, 0, 0, 0.6);
     color: #fff;
-    font-size: 16px;
+    font-size: 18px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     line-height: 1;
+    transition: background 0.2s ease;
 }
 
 .imageRemoveBtn:hover {
@@ -2043,4 +2092,188 @@ body {
     color: #808080;
     font-family: Aptos, sans-serif;
     font-size: 14px;
+}
+
+/* ============================================
+   SIDEBAR DROPDOWN
+   ============================================ */
+
+.navItemDropdown {
+    display: flex;
+    flex-direction: column;
+}
+
+.navSubItems {
+    display: none;
+    flex-direction: column;
+    gap: 2px;
+    padding-left: 36px;
+    overflow: hidden;
+}
+
+.navSubItems.open {
+    display: flex;
+}
+
+.navItem.hasDropdown.expanded .sidebarChevron {
+    transform: rotate(180deg);
+}
+
+.sidebarChevron {
+    transition: transform 0.2s ease;
+}
+
+.navSubItem {
+    display: block;
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    transition:
+        background 0.15s ease,
+        color 0.15s ease;
+}
+
+.navSubItem:hover {
+    background: #f4f1f6;
+    color: #341539;
+}
+
+.navSubItem.active {
+    color: #913b9f;
+    font-weight: 500;
+}
+
+/* ============================================
+   VOUCHERS VIEW
+   ============================================ */
+
+.vouchersView {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 0 48px 48px 48px;
+}
+
+.vouchersHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.vouchersList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.vouchersEmpty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 24px;
+    gap: 8px;
+}
+
+.vouchersEmptyTitle {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.vouchersEmptyText {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+}
+
+.voucherCard {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px 24px;
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    background: #fff;
+    transition: border-color 0.2s ease;
+}
+
+.voucherCard:hover {
+    border-color: #913b9f;
+}
+
+.voucherCardTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.voucherCardInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.voucherCode {
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: #341539;
+    letter-spacing: 0.5px;
+}
+
+.voucherDiscount {
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #913b9f;
+}
+
+.voucherStatus {
+    display: inline-flex;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: normal;
+    white-space: nowrap;
+}
+
+.voucherStatus.active {
+    background: #eaf5e9;
+    color: #2e7d32;
+}
+
+.voucherStatus.inactive {
+    background: #f0f0f0;
+    color: #808080;
+}
+
+.voucherStatus.expired {
+    background: #ffebeb;
+    color: #dc3545;
+}
+
+.voucherCardMeta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    color: #808080;
+}
+
+.voucherCardActions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 8px;
+    border-top: 1px solid #f0f0f0;
 }

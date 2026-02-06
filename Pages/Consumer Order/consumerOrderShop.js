@@ -4,8 +4,12 @@
 
 import { auth, db } from "../../firebase/config.js";
 import { getStallWithMenu } from "../../firebase/services/foodStalls.js";
+import {
+  getFeedbackByStall,
+  getStallFeedbackStats,
+} from "../../firebase/services/feedback.js";
 import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
-import { initMobileMenu } from "../../assets/js/mobileMenu.js";
+import { injectMobileMenu } from "../../assets/js/mobileMenu.js";
 
 // ============================================
 // API FUNCTIONS (Firebase Backend Calls)
@@ -26,22 +30,33 @@ const api = {
         return null;
       }
 
+      // Fetch reviews and rating stats from feedback collection
+      const [feedbackResult, feedbackStats] = await Promise.all([
+        getFeedbackByStall(stallId, { limitCount: 10, publicOnly: true }).catch(
+          () => ({ feedback: [] }),
+        ),
+        getStallFeedbackStats(stallId).catch(() => ({
+          averageRating: 0,
+          totalReviews: 0,
+        })),
+      ]);
+
       // Transform Firebase data to match expected format
       return {
         id: stallData.id,
         name: stallData.name,
         cuisines: stallData.cuisineNames || [],
         rating: {
-          average: stallData.rating || 4.0,
-          count: stallData.reviewCount || 0,
+          average: feedbackStats.averageRating || stallData.rating || 0,
+          count: feedbackStats.totalReviews || stallData.reviewCount || 0,
         },
-        reviews: (stallData.reviews || []).map((review) => ({
+        reviews: (feedbackResult.feedback || []).map((review) => ({
           id: review.id,
           title: review.title || "Review",
           content: review.content || review.comment || "",
           rating: review.rating || 5,
           date: formatReviewDate(review.createdAt),
-          author: review.authorName || "Anonymous",
+          author: review.customerName || review.authorName || "Anonymous",
         })),
         hygieneGrade: {
           grade: stallData.hygieneGrade || "A",
@@ -446,7 +461,7 @@ async function initializeShopPage() {
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize navbar (auth, user display, logout)
   initConsumerNavbar();
-  initMobileMenu();
+  injectMobileMenu();
 
   initializeShopPage();
 

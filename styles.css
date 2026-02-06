@@ -886,12 +886,21 @@ h1 {
 
 .mobileMenuUserInfo > svg {
     flex-shrink: 0;
+    background: #913b9f;
+    border-radius: 50%;
+    padding: 4px;
+    color: #fff;
+}
+
+.mobileMenuUserInfo > svg path {
+    fill: #fff;
 }
 
 .mobileMenuUserDetails {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    min-width: 0;
 }
 
 .mobileMenuUserName {
@@ -899,6 +908,9 @@ h1 {
     font-family: Aptos, sans-serif;
     font-size: 16px;
     font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .mobileMenuUserEmail {
@@ -906,19 +918,27 @@ h1 {
     font-family: Aptos, sans-serif;
     font-size: 13px;
     font-weight: 400;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Mobile Menu Nav */
 .mobileMenuNav {
-    flex: 1;
     padding: 16px 0;
     display: flex;
     flex-direction: column;
 }
 
-/* Mobile Menu Badge */
+/* Mobile Menu Badge — overlaps top-right of cart icon */
+.mobileMenuItem {
+    position: relative;
+}
+
 .mobileMenuBadge {
-    margin-left: auto;
+    position: absolute;
+    top: 8px;
+    left: 44px;
     min-width: 20px;
     height: 20px;
     padding: 0 6px;

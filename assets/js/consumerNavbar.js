@@ -277,6 +277,13 @@ async function updateUserDisplay(user) {
       </svg>
       ${nameToShow}
     `;
+
+    // Update mobile menu user info
+    const mobileNameEl = document.getElementById("mobileMenuUserName");
+    if (mobileNameEl) mobileNameEl.textContent = nameToShow;
+
+    const mobileEmailEl = document.getElementById("mobileMenuUserEmail");
+    if (mobileEmailEl) mobileEmailEl.textContent = user.email;
   }
 }
 

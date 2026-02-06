@@ -550,6 +550,115 @@ body {
 }
 
 /* ============================================
+   REFUND SELECTION MODE
+   ============================================ */
+
+.refundBanner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-radius: 12px;
+    background: #fff0f2;
+    border: 1px solid #ffdde1;
+    animation: refundBannerIn 0.25s ease;
+}
+
+@keyframes refundBannerIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.refundBannerText {
+    color: #eb001b;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.refundBannerCancel {
+    padding: 4px 14px;
+    border-radius: 8px;
+    border: 1px solid #ffdde1;
+    background: #fff;
+    color: #eb001b;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.refundBannerCancel:hover {
+    background: #fff0f2;
+}
+
+.initiateRefund.active {
+    background: #eb001b;
+    border-color: #eb001b;
+    color: #fff;
+}
+
+.initiateRefund.active .buttonKeyboard {
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+    color: #fff;
+}
+
+.initiateRefund.active:hover {
+    background: #d4001a;
+}
+
+/* Refundable rows */
+.refundableRow {
+    border-bottom: 2px solid #ffdde1;
+    position: relative;
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.refundableRow:hover {
+    background: #fff0f2 !important;
+    border-color: #eb001b;
+}
+
+.refundableRow::after {
+    content: "Refund";
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 2px 10px;
+    border-radius: 6px;
+    background: #eb001b;
+    color: #fff;
+    font-family: Aptos, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    pointer-events: none;
+}
+
+.refundableRow:hover::after {
+    opacity: 1;
+}
+
+/* Non-refundable rows in refund mode */
+.nonRefundableRow {
+    opacity: 0.4;
+    cursor: not-allowed !important;
+    transition: opacity 0.2s ease;
+}
+
+/* ============================================
    SETTINGS DROPDOWN - Glassy Purple Style
    ============================================ */
 

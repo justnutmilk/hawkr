@@ -499,6 +499,30 @@ export async function processPayNowPayment(stripe, clientSecret) {
 }
 
 /**
+ * Initiate a refund for an order
+ * @param {string} orderId - Firestore order document ID
+ * @param {string} refundType - "full" or "partial"
+ * @param {number} refundAmount - Amount for partial refund (in dollars)
+ * @param {string} reason - Optional refund reason
+ * @returns {Promise<object>} { success, refundId, refundStatus, refundAmount, refundTransactionId }
+ */
+export async function initiateRefund(
+  orderId,
+  refundType = "full",
+  refundAmount = 0,
+  reason = "",
+) {
+  const initiateRefundFn = httpsCallable(functions, "initiateRefund");
+  const result = await initiateRefundFn({
+    orderId,
+    refundType,
+    refundAmount,
+    reason,
+  });
+  return result.data;
+}
+
+/**
  * Process AliPay payment (redirect-based)
  */
 export async function processAliPayPayment(stripe, clientSecret, returnUrl) {

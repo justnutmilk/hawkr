@@ -34,17 +34,31 @@ function generateOrderNumber() {
 }
 
 /**
- * Generate Hawkr transaction ID in c2b-XXXXXXXXXX-FOOD format
- * @returns {string} - Transaction ID
+ * Generate a random 10-character alphanumeric string
+ * @returns {string}
  */
-function generateTransactionId() {
+function generateRandomChars() {
   const chars =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let id = "";
   for (let i = 0; i < 10; i++) {
     id += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return `c2b-${id}-FOOD`;
+  return id;
+}
+
+/**
+ * Generate Hawkr transaction ID
+ * @param {"c2b"|"b2c"|"b2b"} type - Transaction type
+ * @returns {string} - Transaction ID in format: prefix-XXXXXXXXXX-suffix
+ *   c2b-**********-FOOD  : consumer to vendor purchase
+ *   b2c-**********-REFUND : vendor to consumer refund
+ *   b2b-**********-RENT  : vendor to operator rent payment
+ */
+export function generateTransactionId(type = "c2b") {
+  const suffixes = { c2b: "FOOD", b2c: "REFUND", b2b: "RENT" };
+  const suffix = suffixes[type] || "FOOD";
+  return `${type}-${generateRandomChars()}-${suffix}`;
 }
 
 // ============================================
@@ -62,7 +76,7 @@ export async function createOrder(orderData) {
 
   // Generate order number and transaction ID
   const orderNumber = generateOrderNumber();
-  const hawkrTransactionId = generateTransactionId();
+  const hawkrTransactionId = generateTransactionId("c2b");
 
   // Fetch customer name from profile
   let customerName = "Customer";

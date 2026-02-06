@@ -40,6 +40,7 @@ const {
   deletePaymentMethod,
   confirmPaymentIntent,
   getPaymentIntentStatus,
+  createRefund,
 } = require("./src/stripe");
 
 // Import feedback resolution helper
@@ -666,6 +667,181 @@ exports.getPaymentStatus = onCall(async (request) => {
     console.error("Error getting payment status:", error);
     throw new HttpsError("internal", error.message);
   }
+});
+
+// ============================================
+// REFUND FUNCTIONS
+// ============================================
+
+/**
+ * Initiate a refund for an order from the vendor payments page
+ * Supports full and partial refunds
+ */
+exports.initiateRefund = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "User must be logged in");
+  }
+
+  const userId = request.auth.uid;
+  const {
+    orderId,
+    refundType = "full", // "full" | "partial"
+    refundAmount = 0, // For partial refunds, in dollars
+    reason = "",
+  } = request.data;
+
+  if (!orderId) {
+    throw new HttpsError("invalid-argument", "Order ID is required");
+  }
+
+  const db = admin.firestore();
+
+  // 1. Get the order
+  const orderDoc = await db.collection("orders").doc(orderId).get();
+  if (!orderDoc.exists) {
+    throw new HttpsError("not-found", "Order not found");
+  }
+
+  const orderData = orderDoc.data();
+
+  // 2. Verify the vendor owns this stall
+  const vendorDoc = await db.collection("vendors").doc(userId).get();
+  if (!vendorDoc.exists) {
+    throw new HttpsError("permission-denied", "Vendor profile not found");
+  }
+
+  const vendorData = vendorDoc.data();
+  if (vendorData.stallId !== orderData.stallId) {
+    throw new HttpsError(
+      "permission-denied",
+      "Not authorized to refund this order",
+    );
+  }
+
+  // 3. Check order has a payment intent
+  const paymentIntentId = orderData.paymentIntentId;
+  if (!paymentIntentId) {
+    throw new HttpsError(
+      "failed-precondition",
+      "No payment found for this order (cash orders cannot be refunded via Stripe)",
+    );
+  }
+
+  // 4. Check not already refunded
+  if (orderData.refundStatus === "full") {
+    throw new HttpsError(
+      "already-exists",
+      "This order has already been fully refunded",
+    );
+  }
+
+  // 5. Calculate refund amount in cents
+  let amountInCents;
+  if (refundType === "full") {
+    amountInCents = Math.round(orderData.total * 100);
+  } else {
+    if (!refundAmount || refundAmount <= 0) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Partial refund amount must be greater than 0",
+      );
+    }
+    if (refundAmount > orderData.total) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Refund amount cannot exceed order total",
+      );
+    }
+    amountInCents = Math.round(refundAmount * 100);
+  }
+
+  // 6. Create Stripe refund
+  const refund = await createRefund(
+    paymentIntentId,
+    amountInCents,
+    "requested_by_customer",
+  );
+
+  // 7. Generate refund transaction ID
+  const chars =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let refundTxnChars = "";
+  for (let i = 0; i < 10; i++) {
+    refundTxnChars += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  const refundTransactionId = `b2c-${refundTxnChars}-REFUND`;
+
+  // 8. Update order with refund info
+  await db
+    .collection("orders")
+    .doc(orderId)
+    .update({
+      paymentStatus: "refunded",
+      refundStatus: refundType,
+      refundAmount: amountInCents / 100,
+      refundId: refund.id,
+      refundTransactionId: refundTransactionId,
+      refundReason: reason,
+      refundedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+  // 9. Create in-app notification for customer
+  const customerName = orderData.customerName || "Customer";
+  const refundAmountDisplay = (amountInCents / 100).toFixed(2);
+
+  await db
+    .collection("customers")
+    .doc(orderData.customerId)
+    .collection("notifications")
+    .add({
+      type: "refund_processed",
+      title: `Refund of S$${refundAmountDisplay} processed`,
+      message: `Your ${refundType} refund of S$${refundAmountDisplay} for order #${orderData.orderNumber} from ${orderData.stallName} has been processed.${reason ? ` Reason: "${reason}"` : ""}`,
+      orderId: orderId,
+      stallId: orderData.stallId,
+      stallName: orderData.stallName,
+      refundAmount: amountInCents / 100,
+      refundTransactionId: refundTransactionId,
+      isRead: false,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+  // 10. Send Telegram notification if linked
+  try {
+    const customerDoc = await db
+      .collection("customers")
+      .doc(orderData.customerId)
+      .get();
+    if (customerDoc.exists) {
+      const telegramChatId = customerDoc.data().telegramChatId;
+      if (telegramChatId) {
+        const escapeMarkdown = (text) =>
+          text.replace(/[_*[\]()~`>#+=|{}.!-]/g, "\\$&");
+        const message =
+          `*Refund Processed* from *${escapeMarkdown(orderData.stallName || "Hawkr")}*\n\n` +
+          `Amount: S\\$${refundAmountDisplay}\n` +
+          `Type: ${escapeMarkdown(refundType === "full" ? "Full Refund" : "Partial Refund")}\n` +
+          `Transaction: \`${refundTransactionId}\`` +
+          (reason ? `\nReason: "${escapeMarkdown(reason)}"` : "");
+
+        await sendMessage(telegramChatId, message, {
+          parse_mode: "MarkdownV2",
+        });
+      }
+    }
+  } catch (telegramError) {
+    console.error("Error sending Telegram refund notification:", telegramError);
+    // Don't fail the refund if Telegram notification fails
+  }
+
+  return {
+    success: true,
+    refundId: refund.id,
+    refundStatus: refund.status === "succeeded" ? "completed" : "processing",
+    refundAmount: amountInCents / 100,
+    refundTransactionId: refundTransactionId,
+  };
 });
 
 /**

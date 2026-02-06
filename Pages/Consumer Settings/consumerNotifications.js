@@ -3,7 +3,7 @@
 // ============================================
 
 import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
-import { initMobileMenu } from "../../assets/js/mobileMenu.js";
+import { injectMobileMenu } from "../../assets/js/mobileMenu.js";
 import { auth } from "../../firebase/config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
@@ -240,7 +240,7 @@ function handleBackClick() {
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize navbar (auth, user display, logout)
   initConsumerNavbar();
-  initMobileMenu();
+  injectMobileMenu({ activePage: "notifications" });
 
   // Listen for auth state changes
   onAuthStateChanged(auth, async (user) => {

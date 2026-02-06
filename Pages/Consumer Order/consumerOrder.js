@@ -8,7 +8,7 @@ import {
   getHawkerCentreWithStalls,
 } from "../../firebase/services/hawkerCentres.js";
 import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
-import { initMobileMenu } from "../../assets/js/mobileMenu.js";
+import { injectMobileMenu } from "../../assets/js/mobileMenu.js";
 
 // ============================================
 // API FUNCTIONS (Firebase Backend Calls)
@@ -232,7 +232,7 @@ async function initializeOrderPage() {
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize navbar (auth, user display, logout)
   initConsumerNavbar();
-  initMobileMenu();
+  injectMobileMenu();
 
   initializeOrderPage();
 

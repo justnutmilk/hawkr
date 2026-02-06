@@ -898,3 +898,435 @@ body {
 .settingsDropdownLogout svg {
     stroke: #eb001b;
 }
+
+/* ============================================
+   REFUNDED BADGE (Large, for header)
+   ============================================ */
+
+.refundedBadgeLarge {
+    display: flex;
+    padding: 4px 16px;
+    align-items: center;
+    gap: 8px;
+    border-radius: 8px;
+    border: 1px solid #808080;
+    background: #f0f0f0;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+}
+
+/* ============================================
+   REFUND MODAL
+   ============================================ */
+
+.refundModalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+        opacity 0.3s ease,
+        visibility 0.3s ease;
+}
+
+.refundModalOverlay:not([hidden]) {
+    opacity: 1;
+    visibility: visible;
+}
+
+.refundModalContainer {
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    margin: 24px;
+    background: #fff;
+    border-radius: 24px;
+    box-shadow: 0 24px 48px rgba(52, 21, 57, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+}
+
+.refundModalOverlay:not([hidden]) .refundModalContainer {
+    transform: translateY(0);
+}
+
+.refundModalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.refundModalTitle {
+    font-family: Aptos, sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: #eb001b;
+    margin: 0;
+}
+
+.refundModalClose {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: #808080;
+    transition: color 0.2s ease;
+}
+
+.refundModalClose:hover {
+    color: #341539;
+}
+
+.refundModalBody {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+}
+
+.refundModalFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 24px;
+    border-top: 1px solid #e0e0e0;
+}
+
+/* Order Summary in Modal */
+.refundOrderSummary {
+    padding: 16px;
+    background: #fff0f2;
+    border-radius: 12px;
+    border: 1px solid #ffdde1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.refundSummaryRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.refundSummaryLabel {
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: #808080;
+}
+
+.refundSummaryValue {
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: #341539;
+}
+
+.refundSummaryMono {
+    font-family: "Geist Mono", monospace;
+    font-size: 13px;
+    letter-spacing: 1px;
+}
+
+.refundSummaryBold {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.refundSummaryPayment {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.refundSummaryLogo {
+    height: 20px;
+    width: auto;
+}
+
+/* Refund Type Section */
+.refundTypeSection {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.refundLabel {
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #341539;
+}
+
+.refundOptional {
+    font-weight: 400;
+    color: #808080;
+}
+
+.refundTypeOptions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.refundTypeOption {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.refundTypeOption input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.refundTypeRadio {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #808080;
+    border-radius: 50%;
+    position: relative;
+    flex-shrink: 0;
+    transition: border-color 0.2s ease;
+}
+
+.refundTypeRadio::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 10px;
+    height: 10px;
+    background: #eb001b;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+}
+
+.refundTypeOption input:checked + .refundTypeRadio {
+    border-color: #eb001b;
+}
+
+.refundTypeOption input:checked + .refundTypeRadio::after {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.refundTypeText {
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    color: #341539;
+}
+
+/* Partial Amount Input */
+.refundPartialAmount {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-left: 32px;
+}
+
+.refundAmountInput {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    transition: border-color 0.2s ease;
+}
+
+.refundAmountInput:focus-within {
+    border-color: #eb001b;
+}
+
+.refundCurrency {
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: #808080;
+}
+
+.refundAmountInput input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    color: #341539;
+    background: transparent;
+}
+
+.refundAmountInput input::placeholder {
+    color: #808080;
+}
+
+/* Reason Section */
+.refundReasonSection {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.refundTextarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 12px 16px;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    color: #341539;
+    background: #f4f1f6;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    resize: vertical;
+    transition: border-color 0.2s ease;
+}
+
+.refundTextarea:focus {
+    outline: none;
+    border-color: #913b9f;
+}
+
+.refundTextarea::placeholder {
+    color: #808080;
+}
+
+.refundCharCount {
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    color: #808080;
+    text-align: right;
+}
+
+/* Modal Buttons */
+.refundButtonSecondary {
+    padding: 12px 24px;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: #341539;
+    background: transparent;
+    border: 2px solid #341539;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.refundButtonSecondary:hover {
+    background: rgba(52, 21, 57, 0.05);
+}
+
+.refundButtonPrimary {
+    padding: 12px 24px;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: #fff;
+    background: #eb001b;
+    border: 2px solid #eb001b;
+    border-radius: 8px;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.refundButtonPrimary:hover {
+    background: #c7001a;
+    border-color: #c7001a;
+}
+
+.refundButtonPrimary:disabled {
+    background: #808080;
+    border-color: #808080;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   TOAST NOTIFICATION
+   ============================================ */
+
+.refundToast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #341539;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    box-shadow: 0 8px 24px rgba(52, 21, 57, 0.25);
+    z-index: 2000;
+    opacity: 0;
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease;
+    max-width: 600px;
+    text-align: center;
+}
+
+.refundToast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* ============================================
+   RESPONSIVE - Refund Modal
+   ============================================ */
+
+@media (max-width: 768px) {
+    .refundModalContainer {
+        margin: 16px;
+        max-height: 85vh;
+    }
+
+    .refundModalHeader,
+    .refundModalBody,
+    .refundModalFooter {
+        padding: 16px;
+    }
+
+    .refundModalFooter {
+        flex-direction: column;
+    }
+
+    .refundButtonSecondary,
+    .refundButtonPrimary {
+        width: 100%;
+    }
+
+    .refundToast {
+        left: 16px;
+        right: 16px;
+        transform: translateX(0) translateY(20px);
+        max-width: none;
+    }
+
+    .refundToast.show {
+        transform: translateX(0) translateY(0);
+    }
+}
