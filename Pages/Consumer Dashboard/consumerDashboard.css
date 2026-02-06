@@ -739,6 +739,19 @@ body {
 }
 
 @media (max-width: 768px) {
+    .topBar {
+        padding: 24px 5% 0 5%;
+    }
+
+    .heroSection,
+    .quickActions,
+    .nearbyHawkersSection,
+    .vouchersSection,
+    .culturalHeritageSection {
+        padding-left: 5%;
+        padding-right: 5%;
+    }
+
     .quickActions {
         gap: 24px;
         justify-content: space-around;
@@ -752,6 +765,115 @@ body {
         width: 80px;
         height: 80px;
         padding: 16px;
+    }
+
+    .quickActionLabel {
+        font-size: 18px;
+    }
+
+    .sectionTitle {
+        font-size: 28px;
+    }
+
+    .topActionButtons {
+        gap: 1.5em;
+    }
+
+    .searchModule {
+        max-width: none;
+        flex: 1;
+        height: 48px;
+    }
+
+    .orderStatusContainer {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .topBar {
+        padding: 16px 4% 0 4%;
+    }
+
+    .heroSection,
+    .quickActions,
+    .nearbyHawkersSection,
+    .vouchersSection,
+    .culturalHeritageSection {
+        padding-left: 4%;
+        padding-right: 4%;
+    }
+
+    .topActionButtons {
+        gap: 1em;
+    }
+
+    .searchInput {
+        font-size: 16px;
+    }
+
+    .quickActions {
+        gap: 16px;
+    }
+
+    .quickActionItem {
+        width: 70px;
+    }
+
+    .quickActionIcon {
+        width: 60px;
+        height: 60px;
+        padding: 12px;
+        border-radius: 20px;
+    }
+
+    .quickActionLabel {
+        font-size: 14px;
+    }
+
+    .sectionTitle {
+        font-size: 24px;
+    }
+
+    .hawkerCard {
+        width: 220px;
+    }
+
+    .hawkerCardImage {
+        height: 120px;
+        border-radius: 16px;
+    }
+
+    .hawkerCardName {
+        font-size: 18px;
+    }
+
+    .hawkerCardAddress {
+        font-size: 14px;
+    }
+
+    .hawkerCardsRow {
+        gap: 24px;
+    }
+
+    .orderStatusCard {
+        padding: 16px 20px;
+    }
+
+    .orderStatusLabel {
+        font-size: 14px;
+    }
+
+    .orderStatusValue {
+        font-size: 20px;
+    }
+
+    .searchDropdown {
+        width: 100%;
+    }
+
+    .searchModuleWrapper.active .searchDropdown {
+        width: calc(100vw - 8%);
     }
 }
 

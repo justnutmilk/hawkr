@@ -7,20 +7,32 @@
         <link rel="stylesheet" href="auth.css" />
     </head>
     <body>
-        <div class="authContainer">
-            <div class="authLeft">
-                <div class="authBranding">
-                    <img
-                        src="../../images/hawkr logo.svg"
-                        alt="Hawkr Logo"
-                        class="authLogo"
-                    />
-                    <p class="authTagline">
-                        Singapore's Hawker Culture,<br />At Your Fingertips
-                    </p>
-                </div>
+        <!-- Liquid Glass Top Bar -->
+        <header class="authGlassTopBar" id="authGlassTopBar">
+            <div class="authGlassTopBarInner">
+                <a href="login.html" class="authTopBarBack">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    <span class="authTopBarBackText">Back</span>
+                </a>
+                <span class="authTopBarTitle">Create account</span>
+                <div class="authTopBarSpacer"></div>
             </div>
+            <div class="authGlassHighlight"></div>
+        </header>
 
+        <div class="authContainer">
             <div class="authRight">
                 <div class="authFormContainer">
                     <div class="authHeader">

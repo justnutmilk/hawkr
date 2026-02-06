@@ -30,6 +30,21 @@ const {
 } = require("./src/telegram");
 const { getOrderStatusMessage } = require("./src/notifications");
 
+// Import Stripe helpers
+const {
+  getOrCreateStripeCustomer,
+  createSetupIntent,
+  createPaymentIntent,
+  getPaymentMethods,
+  setDefaultPaymentMethod,
+  deletePaymentMethod,
+  confirmPaymentIntent,
+  getPaymentIntentStatus,
+} = require("./src/stripe");
+
+// Import feedback resolution helper
+const { resolveFeedback } = require("./src/resolveFeedback");
+
 // ============================================
 // FIRESTORE TRIGGERS
 // ============================================
@@ -376,4 +391,346 @@ exports.generateTelegramLinkToken = onCall(async (request) => {
   });
 
   return { token, expiresIn: 600 };
+});
+
+// ============================================
+// FEEDBACK RESOLUTION
+// ============================================
+
+/**
+ * Resolve feedback with optional refund
+ * Called by vendors/operators to respond to customer feedback
+ */
+exports.resolveFeedback = onCall(async (request) => {
+  return await resolveFeedback(request);
+});
+
+// ============================================
+// STRIPE PAYMENT FUNCTIONS
+// ============================================
+
+/**
+ * Create a SetupIntent for saving a new payment method
+ * Returns client secret for Stripe Elements
+ */
+exports.createSetupIntent = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "User must be logged in");
+  }
+
+  const userId = request.auth.uid;
+
+  try {
+    // Get user info
+    const userDoc = await admin
+      .firestore()
+      .collection("customers")
+      .doc(userId)
+      .get();
+
+    if (!userDoc.exists) {
+      throw new HttpsError("not-found", "Customer not found");
+    }
+
+    const userData = userDoc.data();
+    const email = request.auth.token.email || userData.email;
+    const name = userData.name || "Hawkr Customer";
+
+    // Get or create Stripe customer
+    const stripeCustomerId = await getOrCreateStripeCustomer(
+      admin,
+      userId,
+      email,
+      name,
+    );
+
+    // Create SetupIntent
+    const setupIntent = await createSetupIntent(stripeCustomerId);
+
+    return {
+      clientSecret: setupIntent.clientSecret,
+      customerId: stripeCustomerId,
+    };
+  } catch (error) {
+    console.error("Error creating SetupIntent:", error);
+    throw new HttpsError("internal", error.message);
+  }
+});
+
+/**
+ * Get saved payment methods for the current user
+ */
+exports.getPaymentMethods = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "User must be logged in");
+  }
+
+  const userId = request.auth.uid;
+
+  try {
+    const userDoc = await admin
+      .firestore()
+      .collection("customers")
+      .doc(userId)
+      .get();
+
+    if (!userDoc.exists) {
+      throw new HttpsError("not-found", "Customer not found");
+    }
+
+    const userData = userDoc.data();
+    const stripeCustomerId = userData.stripeCustomerId;
+
+    if (!stripeCustomerId) {
+      return { paymentMethods: [] };
+    }
+
+    const paymentMethods = await getPaymentMethods(stripeCustomerId);
+
+    return { paymentMethods };
+  } catch (error) {
+    console.error("Error getting payment methods:", error);
+    throw new HttpsError("internal", error.message);
+  }
+});
+
+/**
+ * Delete a saved payment method
+ */
+exports.deletePaymentMethod = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "User must be logged in");
+  }
+
+  const { paymentMethodId } = request.data;
+
+  if (!paymentMethodId) {
+    throw new HttpsError("invalid-argument", "Payment method ID required");
+  }
+
+  try {
+    await deletePaymentMethod(paymentMethodId);
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting payment method:", error);
+    throw new HttpsError("internal", error.message);
+  }
+});
+
+/**
+ * Set a payment method as default
+ */
+exports.setDefaultPaymentMethod = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "User must be logged in");
+  }
+
+  const userId = request.auth.uid;
+  const { paymentMethodId } = request.data;
+
+  if (!paymentMethodId) {
+    throw new HttpsError("invalid-argument", "Payment method ID required");
+  }
+
+  try {
+    const userDoc = await admin
+      .firestore()
+      .collection("customers")
+      .doc(userId)
+      .get();
+
+    const userData = userDoc.data();
+    const stripeCustomerId = userData.stripeCustomerId;
+
+    if (!stripeCustomerId) {
+      throw new HttpsError("failed-precondition", "No Stripe customer found");
+    }
+
+    await setDefaultPaymentMethod(stripeCustomerId, paymentMethodId);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error setting default payment method:", error);
+    throw new HttpsError("internal", error.message);
+  }
+});
+
+/**
+ * Create a PaymentIntent for processing an order
+ */
+exports.createPaymentIntent = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "User must be logged in");
+  }
+
+  const userId = request.auth.uid;
+  const { amount, paymentMethodId, orderId } = request.data;
+
+  if (!amount || amount <= 0) {
+    throw new HttpsError("invalid-argument", "Valid amount required");
+  }
+
+  try {
+    const userDoc = await admin
+      .firestore()
+      .collection("customers")
+      .doc(userId)
+      .get();
+
+    if (!userDoc.exists) {
+      throw new HttpsError("not-found", "Customer not found");
+    }
+
+    const userData = userDoc.data();
+    const email = request.auth.token.email || userData.email;
+    const name = userData.name || "Hawkr Customer";
+
+    // Get or create Stripe customer
+    const stripeCustomerId = await getOrCreateStripeCustomer(
+      admin,
+      userId,
+      email,
+      name,
+    );
+
+    // Convert amount to cents (Stripe uses smallest currency unit)
+    const amountInCents = Math.round(amount * 100);
+
+    // Create PaymentIntent
+    const paymentIntent = await createPaymentIntent(
+      amountInCents,
+      "sgd",
+      stripeCustomerId,
+      paymentMethodId,
+      {
+        orderId: orderId || "",
+        userId: userId,
+      },
+    );
+
+    return {
+      clientSecret: paymentIntent.clientSecret,
+      paymentIntentId: paymentIntent.paymentIntentId,
+      status: paymentIntent.status,
+    };
+  } catch (error) {
+    console.error("Error creating PaymentIntent:", error);
+    throw new HttpsError("internal", error.message);
+  }
+});
+
+/**
+ * Confirm a PaymentIntent with a specific payment method
+ */
+exports.confirmPayment = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "User must be logged in");
+  }
+
+  const { paymentIntentId, paymentMethodId } = request.data;
+
+  if (!paymentIntentId || !paymentMethodId) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Payment intent ID and payment method ID required",
+    );
+  }
+
+  try {
+    const result = await confirmPaymentIntent(paymentIntentId, paymentMethodId);
+    return result;
+  } catch (error) {
+    console.error("Error confirming payment:", error);
+    throw new HttpsError("internal", error.message);
+  }
+});
+
+/**
+ * Get payment status
+ */
+exports.getPaymentStatus = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "User must be logged in");
+  }
+
+  const { paymentIntentId } = request.data;
+
+  if (!paymentIntentId) {
+    throw new HttpsError("invalid-argument", "Payment intent ID required");
+  }
+
+  try {
+    const status = await getPaymentIntentStatus(paymentIntentId);
+    return status;
+  } catch (error) {
+    console.error("Error getting payment status:", error);
+    throw new HttpsError("internal", error.message);
+  }
+});
+
+/**
+ * Stripe webhook handler for payment events
+ */
+exports.stripeWebhook = onRequest(async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).send("Method not allowed");
+    return;
+  }
+
+  const sig = req.headers["stripe-signature"];
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  let event;
+
+  try {
+    const { stripe } = require("./src/stripe");
+    event = stripe.webhooks.constructEvent(req.rawBody, sig, endpointSecret);
+  } catch (err) {
+    console.error("Webhook signature verification failed:", err.message);
+    res.status(400).send(`Webhook Error: ${err.message}`);
+    return;
+  }
+
+  // Handle the event
+  switch (event.type) {
+    case "payment_intent.succeeded":
+      const paymentIntent = event.data.object;
+      console.log(`PaymentIntent ${paymentIntent.id} succeeded`);
+
+      // Update order status if orderId in metadata
+      if (paymentIntent.metadata?.orderId) {
+        await admin
+          .firestore()
+          .collection("orders")
+          .doc(paymentIntent.metadata.orderId)
+          .update({
+            paymentStatus: "paid",
+            paymentIntentId: paymentIntent.id,
+            paidAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+      }
+      break;
+
+    case "payment_intent.payment_failed":
+      const failedPayment = event.data.object;
+      console.log(`PaymentIntent ${failedPayment.id} failed`);
+
+      if (failedPayment.metadata?.orderId) {
+        await admin
+          .firestore()
+          .collection("orders")
+          .doc(failedPayment.metadata.orderId)
+          .update({
+            paymentStatus: "failed",
+            paymentError:
+              failedPayment.last_payment_error?.message || "Payment failed",
+          });
+      }
+      break;
+
+    default:
+      console.log(`Unhandled event type: ${event.type}`);
+  }
+
+  res.json({ received: true });
 });

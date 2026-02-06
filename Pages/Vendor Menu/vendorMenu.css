@@ -279,7 +279,6 @@ body {
     line-height: normal;
 }
 
-.newOrderButton,
 .addItemButton {
     display: flex;
     padding: 4px 16px;
@@ -299,12 +298,10 @@ body {
     text-decoration: none;
 }
 
-.newOrderButton:hover,
 .addItemButton:hover {
     background: #7a3286;
 }
 
-.newOrderButton kbd,
 .addItemButton kbd {
     display: flex;
     align-items: center;
@@ -319,6 +316,57 @@ body {
     font-family: Aptos, sans-serif;
     font-size: 13px;
     font-weight: 600;
+}
+
+.newOrderButton {
+    display: flex;
+    padding: 4px 16px;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    border-radius: 8px;
+    background: transparent;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    border: 2px solid #341539;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+    text-decoration: none;
+}
+
+.newOrderButton:hover {
+    background: rgba(52, 21, 57, 0.05);
+    border-color: #913b9f;
+    color: #913b9f;
+}
+
+.newOrderButton kbd {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 19px;
+    height: 19px;
+    padding: 0 6px;
+    border-radius: 4px;
+    background: rgba(52, 21, 57, 0.1);
+    box-shadow: 0 2px 0 rgba(52, 21, 57, 0.15);
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+.newOrderButton:hover kbd {
+    background: rgba(145, 59, 159, 0.1);
+    color: #913b9f;
 }
 
 /* Menu Cards */
@@ -404,6 +452,13 @@ body {
     height: 160px;
     border-radius: 8px;
     background: #f0f0f0;
+    overflow: hidden;
+}
+
+.menuItemImage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .menuItemName {
@@ -842,12 +897,53 @@ body {
     cursor: pointer;
 }
 
+.addFormCheckGroup {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.addFormCheckbox {
+    width: 18px;
+    height: 18px;
+    accent-color: #913b9f;
+    cursor: pointer;
+}
+
 .addPanelFooter {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
     gap: 12px;
     padding: 24px;
     border-top: 1px solid #e0e0e0;
+}
+
+.addPanelFooterRight {
+    display: flex;
+    gap: 12px;
+}
+
+.addPanelDeleteBtn {
+    display: flex;
+    padding: 8px 16px;
+    align-items: center;
+    border-radius: 8px;
+    border: 1px solid #dc3545;
+    background: transparent;
+    color: #dc3545;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+.addPanelDeleteBtn:hover {
+    background: #dc3545;
+    color: #fff;
 }
 
 .addPanelCancelBtn {
@@ -869,6 +965,18 @@ body {
     background: #f4f1f6;
 }
 
+.addPanelCancelBtn kbd {
+    display: inline-block;
+    padding: 2px 6px;
+    margin-left: 6px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.08);
+    font-family: Aptos, sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    color: #666;
+}
+
 .addPanelSaveBtn {
     display: flex;
     padding: 8px 16px;
@@ -886,6 +994,27 @@ body {
 
 .addPanelSaveBtn:hover {
     background: #7a3286;
+}
+
+.addPanelSaveBtn .kbdGroup {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.addPanelSaveBtn kbd {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    font-family: Aptos, sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    color: #fff;
 }
 
 /* ============================================
@@ -1055,4 +1184,863 @@ body {
 
 .editPopupSaveBtn:hover {
     background: #7a3286;
+}
+
+/* ============================================
+   SETTINGS DROPDOWN - Glassy Purple Style
+   ============================================ */
+
+.settingsDropdownWrapper {
+    position: relative;
+}
+
+.settingsButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.settingsDropdown {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    min-width: 180px;
+    padding: 16px;
+    border-radius: 24px;
+    background: rgba(200, 150, 210, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: none;
+    box-shadow:
+        0 8px 32px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease,
+        visibility 0.3s ease;
+}
+
+.settingsDropdownWrapper:hover .settingsDropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.settingsDropdownItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-family: Aptos, sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    text-decoration: none;
+    color: #341539;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    transition: background 0.15s ease;
+}
+
+.settingsDropdownItem:hover {
+    background: #ece6f0;
+}
+
+.settingsDropdownLogout {
+    color: #eb001b;
+}
+
+.settingsDropdownLogout svg {
+    stroke: #eb001b;
+}
+
+/* ============================================
+   VARIANTS BUILDER
+   ============================================ */
+
+.variantsBuilder {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.variantGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    background: #fafafa;
+}
+
+.variantGroupHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.variantGroupName {
+    flex: 1;
+    border-radius: 8px;
+    border: 1px solid #d0d0d0;
+    padding: 8px 12px;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #341539;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.variantGroupName:focus {
+    border-color: #913b9f;
+}
+
+.variantGroupName::placeholder {
+    font-weight: 400;
+    color: #808080;
+}
+
+.variantGroupRemove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: #808080;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+.variantGroupRemove:hover {
+    background: #ffebeb;
+    color: #eb001b;
+}
+
+.variantMultiSelectRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.variantTogglesRow {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 12px;
+}
+
+.variantToggleItem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.variantToggleLabel {
+    color: #595959;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+/* Liquid Glass Toggle - Small variant (documented in LIQUID_GLASS_TOGGLE.md) */
+/* Track: 56x26, Thumb: 20x20, Glass: 44x38 */
+.liquidGlassToggle {
+    position: relative;
+    display: inline-flex;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    caret-color: transparent;
+    flex-shrink: 0;
+}
+
+.liquidGlassToggle span,
+.liquidGlassToggle .toggleTrack,
+.liquidGlassToggle .toggleThumb {
+    border-right: none !important;
+    animation: none !important;
+    caret-color: transparent;
+}
+
+.liquidGlassToggle input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.liquidGlassToggle .toggleTrack {
+    position: relative;
+    width: 56px;
+    height: 26px;
+    border-radius: 9999px;
+    background: #c8c8c8;
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.12),
+        inset 0 1px 2px rgba(0, 0, 0, 0.08);
+    transition: background 0.3s ease;
+    overflow: visible;
+}
+
+.liquidGlassToggle .toggleTrack::before,
+.liquidGlassToggle .toggleTrack::after {
+    display: none;
+}
+
+.liquidGlassToggle .toggleThumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 30px;
+    height: 20px;
+    border-radius: 9999px;
+    background: #ffffff;
+    border: 2px solid transparent;
+    box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.15),
+        0 1px 2px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+    transition:
+        left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        top 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+        width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+        height 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+        background 0.25s ease,
+        border 0.25s ease,
+        box-shadow 0.25s ease,
+        backdrop-filter 0.25s ease,
+        -webkit-backdrop-filter 0.25s ease;
+    z-index: 3;
+    cursor: grab;
+}
+
+.liquidGlassToggle .toggleThumb:active {
+    cursor: grabbing;
+}
+
+.liquidGlassToggle.dragging .toggleThumb {
+    top: -6px;
+    width: 48px;
+    height: 38px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(0.1px);
+    -webkit-backdrop-filter: blur(0.1px);
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.05),
+        inset 0 1px 2px rgba(255, 255, 255, 0.3),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.liquidGlassToggle input:checked + .toggleTrack {
+    background: #34c759;
+}
+
+.liquidGlassToggle input:checked + .toggleTrack .toggleThumb {
+    left: 23px; /* 56 - 30 - 3 */
+}
+
+.liquidGlassToggle .toggleTrack.green {
+    background: #34c759;
+}
+
+.liquidGlassToggle:hover .toggleTrack {
+    box-shadow:
+        0 3px 12px rgba(0, 0, 0, 0.15),
+        inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.liquidGlassToggle:hover input:checked + .toggleTrack {
+    box-shadow:
+        0 3px 12px rgba(52, 199, 89, 0.3),
+        inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* Availability Toggle Layout */
+.availabilityToggleGroup {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e8e8e8;
+}
+
+.availabilityToggleRow {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.availabilityToggleLabel {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: normal;
+}
+
+.variantMultiSelectLabel {
+    color: #666;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.variantOptions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.variantOption {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.variantOptionName {
+    flex: 1;
+    border-radius: 8px;
+    border: 1px solid #d0d0d0;
+    padding: 8px 12px;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    color: #341539;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.variantOptionName:focus {
+    border-color: #913b9f;
+}
+
+.variantOptionName::placeholder {
+    color: #808080;
+}
+
+.variantPriceWrapper {
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    border: 1px solid #d0d0d0;
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+    width: 110px;
+    flex-shrink: 0;
+}
+
+.variantPriceWrapper:focus-within {
+    border-color: #913b9f;
+}
+
+.variantPricePrefix {
+    padding: 8px 0 8px 8px;
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.variantPriceInput {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 8px 8px 8px 4px;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    color: #341539;
+    width: 100%;
+    min-width: 0;
+}
+
+.variantPriceInput::placeholder {
+    color: #808080;
+}
+
+.variantOptionRemove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: #808080;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
+    flex-shrink: 0;
+}
+
+.variantOptionRemove:hover {
+    background: #ffebeb;
+    color: #eb001b;
+}
+
+.addVariantOptionBtn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #d0d0d0;
+    background: transparent;
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    cursor: pointer;
+    transition:
+        border-color 0.2s ease,
+        color 0.2s ease,
+        background 0.2s ease;
+    width: fit-content;
+}
+
+.addVariantOptionBtn:hover {
+    border-color: #913b9f;
+    color: #913b9f;
+    background: #f9f5fa;
+}
+
+.addVariantGroupBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid #913b9f;
+    background: transparent;
+    color: #913b9f;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    width: fit-content;
+    margin-top: 8px;
+}
+
+.addVariantGroupBtn:hover {
+    background: #f9f5fa;
+}
+
+/* ============================================
+   ALLERGEN TAG INPUT
+   ============================================ */
+
+.allergenContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid #d0d0d0;
+    border-radius: 10px;
+    background: #fff;
+    min-height: 48px;
+    cursor: text;
+    transition: border-color 0.2s ease;
+}
+
+.allergenContainer:focus-within {
+    border-color: #913b9f;
+}
+
+.allergenContainer.snap-drop-active {
+    border-color: #913b9f;
+    background: rgba(145, 59, 159, 0.05);
+}
+
+.allergenContainer .allergenTag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    padding: 6px 32px 6px 12px;
+    border-radius: 100px;
+    background: #ffebeb;
+    color: #341539;
+    font-family: "Geist Mono", monospace;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.allergenContainer .allergenTagInner {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.allergenContainer .allergenTag img {
+    width: 15px;
+    height: 15px;
+    object-fit: contain;
+}
+
+.allergenTagRemove {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: #808080;
+    font-size: 16px;
+    transition: color 0.2s ease;
+}
+
+.allergenTagRemove:hover {
+    color: #d32f2f;
+}
+
+.allergenSuggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 8px 0;
+}
+
+.allergenSuggestionsLabel {
+    width: 100%;
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    margin-bottom: 4px;
+}
+
+.allergenSuggestion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 100px;
+    background: #ffebeb;
+    color: #341539;
+    font-family: "Geist Mono", monospace;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        transform 0.15s ease,
+        opacity 0.15s ease;
+    user-select: none;
+}
+
+.allergenSuggestion img {
+    width: 15px;
+    height: 15px;
+    object-fit: contain;
+}
+
+.allergenSuggestion:hover {
+    transform: scale(1.05);
+}
+
+.allergenSuggestion.added {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.allergenInput {
+    flex: 1;
+    min-width: 100px;
+    border: none;
+    background: transparent;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    color: #341539;
+    outline: none;
+}
+
+.allergenInput::placeholder {
+    color: #808080;
+}
+
+/* ============================================
+   DELETE CONFIRMATION MODAL
+   ============================================ */
+
+.deleteModalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+        opacity 0.2s ease,
+        visibility 0.2s ease;
+}
+
+.deleteModalOverlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.deleteModal {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    transform: scale(0.95);
+    transition: transform 0.2s ease;
+}
+
+.deleteModalOverlay.active .deleteModal {
+    transform: scale(1);
+}
+
+.deleteModalTitle {
+    font-family: Aptos, sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: #341539;
+    margin-bottom: 8px;
+}
+
+.deleteModalText {
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    color: #666;
+    line-height: 1.5;
+    margin-bottom: 24px;
+}
+
+.deleteModalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.deleteModalCancelBtn {
+    display: flex;
+    padding: 10px 20px;
+    align-items: center;
+    border-radius: 8px;
+    border: 1px solid #808080;
+    background: transparent;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.deleteModalCancelBtn:hover {
+    background: #f5f5f5;
+}
+
+.deleteModalConfirmBtn {
+    display: flex;
+    padding: 10px 20px;
+    align-items: center;
+    border-radius: 8px;
+    border: none;
+    background: #dc3545;
+    color: #fff;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.deleteModalConfirmBtn:hover {
+    background: #c82333;
+}
+
+.deleteModalConfirmBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   LOADING STATE / SKELETON
+   ============================================ */
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.menuCategoryPillsSkeleton {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 32px;
+}
+
+.skeletonPill {
+    height: 36px;
+    width: 80px;
+    border-radius: 24px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+.menuSectionSkeleton {
+    margin-bottom: 32px;
+}
+
+.skeletonSectionTitle {
+    height: 24px;
+    width: 120px;
+    margin-bottom: 16px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+.menuSkeletonGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+.menuItemSkeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    background: #fff;
+}
+
+.skeletonImage {
+    width: 100%;
+    height: 160px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+.skeletonText {
+    border-radius: 4px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+.skeletonTitle {
+    height: 22px;
+    width: 70%;
+}
+
+.skeletonCategory {
+    height: 32px;
+    width: 70px;
+    border-radius: 8px;
+}
+
+.skeletonPrice {
+    height: 20px;
+    width: 30%;
+}
+
+.skeletonAllergens {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.skeletonAllergenLabel {
+    height: 14px;
+    width: 60px;
+}
+
+.skeletonAllergenTags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.skeletonAllergenTag {
+    height: 28px;
+    width: 70px;
+    border-radius: 16px;
+}
+
+.skeletonFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 12px;
+}
+
+.skeletonAvailability {
+    height: 18px;
+    width: 80px;
+}
+
+.skeletonButton {
+    height: 34px;
+    width: 50px;
+    border-radius: 8px;
+}
+
+.emptyMenuState {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 24px;
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
 }

@@ -3,6 +3,13 @@
 // ============================================
 
 import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
+import { initMobileMenu } from "../../assets/js/mobileMenu.js";
+import { auth } from "../../firebase/config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getCustomerOrders,
+  getOrderById,
+} from "../../firebase/services/orders.js";
 
 // ============================================
 // PAGE DETECTION
@@ -11,6 +18,9 @@ import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
 const isDetailPage = window.location.pathname.includes(
   "consumerTransactionDetail",
 );
+
+// Auth state
+let currentUser = null;
 
 // ============================================
 // MOCK TRANSACTION DATA
@@ -544,6 +554,8 @@ function groupTransactionsByDate(transactions) {
 
 function renderTransactionCard(transaction) {
   const amountClass = transaction.type === "credit" ? "credit" : "debit";
+  // Use orderId for navigation to detail page (Firebase document ID)
+  const detailId = transaction.orderId || transaction.id;
 
   return `
         <div class="transactionCard ${transaction.type}">
@@ -554,7 +566,7 @@ function renderTransactionCard(transaction) {
             </div>
             <div class="transactionCardRight">
                 <span class="transactionAmount ${amountClass}">${formatPrice(transaction.amount, transaction.type)}</span>
-                <a class="seeMoreLink" href="#" data-transaction-id="${transaction.id}">see more ></a>
+                <a class="seeMoreLink" href="#" data-transaction-id="${detailId}">see more ></a>
             </div>
         </div>
     `;
@@ -746,16 +758,201 @@ function renderTransactionDetail(transactionId) {
   `;
 }
 
-function initializeDetailPage() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const transactionId = urlParams.get("id");
+/**
+ * Render transaction detail from Firebase order data
+ */
+function renderTransactionDetailFromOrder(order, orderId) {
+  const container = document.getElementById("confirmedContent");
+  if (!container) return;
 
-  if (transactionId) {
-    renderTransactionDetail(transactionId);
-  } else {
+  // Get collection details
+  const collectionDetails = order.collectionDetails || {};
+  const collectionLocation =
+    collectionDetails.venueName || order.stallName || "Unknown Location";
+  const collectionAddress = collectionDetails.address || "";
+  const pickupTime = collectionDetails.pickupTime || 10;
+
+  // Get payment details
+  const paymentDetails = order.paymentDetails || {};
+  const paymentMethod = paymentDetails.type || order.paymentMethod || "Unknown";
+  const paymentBrand = paymentDetails.brand || "";
+  const paymentLastFour = paymentDetails.lastFour || "";
+
+  // Calculate total
+  const total =
+    order.total ||
+    order.items?.reduce(
+      (sum, item) => sum + item.unitPrice * item.quantity,
+      0,
+    ) ||
+    0;
+
+  // Render order items
+  const orderItemsHTML = (order.items || [])
+    .map(
+      (item) => `
+    <div class="orderItem">
+      <img src="${item.imageUrl || "../../images/placeholder-food.jpg"}" alt="${item.name}" class="orderItemImage" />
+      <div class="orderItemDetails">
+        <div class="orderItemRow">
+          <div class="orderItemNameGroup">
+            <span class="itemName">${item.name}</span>
+            <span class="storeName">${order.stallName || "Unknown Stall"}</span>
+          </div>
+          <span class="price">$${(item.unitPrice || 0).toFixed(2)}</span>
+        </div>
+        <div class="orderItemRow">
+          ${item.notes ? `<span class="specialRequest">${item.notes}</span>` : "<span></span>"}
+          <span class="qtyCount">${item.quantity}</span>
+        </div>
+      </div>
+    </div>
+  `,
+    )
+    .join("");
+
+  // Determine payment display
+  let paymentDisplayText = "Credit/Debit Card";
+  let paymentSubtext = "";
+  let paymentLogoHTML = "";
+
+  const cardBrands = ["visa", "mastercard", "amex", "unionpay"];
+  const isCard =
+    paymentMethod === "card" ||
+    cardBrands.includes(paymentMethod.toLowerCase());
+
+  if (paymentMethod === "paynow" || paymentMethod === "PayNow") {
+    paymentDisplayText = "PayNow";
+    paymentLogoHTML = `<img src="../../Payment Methods/PayNow.svg" alt="PayNow" class="paymentMethodImage" />`;
+  } else if (paymentMethod === "grabpay" || paymentMethod === "GrabPay") {
+    paymentDisplayText = "GrabPay";
+    paymentLogoHTML = `<img src="../../Payment Methods/GrabPay.svg" alt="GrabPay" class="paymentMethodImage" />`;
+  } else if (
+    paymentMethod === "alipay" ||
+    paymentMethod === "AliPay" ||
+    paymentMethod === "Alipay"
+  ) {
+    paymentDisplayText = "Alipay";
+    paymentSubtext = "支付宝";
+    paymentLogoHTML = `<img src="../../Payment Methods/AliPay.svg" alt="Alipay" class="paymentMethodImage" />`;
+  } else if (isCard) {
+    paymentDisplayText = "Credit/Debit Card";
+    if (paymentBrand && paymentLastFour) {
+      paymentSubtext = `${capitalizeFirstLetter(paymentBrand)} ${paymentLastFour}`;
+    }
+    // Get card logo
+    const brandLogos = {
+      visa: "../../Payment Methods/Visa.svg",
+      mastercard: "../../Payment Methods/masterCard.svg",
+      amex: "../../Payment Methods/Amex.svg",
+      unionpay: "../../Payment Methods/UnionPay.svg",
+    };
+    const logoPath =
+      brandLogos[paymentBrand?.toLowerCase()] ||
+      "../../Payment Methods/Visa.svg";
+    paymentLogoHTML = `<img src="${logoPath}" alt="${paymentBrand}" class="paymentMethodImage" />`;
+  }
+
+  // Get transaction ID (use saved hawkrTransactionId or generate from orderId)
+  const transactionId =
+    order.hawkrTransactionId || `c2b-${orderId.substring(0, 10)}-FOOD`;
+
+  container.innerHTML = `
+    <div class="orderItemsList">
+      ${orderItemsHTML}
+    </div>
+
+    <div class="totalRow">
+      <span class="totalLabel">Total</span>
+      <span class="totalPrice">$${total.toFixed(2)}</span>
+    </div>
+
+    <div class="detailsRow">
+      <div class="collectionDetailsSection">
+        <span class="sectionLabel">Collection Details</span>
+        <div class="collectionRow">
+          <div class="collectionIcon location">
+            ${getLocationIcon()}
+          </div>
+          <div class="collectionInfo">
+            <span class="collectionTitle">${collectionLocation}</span>
+            <span class="collectionSubtitle">${collectionAddress}</span>
+          </div>
+        </div>
+        <div class="collectionRow">
+          <div class="collectionIcon time">
+            ${getClockIcon()}
+          </div>
+          <div class="collectionInfo">
+            <span class="collectionTitle">Pick up in ${pickupTime} minutes</span>
+            <span class="collectionSubtitle">Collection Time</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="transactionDetailsSection">
+        <span class="sectionLabel">Transaction Details</span>
+        <div class="paymentMethodCard">
+          ${paymentLogoHTML}
+          <div class="paymentInfo">
+            <span class="paymentMethod">${paymentDisplayText}</span>
+            ${paymentSubtext ? `<span class="paymentMethodDetails">${paymentSubtext}</span>` : ""}
+          </div>
+        </div>
+        <div class="transactionIds">
+          <span class="transactionId">Hawkr Transaction ID: ${transactionId}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="feedbackSection">
+      <a href="consumerFeedback.html?order=${encodeURIComponent(orderId)}" class="leaveFeedbackBtn">Leave feedback</a>
+    </div>
+  `;
+}
+
+/**
+ * Capitalize first letter of a string
+ */
+function capitalizeFirstLetter(str) {
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
+async function initializeDetailPage() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const orderId = urlParams.get("id");
+
+  if (!orderId) {
     const container = document.getElementById("confirmedContent");
     if (container) {
       container.innerHTML = `<p>No transaction ID provided.</p>`;
+    }
+    return;
+  }
+
+  // Show loading
+  const container = document.getElementById("confirmedContent");
+  if (container) {
+    container.innerHTML = `<div class="loadingSpinner"></div>`;
+  }
+
+  try {
+    // Fetch order from Firebase
+    const order = await getOrderById(orderId);
+
+    if (!order) {
+      if (container) {
+        container.innerHTML = `<p>Transaction not found.</p>`;
+      }
+      return;
+    }
+
+    renderTransactionDetailFromOrder(order, orderId);
+  } catch (error) {
+    console.error("Error fetching transaction detail:", error);
+    if (container) {
+      container.innerHTML = `<p>Failed to load transaction details.</p>`;
     }
   }
 }
@@ -819,24 +1016,82 @@ function showLoading() {
 async function initializeSettingsPage() {
   showLoading();
 
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 300));
+  if (!currentUser) {
+    const container = document.getElementById("settingsContent");
+    if (container) {
+      container.innerHTML = `
+        <div class="emptyState">
+          <p>Please log in to view your transactions.</p>
+          <a href="../Auth/login.html" class="loginBtn">Log In</a>
+        </div>
+      `;
+    }
+    return;
+  }
 
-  renderTransactionHistory(mockTransactions);
+  try {
+    // Fetch real orders from Firebase
+    const orders = await getCustomerOrders(50);
 
-  // Restore scroll position if coming back from detail page
-  const savedScrollPosition = sessionStorage.getItem(
-    "transactionsScrollPosition",
-  );
-  if (savedScrollPosition) {
-    window.scrollTo(0, parseInt(savedScrollPosition, 10));
-    sessionStorage.removeItem("transactionsScrollPosition");
+    // Transform orders to transaction format
+    const transactions = orders.map((order) => ({
+      id: order.hawkrTransactionId || order.id,
+      orderId: order.id, // Keep original order ID for detail page
+      name: order.stallName || "Unknown Stall",
+      venue: order.collectionDetails?.venueName || "Unknown Location",
+      amount: order.total || 0,
+      type: "debit",
+      date: order.createdAt?.toDate
+        ? order.createdAt.toDate()
+        : new Date(order.createdAt),
+      // Store additional data for detail page
+      orderNumber: order.orderNumber,
+      hawkrTransactionId: order.hawkrTransactionId,
+    }));
+
+    if (transactions.length === 0) {
+      const container = document.getElementById("settingsContent");
+      if (container) {
+        container.innerHTML = `
+          <div class="nowPerusingSection">
+            <span class="nowPerusingLabel">Now Perusing:</span>
+            <span class="nowPerusingTitle">Transactions</span>
+          </div>
+          <div class="emptyState">
+            <p>No transactions yet. Start ordering to see your history!</p>
+            <a href="../Consumer Order/consumerOrder.html" class="orderBtn">Order Food</a>
+          </div>
+        `;
+      }
+      return;
+    }
+
+    renderTransactionHistory(transactions);
+
+    // Restore scroll position if coming back from detail page
+    const savedScrollPosition = sessionStorage.getItem(
+      "transactionsScrollPosition",
+    );
+    if (savedScrollPosition) {
+      window.scrollTo(0, parseInt(savedScrollPosition, 10));
+      sessionStorage.removeItem("transactionsScrollPosition");
+    }
+  } catch (error) {
+    console.error("Error fetching transactions:", error);
+    const container = document.getElementById("settingsContent");
+    if (container) {
+      container.innerHTML = `
+        <div class="emptyState">
+          <p>Failed to load transactions. Please try again.</p>
+        </div>
+      `;
+    }
   }
 }
 
 async function initializePage() {
   if (isDetailPage) {
-    initializeDetailPage();
+    await initializeDetailPage();
   } else {
     await initializeSettingsPage();
   }
@@ -849,8 +1104,13 @@ async function initializePage() {
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize navbar (auth, user display, logout)
   initConsumerNavbar();
+  initMobileMenu();
 
-  initializePage();
+  // Listen for auth state and then initialize
+  onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+    await initializePage();
+  });
 
   // Back button handler
   const backButton = document.getElementById("backButton");

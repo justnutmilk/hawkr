@@ -341,6 +341,152 @@
             </div>
         </div>
 
+        <!-- Resolve Feedback Modal -->
+        <div class="resolveModalOverlay" id="resolveModal" hidden>
+            <div class="resolveModalContainer">
+                <div class="resolveModalHeader">
+                    <h2 class="resolveModalTitle">Resolve Feedback</h2>
+                    <button class="resolveModalClose" id="closeResolveModal">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="resolveModalBody">
+                    <!-- Review Summary -->
+                    <div class="resolveReviewSummary" id="resolveReviewSummary">
+                        <!-- Dynamically populated -->
+                    </div>
+
+                    <!-- Order Info (if linked) -->
+                    <div class="resolveOrderInfo" id="resolveOrderInfo" hidden>
+                        <div class="resolveOrderLabel">Linked Order</div>
+                        <div class="resolveOrderDetails">
+                            <span
+                                class="resolveOrderId"
+                                id="resolveOrderId"
+                            ></span>
+                            <span
+                                class="resolveOrderAmount"
+                                id="resolveOrderAmount"
+                            ></span>
+                        </div>
+                    </div>
+
+                    <!-- Response Section -->
+                    <div class="resolveResponseSection">
+                        <label class="resolveLabel" for="resolveResponseText"
+                            >Your Response
+                            <span class="resolveRequired">*</span></label
+                        >
+                        <textarea
+                            class="resolveTextarea"
+                            id="resolveResponseText"
+                            placeholder="Write a response to the customer..."
+                            maxlength="1000"
+                            required
+                        ></textarea>
+                        <span class="resolveCharCount"
+                            ><span id="resolveCharCount">0</span>/1000</span
+                        >
+                    </div>
+
+                    <!-- Refund Section (conditional) -->
+                    <div
+                        class="resolveRefundSection"
+                        id="resolveRefundSection"
+                        hidden
+                    >
+                        <div class="resolveRefundToggle">
+                            <label class="liquidGlassToggle">
+                                <input type="checkbox" id="includeRefund" />
+                                <span class="toggleTrack">
+                                    <span class="toggleThumb"></span>
+                                </span>
+                            </label>
+                            <span class="resolveRefundLabel"
+                                >Include Refund</span
+                            >
+                        </div>
+
+                        <div
+                            class="resolveRefundOptions"
+                            id="resolveRefundOptions"
+                            hidden
+                        >
+                            <label class="resolveRefundOption">
+                                <input
+                                    type="radio"
+                                    name="refundType"
+                                    value="full"
+                                    checked
+                                />
+                                <span class="resolveRefundRadio"></span>
+                                <span class="resolveRefundText"
+                                    >Full Refund (<span id="fullRefundAmount"
+                                        >$0.00</span
+                                    >)</span
+                                >
+                            </label>
+                            <label class="resolveRefundOption">
+                                <input
+                                    type="radio"
+                                    name="refundType"
+                                    value="partial"
+                                />
+                                <span class="resolveRefundRadio"></span>
+                                <span class="resolveRefundText"
+                                    >Partial Refund</span
+                                >
+                            </label>
+                            <div
+                                class="resolvePartialAmount"
+                                id="resolvePartialAmount"
+                                hidden
+                            >
+                                <label
+                                    class="resolveLabel"
+                                    for="partialRefundAmount"
+                                    >Amount</label
+                                >
+                                <div class="resolveAmountInput">
+                                    <span class="resolveCurrency">$</span>
+                                    <input
+                                        type="number"
+                                        id="partialRefundAmount"
+                                        step="0.01"
+                                        min="0.01"
+                                        placeholder="0.00"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="resolveModalFooter">
+                    <button class="resolveButtonSecondary" id="cancelResolve">
+                        Cancel
+                    </button>
+                    <button class="resolveButtonPrimary" id="submitResolve">
+                        Resolve Feedback
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <script type="module" src="vendorReviews.js"></script>
     </body>
 </html>

@@ -11,6 +11,9 @@ import {
 import {
   doc,
   getDoc,
+  collection,
+  getDocs,
+  onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // ============================================
@@ -44,8 +47,209 @@ function getAssetPath() {
 }
 
 // ============================================
+// CART BADGE FUNCTIONS
+// ============================================
+
+// Store the unsubscribe function for cart listener
+let cartUnsubscribe = null;
+
+/**
+ * Get cart item count from Firebase or localStorage
+ */
+async function getCartItemCount(userId) {
+  if (userId) {
+    try {
+      const cartRef = collection(db, "customers", userId, "cart");
+      const cartSnapshot = await getDocs(cartRef);
+      let totalItems = 0;
+      cartSnapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        totalItems += data.quantity || 1;
+      });
+      return totalItems;
+    } catch (error) {
+      console.error("Error fetching cart count:", error);
+      return 0;
+    }
+  } else {
+    // Fallback to localStorage for guests
+    const cart = JSON.parse(localStorage.getItem("hawkrCart") || "[]");
+    return cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+  }
+}
+
+/**
+ * Inject cart badge styles if not already present
+ */
+function injectCartBadgeStyles() {
+  if (document.getElementById("cartBadgeStyles")) return;
+
+  const style = document.createElement("style");
+  style.id = "cartBadgeStyles";
+  style.textContent = `
+    .cartLinkWrapper,
+    .cartIconWrapper {
+      position: relative;
+      display: inline-flex;
+    }
+    .cartBadge,
+    .navCartBadge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 50%;
+      background: #913b9f;
+      color: #fff;
+      font-family: Aptos, system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      border: 2px solid #fff;
+      box-sizing: content-box;
+    }
+    /* When count is single digit, keep it perfectly circular */
+    .cartBadge:not(.multi-digit),
+    .navCartBadge:not(.multi-digit) {
+      width: 18px;
+      padding: 0;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+/**
+ * Update cart badge display on all cart links
+ */
+function updateCartBadge(count) {
+  // Inject styles
+  injectCartBadgeStyles();
+
+  // Find all cart links (desktop and mobile)
+  const cartLinks = document.querySelectorAll('a[href*="consumerCart.html"]');
+
+  cartLinks.forEach((cartLink) => {
+    // Add wrapper class and set position relative
+    if (
+      !cartLink.classList.contains("cartLinkWrapper") &&
+      !cartLink.classList.contains("cartIconWrapper")
+    ) {
+      cartLink.classList.add("cartLinkWrapper");
+    }
+
+    // Remove existing badge if any (check for both class names)
+    const existingBadge = cartLink.querySelector(".cartBadge, .navCartBadge");
+    if (existingBadge) {
+      existingBadge.remove();
+    }
+
+    // Add badge if count > 0
+    if (count > 0) {
+      const badge = document.createElement("span");
+      badge.className = "navCartBadge";
+      const displayCount = count > 99 ? "99+" : count;
+      badge.textContent = displayCount;
+      // Add multi-digit class if needed for proper sizing
+      if (count >= 10) {
+        badge.classList.add("multi-digit");
+      }
+      cartLink.appendChild(badge);
+    }
+  });
+
+  // Also update any existing cartBadge element by ID (for pages that have it in HTML)
+  const cartBadgeById = document.getElementById("cartBadge");
+  if (cartBadgeById) {
+    if (count > 0) {
+      cartBadgeById.textContent = count > 99 ? "99+" : count;
+      cartBadgeById.style.display = "flex";
+    } else {
+      cartBadgeById.style.display = "none";
+    }
+  }
+}
+
+/**
+ * Initialize cart badge with real-time listener for Firebase updates
+ */
+async function initCartBadge(userId) {
+  // Clean up previous listener if exists
+  if (cartUnsubscribe) {
+    cartUnsubscribe();
+    cartUnsubscribe = null;
+  }
+
+  if (userId) {
+    // Set up real-time listener for cart changes
+    const cartRef = collection(db, "customers", userId, "cart");
+
+    cartUnsubscribe = onSnapshot(
+      cartRef,
+      (snapshot) => {
+        let totalItems = 0;
+        snapshot.docs.forEach((doc) => {
+          const data = doc.data();
+          totalItems += data.quantity || 1;
+        });
+        updateCartBadge(totalItems);
+      },
+      (error) => {
+        console.error("Error listening to cart changes:", error);
+      },
+    );
+  } else {
+    // For guests, just get the count once (no real-time for localStorage)
+    const count = await getCartItemCount(null);
+    updateCartBadge(count);
+  }
+}
+
+// ============================================
 // USER DISPLAY FUNCTIONS
 // ============================================
+
+/**
+ * Determine user type by checking which collection they exist in
+ * @returns {Promise<{type: string, data: object}|null>}
+ */
+async function getUserType(uid) {
+  // Check customers collection first
+  try {
+    const customerDoc = await getDoc(doc(db, "customers", uid));
+    if (customerDoc.exists()) {
+      return { type: "customer", data: customerDoc.data() };
+    }
+  } catch (error) {
+    console.log("Not a customer");
+  }
+
+  // Check vendors collection
+  try {
+    const vendorDoc = await getDoc(doc(db, "vendors", uid));
+    if (vendorDoc.exists()) {
+      return { type: "vendor", data: vendorDoc.data() };
+    }
+  } catch (error) {
+    console.log("Not a vendor");
+  }
+
+  // Check operators collection
+  try {
+    const operatorDoc = await getDoc(doc(db, "operators", uid));
+    if (operatorDoc.exists()) {
+      return { type: "operator", data: operatorDoc.data() };
+    }
+  } catch (error) {
+    console.log("Not an operator");
+  }
+
+  return null;
+}
 
 /**
  * Update the profile dropdown with user info
@@ -86,7 +290,7 @@ async function updateUserDisplay(user) {
 async function handleLogout() {
   try {
     await signOut(auth);
-    window.location.href = "../../Pages/Auth/login.html";
+    window.location.href = "../../index.html";
   } catch (error) {
     console.error("Logout error:", error);
     alert("Failed to logout. Please try again.");
@@ -112,7 +316,10 @@ function initProfileDropdown() {
 
     // Close dropdown when clicking outside
     document.addEventListener("click", (e) => {
-      if (!profileDropdown.contains(e.target) && !profileButton.contains(e.target)) {
+      if (
+        !profileDropdown.contains(e.target) &&
+        !profileButton.contains(e.target)
+      ) {
         profileDropdown.classList.remove("active");
       }
     });
@@ -139,8 +346,48 @@ export function initConsumerNavbar() {
   // Listen for auth state changes and update UI
   onAuthStateChanged(auth, async (user) => {
     if (user) {
+      // Check user type and redirect if on wrong dashboard
+      const userTypeInfo = await getUserType(user.uid);
+
+      if (userTypeInfo) {
+        const currentPath = window.location.pathname;
+
+        // If user is a vendor but on consumer pages, redirect to vendor dashboard
+        if (
+          userTypeInfo.type === "vendor" &&
+          currentPath.includes("/Consumer")
+        ) {
+          window.location.href =
+            "../../Pages/Vendor Dashboard/vendorDashboard.html";
+          return;
+        }
+
+        // If user is an operator but on consumer/vendor pages, redirect to operator dashboard
+        if (
+          userTypeInfo.type === "operator" &&
+          (currentPath.includes("/Consumer") || currentPath.includes("/Vendor"))
+        ) {
+          window.location.href =
+            "../../Pages/Operator Dashboard/operatorDashboard.html";
+          return;
+        }
+
+        // If user is a customer but on vendor/operator pages, redirect to consumer dashboard
+        if (
+          userTypeInfo.type === "customer" &&
+          (currentPath.includes("/Vendor") || currentPath.includes("/Operator"))
+        ) {
+          window.location.href =
+            "../../Pages/Consumer Dashboard/consumerDashboard.html";
+          return;
+        }
+      }
+
       await updateUserDisplay(user);
+      await initCartBadge(user.uid);
     } else {
+      // Still show cart badge for guests (from localStorage)
+      await initCartBadge(null);
       // Redirect to login if not authenticated
       window.location.href = "../../Pages/Auth/login.html";
     }
@@ -148,4 +395,10 @@ export function initConsumerNavbar() {
 }
 
 // Export for use in other modules
-export { handleLogout, updateUserDisplay };
+export {
+  handleLogout,
+  updateUserDisplay,
+  updateCartBadge,
+  getCartItemCount,
+  initCartBadge,
+};

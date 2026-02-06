@@ -21,6 +21,7 @@ import {
   getStallsByHawkerCentre,
 } from "../../firebase/services/foodStalls.js";
 import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
+import { initMobileMenu } from "../../assets/js/mobileMenu.js";
 
 // ============================================
 // MOCK DATA (Simulating Backend Database)
@@ -851,9 +852,9 @@ function handleSearchResultClick(type, id, url = null) {
   if (type === "page" && url) {
     window.location.href = url;
   } else if (type === "hawkerCentre") {
-    window.location.href = `../Consumer Order/consumerHawkerCentre?id=${id}`;
+    window.location.href = `../Consumer Order/consumerHawkerCentre.html?id=${id}`;
   } else if (type === "stall") {
-    window.location.href = `../Consumer Order/consumerOrderShop?id=${id}`;
+    window.location.href = `../Consumer Order/consumerOrderShop.html?id=${id}`;
   }
 }
 
@@ -1122,7 +1123,7 @@ function renderHawkerCard(hawker) {
   const hawkerId = hawker.id || "";
 
   return `
-    <a href="../Consumer Order/consumerHawkerCentre?id=${hawkerId}" class="hawkerCard" data-hawker-id="${hawkerId}">
+    <a href="../Consumer Order/consumerHawkerCentre.html?id=${hawkerId}" class="hawkerCard" data-hawker-id="${hawkerId}">
       <div class="hawkerCardImage">
         <img src="${hawker.image}" alt="${hawker.name}" onerror="this.style.display='none'">
       </div>
@@ -1182,16 +1183,16 @@ function handleHawkerClick(hawkerId) {
     console.error("No hawker ID provided to handleHawkerClick");
     return;
   }
-  window.location.href = `../Consumer Order/consumerHawkerCentre?id=${hawkerId}`;
+  window.location.href = `../Consumer Order/consumerHawkerCentre.html?id=${hawkerId}`;
 }
 
 // Expose navigation function globally for inline onclick handlers (needed for ES modules)
 window.navigateToHawker = function (hawkerId) {
-  console.log("navigateToHawker called with ID:", hawkerId);
-  console.log("Type of hawkerId:", typeof hawkerId);
-  const targetUrl = `../Consumer Order/consumerHawkerCentre?id=${hawkerId}`;
-  console.log("Navigating to:", targetUrl);
-  window.location.href = targetUrl;
+  if (!hawkerId) {
+    console.error("No hawker ID provided to navigateToHawker");
+    return;
+  }
+  window.location.href = `../Consumer Order/consumerHawkerCentre.html?id=${hawkerId}`;
 };
 
 function renderVouchers(vouchers) {
@@ -1267,6 +1268,9 @@ async function initializeDashboard() {
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize navbar (auth, user display, logout)
   initConsumerNavbar();
+
+  // Initialize mobile menu
+  initMobileMenu();
 
   // Initialize dashboard with dynamic content
   initializeDashboard();

@@ -560,41 +560,195 @@ body {
     padding-left: 124px;
 }
 
-.paymentMethodCard {
+.savedPaymentMethods {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.noPaymentMethods {
+    padding: 16px;
+    text-align: center;
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+}
+
+.noPaymentMethods p {
+    margin: 0;
+}
+
+.paymentOption {
     display: flex;
     align-items: center;
     gap: 16px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid #e0e0e0;
+    background: #fff;
+    cursor: pointer;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease;
 }
 
-.paymentMethodImage {
+.paymentOption:hover {
+    border-color: #c9a0d0;
+    background: #faf8fb;
+}
+
+.paymentOption.selected {
+    border-color: #913b9f;
+    background: #faf8fb;
+}
+
+.paymentOption input[type="radio"] {
+    display: none;
+}
+
+.paymentOptionContent {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.paymentOptionIcon {
     width: 48px;
-    height: 48px;
-    border-radius: 8px;
+    height: 32px;
     object-fit: contain;
 }
 
-.paymentInfo {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.paymentMethod {
+.paymentOptionDetails {
     color: #341539;
-    font-family: "Source Serif", Georgia, serif;
-    font-size: 19px;
-    font-style: normal;
-    font-weight: 400;
-    line-height: 24px;
-}
-
-.paymentMethodDetails {
-    color: #808080;
     font-family: Aptos, sans-serif;
     font-size: 16px;
-    font-style: normal;
     font-weight: 400;
-    line-height: normal;
+}
+
+.paymentOptionDefault {
+    color: #913b9f;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 4px 8px;
+    background: rgba(145, 59, 159, 0.1);
+    border-radius: 4px;
+}
+
+.paymentOptionCheck {
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.paymentOption.selected .paymentOptionCheck {
+    display: flex;
+}
+
+/* Add New Card Button */
+.addNewCardBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px dashed #c9a0d0;
+    background: transparent;
+    cursor: pointer;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+.addNewCardBtn:hover {
+    border-color: #913b9f;
+    background: #faf8fb;
+}
+
+.addNewCardBtn span {
+    color: #913b9f;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* Payment Divider */
+.paymentDivider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 8px 0;
+}
+
+.paymentDividerLine {
+    flex: 1;
+    height: 1px;
+    background: #e0e0e0;
+}
+
+.paymentDividerText {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+/* Digital Wallets */
+.digitalWallets {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.walletBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    padding: 16px 20px;
+    border-radius: 12px;
+    border: 2px solid #e0e0e0;
+    background: #fff;
+    cursor: pointer;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.walletBtn:hover {
+    border-color: #c9a0d0;
+    background: #faf8fb;
+    transform: translateY(-2px);
+}
+
+.walletBtn.selected {
+    border-color: #913b9f;
+    background: #faf8fb;
+}
+
+.walletBtn:active {
+    transform: translateY(0);
+}
+
+.walletBtn img {
+    height: 28px;
+    width: auto;
+    object-fit: contain;
+}
+
+#paymentRequestButton {
+    min-width: 150px;
+    min-height: 48px;
+}
+
+#paymentRequestButton:empty {
+    display: none;
 }
 
 /* Checkout Section */
@@ -900,6 +1054,355 @@ body {
     transform: scale(0.98);
 }
 
+/* ============================================
+   ADD CARD MODAL
+   ============================================ */
+
+.cardModalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+        opacity 0.3s ease,
+        visibility 0.3s ease;
+}
+
+.cardModalOverlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.cardModal {
+    width: 90%;
+    max-width: 440px;
+    background: #fff;
+    border-radius: 24px;
+    overflow: hidden;
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+}
+
+.cardModalOverlay.active .cardModal {
+    transform: translateY(0);
+}
+
+.cardModalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.cardModalTitle {
+    color: #341539;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.cardModalClose {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: #f4f4f5;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.cardModalClose:hover {
+    background: #e8e8e9;
+    transform: scale(1.05);
+}
+
+.cardModalContent {
+    padding: 24px;
+}
+
+.cardInputWrapper {
+    padding: 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    background: #fff;
+    transition: border-color 0.2s ease;
+}
+
+.cardInputWrapper:focus-within {
+    border-color: #913b9f;
+}
+
+#cardElement {
+    min-height: 24px;
+}
+
+.cardModalError {
+    color: #eb001b;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    margin: 12px 0 0 0;
+    min-height: 20px;
+}
+
+.cardModalSecure {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding: 12px;
+    background: #f9f9f9;
+    border-radius: 8px;
+}
+
+.cardModalSecure span {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+}
+
+.cardModalFooter {
+    display: flex;
+    gap: 12px;
+    padding: 16px 24px 24px;
+}
+
+.cardModalCancelBtn {
+    flex: 1;
+    padding: 14px 24px;
+    border: 2px solid #e0e0e0;
+    border-radius: 48px;
+    background: #fff;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+.cardModalCancelBtn:hover {
+    border-color: #c9a0d0;
+    background: #faf8fb;
+}
+
+.cardModalSaveBtn {
+    flex: 1;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 48px;
+    background: #913b9f;
+    color: #fff;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.cardModalSaveBtn:hover {
+    background: #7a3287;
+}
+
+.cardModalSaveBtn:disabled {
+    background: #c9a0d0;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   PAYMENT PROCESSING OVERLAY
+   ============================================ */
+
+.paymentProcessingOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+        opacity 0.3s ease,
+        visibility 0.3s ease;
+}
+
+.paymentProcessingOverlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.paymentProcessingContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+}
+
+.paymentProcessingSpinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #f4f1f6;
+    border-top-color: #913b9f;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.paymentProcessingText {
+    color: #341539;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+/* ============================================
+   PAYNOW QR CODE MODAL
+   ============================================ */
+
+.paynowModalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+        opacity 0.3s ease,
+        visibility 0.3s ease;
+}
+
+.paynowModalOverlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.paynowModal {
+    width: 90%;
+    max-width: 400px;
+    background: #fff;
+    border-radius: 24px;
+    overflow: hidden;
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+}
+
+.paynowModalOverlay.active .paynowModal {
+    transform: translateY(0);
+}
+
+.paynowModalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.paynowModalTitle {
+    color: #341539;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.paynowModalClose {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: #f4f4f5;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+}
+
+.paynowModalClose:hover {
+    background: #e8e8e9;
+}
+
+.paynowModalContent {
+    padding: 24px;
+    text-align: center;
+}
+
+.paynowQRCode {
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 16px;
+    display: block;
+}
+
+.paynowAmount {
+    color: #341539;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+}
+
+.paynowInstructions {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    margin: 0 0 24px 0;
+}
+
+.paynowPolling {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px;
+    background: #f9f9f9;
+    border-radius: 12px;
+}
+
+.paynowPolling span {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+}
+
+.paynowSpinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f4f1f6;
+    border-top-color: #913b9f;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
 /* Responsive Adjustments */
 @media (max-width: 1024px) {
     .topBar {
@@ -1137,4 +1640,141 @@ body {
     height: 18px;
     filter: brightness(0) saturate(100%) invert(14%) sepia(89%) saturate(5765%)
         hue-rotate(350deg) brightness(92%) contrast(107%);
+}
+
+/* ============================================
+   CART ITEM VARIANTS
+   ============================================ */
+
+.cartItemVariants {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.cartItemSpecialRequest {
+    color: #913b9f;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+    margin-top: 4px;
+}
+
+/* ============================================
+   EDIT POPUP VARIANTS
+   ============================================ */
+
+.editPopupVariantsSection {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.editPopupLoading {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    padding: 8px 0;
+}
+
+.editVariantGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.editVariantGroupLabel {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.editVariantOptions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.editVariantOption {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 48px;
+    border: 1px solid #d0d0d0;
+    background: #fff;
+    cursor: pointer;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+.editVariantOption:hover {
+    border-color: #913b9f;
+}
+
+.editVariantOption.selected {
+    border-color: #913b9f;
+    background: #f9f5fa;
+}
+
+.editVariantOption input[type="radio"],
+.editVariantOption input[type="checkbox"] {
+    display: none;
+}
+
+.editVariantMultiHint {
+    font-size: 12px;
+    color: #808080;
+    font-weight: 400;
+}
+
+.editVariantOptionName {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.editVariantOption.selected .editVariantOptionName {
+    font-weight: 600;
+}
+
+.editVariantOptionPrice {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.editVariantOption.selected .editVariantOptionPrice {
+    color: #913b9f;
+}
+
+/* Special Request Label */
+.specialRequestLabel {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: normal;
+    display: block;
+    margin-bottom: 8px;
+}
+
+/* Edit Popup Footer Price */
+#editPopupPrice {
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
 }

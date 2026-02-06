@@ -462,69 +462,123 @@
                     </div>
                 </div>
                 <div class="addFormGroup">
-                    <label class="addFormLabel" for="addTags"
-                        >Tags
-                        <span class="addFormHint"
-                            >(comma-separated)</span
-                        ></label
+                    <label class="addFormLabel">Allergens</label>
+                    <span class="addFormHint"
+                        >Type an allergen and press Enter, or click suggestions
+                        below.</span
                     >
-                    <input
-                        class="addFormInput addFormTagsInput"
-                        type="text"
-                        id="addTags"
-                    />
+                    <div
+                        class="allergenContainer"
+                        id="addAllergenContainer"
+                        data-droppable
+                    >
+                        <input
+                            type="text"
+                            class="allergenInput"
+                            id="addAllergenInput"
+                            placeholder="Add allergen..."
+                        />
+                    </div>
+                    <div
+                        class="allergenSuggestions"
+                        id="addAllergenSuggestions"
+                    >
+                        <span class="allergenSuggestionsLabel"
+                            >Click or drag to add:</span
+                        >
+                        <span
+                            class="allergenSuggestion"
+                            data-allergen="Seafood"
+                            data-draggable
+                        >
+                            <img
+                                src="../../assets/icons/seafood.svg"
+                                alt="Seafood"
+                            />
+                            Seafood
+                        </span>
+                        <span
+                            class="allergenSuggestion"
+                            data-allergen="Nuts"
+                            data-draggable
+                        >
+                            <img src="../../assets/icons/nuts.svg" alt="Nuts" />
+                            Nuts
+                        </span>
+                        <span
+                            class="allergenSuggestion"
+                            data-allergen="Dairy"
+                            data-draggable
+                        >
+                            <img
+                                src="../../assets/icons/dairy.svg"
+                                alt="Dairy"
+                            />
+                            Dairy
+                        </span>
+                        <span
+                            class="allergenSuggestion"
+                            data-allergen="Eggs"
+                            data-draggable
+                        >
+                            <img src="../../assets/icons/egg.svg" alt="Eggs" />
+                            Eggs
+                        </span>
+                        <span
+                            class="allergenSuggestion"
+                            data-allergen="Soy"
+                            data-draggable
+                        >
+                            <img src="../../assets/icons/soy.svg" alt="Soy" />
+                            Soy
+                        </span>
+                    </div>
                 </div>
                 <div class="addFormGroup">
-                    <label class="addFormLabel">Allergens</label>
-                    <div class="addFormAllergenList">
-                        <label class="addFormAllergenItem">
-                            <input
-                                type="checkbox"
-                                value="Seafood"
-                                class="addFormAllergenCheck"
+                    <label class="addFormLabel">Variants</label>
+                    <span class="addFormHint"
+                        >Add options like size, spice level, or add-ons.</span
+                    >
+                    <div class="variantsBuilder" id="addVariantsBuilder">
+                        <!-- Variant groups will be added here -->
+                    </div>
+                    <button
+                        class="addVariantGroupBtn"
+                        type="button"
+                        id="addVariantGroupBtn"
+                    >
+                        <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 16 16"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M8 3.33334V12.6667M3.33333 8H12.6667"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
                             />
-                            <span>Seafood</span>
+                        </svg>
+                        Add variant group
+                    </button>
+                </div>
+                <div class="addFormGroup availabilityToggleGroup">
+                    <div class="availabilityToggleRow">
+                        <label
+                            class="liquidGlassToggle availabilityToggle"
+                            id="addAvailableToggle"
+                        >
+                            <input type="checkbox" id="addAvailable" checked />
+                            <span class="toggleTrack">
+                                <span class="toggleThumb"></span>
+                            </span>
                         </label>
-                        <label class="addFormAllergenItem">
-                            <input
-                                type="checkbox"
-                                value="Nuts"
-                                class="addFormAllergenCheck"
-                            />
-                            <span>Nuts</span>
-                        </label>
-                        <label class="addFormAllergenItem">
-                            <input
-                                type="checkbox"
-                                value="Dairy"
-                                class="addFormAllergenCheck"
-                            />
-                            <span>Dairy</span>
-                        </label>
-                        <label class="addFormAllergenItem">
-                            <input
-                                type="checkbox"
-                                value="Eggs"
-                                class="addFormAllergenCheck"
-                            />
-                            <span>Eggs</span>
-                        </label>
-                        <label class="addFormAllergenItem">
-                            <input
-                                type="checkbox"
-                                value="Gluten"
-                                class="addFormAllergenCheck"
-                            />
-                            <span>Gluten</span>
-                        </label>
-                        <label class="addFormAllergenItem">
-                            <input
-                                type="checkbox"
-                                value="Soy"
-                                class="addFormAllergenCheck"
-                            />
-                            <span>Soy</span>
-                        </label>
+                        <span class="availabilityToggleLabel"
+                            >Available for ordering</span
+                        >
                     </div>
                 </div>
             </form>
@@ -534,7 +588,7 @@
                     id="addPanelCancelBtn"
                     type="button"
                 >
-                    Cancel
+                    Cancel <kbd>ESC</kbd>
                 </button>
                 <button
                     class="addPanelSaveBtn"
@@ -542,137 +596,262 @@
                     type="button"
                 >
                     Add product
+                    <span class="kbdGroup"
+                        ><kbd>CTRL</kbd><kbd>ENTER ↵</kbd></span
+                    >
                 </button>
             </div>
         </div>
 
-        <!-- Edit Menu Item Overlay -->
-        <div class="overlay" id="editOverlay">
-            <div class="editPopup">
-                <div class="editPopupHeader">
-                    <h2 class="editPopupTitle">Edit Menu Item</h2>
-                    <button class="editPopupClose" id="editPopupClose">
+        <!-- Edit Menu Item Side Panel -->
+        <div class="addPanelOverlay" id="editPanelOverlay"></div>
+        <div class="addPanel" id="editPanel">
+            <div class="addPanelHeader">
+                <h2 class="addPanelTitle">Edit product</h2>
+                <button class="addPanelClose" id="editPanelClose">
+                    <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <path
+                            d="M15 5L5 15M5 5L15 15"
+                            stroke="#341539"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                </button>
+            </div>
+            <form class="addPanelForm" id="editForm">
+                <div class="addFormGroup">
+                    <label class="addFormLabel" for="editName"
+                        >Name (required)</label
+                    >
+                    <span class="addFormHint"
+                        >Name of the product, visible to customers.</span
+                    >
+                    <input class="addFormInput" type="text" id="editName" />
+                </div>
+                <div class="addFormGroup">
+                    <label class="addFormLabel" for="editDescription"
+                        >Description</label
+                    >
+                    <span class="addFormHint"
+                        >Appears on the customer's order summary.</span
+                    >
+                    <textarea
+                        class="addFormTextarea"
+                        id="editDescription"
+                        rows="4"
+                    ></textarea>
+                </div>
+                <div class="addFormGroup">
+                    <label class="addFormLabel" for="editCategory"
+                        >Category</label
+                    >
+                    <select class="addFormSelect" id="editCategory">
+                        <option value="Noodles">Noodles</option>
+                        <option value="Rice">Rice</option>
+                        <option value="Drinks">Drinks</option>
+                        <option value="Sides">Sides</option>
+                        <option value="__other">Other</option>
+                    </select>
+                    <input
+                        class="addFormInput addFormCustomCategory"
+                        type="text"
+                        id="editCustomCategory"
+                        placeholder="Enter custom category"
+                    />
+                </div>
+                <div class="addFormGroup">
+                    <label class="addFormLabel" for="editPrice">Price</label>
+                    <div class="addFormPriceWrapper">
+                        <span class="addFormPricePrefix">S$</span>
+                        <input
+                            class="addFormPriceInput"
+                            type="number"
+                            id="editPrice"
+                            step="0.01"
+                            min="0"
+                            placeholder="0.00"
+                        />
+                    </div>
+                </div>
+                <div class="addFormGroup">
+                    <label class="addFormLabel">Allergens</label>
+                    <span class="addFormHint"
+                        >Type an allergen and press Enter, or click suggestions
+                        below.</span
+                    >
+                    <div
+                        class="allergenContainer"
+                        id="editAllergenContainer"
+                        data-droppable
+                    >
+                        <input
+                            type="text"
+                            class="allergenInput"
+                            id="editAllergenInput"
+                            placeholder="Add allergen..."
+                        />
+                    </div>
+                    <div
+                        class="allergenSuggestions"
+                        id="editAllergenSuggestions"
+                    >
+                        <span class="allergenSuggestionsLabel"
+                            >Click or drag to add:</span
+                        >
+                        <span
+                            class="allergenSuggestion"
+                            data-allergen="Seafood"
+                            data-draggable
+                        >
+                            <img
+                                src="../../assets/icons/seafood.svg"
+                                alt="Seafood"
+                            />
+                            Seafood
+                        </span>
+                        <span
+                            class="allergenSuggestion"
+                            data-allergen="Nuts"
+                            data-draggable
+                        >
+                            <img src="../../assets/icons/nuts.svg" alt="Nuts" />
+                            Nuts
+                        </span>
+                        <span
+                            class="allergenSuggestion"
+                            data-allergen="Dairy"
+                            data-draggable
+                        >
+                            <img
+                                src="../../assets/icons/dairy.svg"
+                                alt="Dairy"
+                            />
+                            Dairy
+                        </span>
+                        <span
+                            class="allergenSuggestion"
+                            data-allergen="Eggs"
+                            data-draggable
+                        >
+                            <img src="../../assets/icons/egg.svg" alt="Eggs" />
+                            Eggs
+                        </span>
+                        <span
+                            class="allergenSuggestion"
+                            data-allergen="Soy"
+                            data-draggable
+                        >
+                            <img src="../../assets/icons/soy.svg" alt="Soy" />
+                            Soy
+                        </span>
+                    </div>
+                </div>
+                <div class="addFormGroup">
+                    <label class="addFormLabel">Variants</label>
+                    <span class="addFormHint"
+                        >Add options like size, spice level, or add-ons.</span
+                    >
+                    <div class="variantsBuilder" id="editVariantsBuilder">
+                        <!-- Variant groups will be added here -->
+                    </div>
+                    <button
+                        class="addVariantGroupBtn"
+                        type="button"
+                        id="editVariantGroupBtn"
+                    >
                         <svg
-                            width="20"
-                            height="20"
-                            viewBox="0 0 20 20"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 16 16"
                             fill="none"
                             xmlns="http://www.w3.org/2000/svg"
                         >
                             <path
-                                d="M15 5L5 15M5 5L15 15"
-                                stroke="#341539"
-                                stroke-width="2"
+                                d="M8 3.33334V12.6667M3.33333 8H12.6667"
+                                stroke="currentColor"
+                                stroke-width="1.5"
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                             />
                         </svg>
+                        Add variant group
                     </button>
                 </div>
-                <form class="editForm" id="editForm">
-                    <div class="editFormGroup">
-                        <label class="editFormLabel" for="editName">Name</label>
-                        <input
-                            class="editFormInput"
-                            type="text"
-                            id="editName"
-                        />
-                    </div>
-                    <div class="editFormGroup">
-                        <label class="editFormLabel" for="editCategory"
-                            >Category</label
+                <div class="addFormGroup availabilityToggleGroup">
+                    <div class="availabilityToggleRow">
+                        <label
+                            class="liquidGlassToggle availabilityToggle"
+                            id="editAvailableToggle"
                         >
-                        <select class="editFormSelect" id="editCategory">
-                            <option value="Noodles">Noodles</option>
-                            <option value="Rice">Rice</option>
-                            <option value="Drinks">Drinks</option>
-                            <option value="Sides">Sides</option>
-                            <option value="__other">Other</option>
-                        </select>
-                        <input
-                            class="editFormInput editFormCustomCategory"
-                            type="text"
-                            id="editCustomCategory"
-                            placeholder="Enter custom category"
-                        />
-                    </div>
-                    <div class="editFormGroup">
-                        <label class="editFormLabel" for="editPrice"
-                            >Price</label
+                            <input type="checkbox" id="editAvailable" />
+                            <span class="toggleTrack">
+                                <span class="toggleThumb"></span>
+                            </span>
+                        </label>
+                        <span class="availabilityToggleLabel"
+                            >Available for ordering</span
                         >
-                        <div class="addFormPriceWrapper">
-                            <span class="addFormPricePrefix">S$</span>
-                            <input
-                                class="addFormPriceInput"
-                                type="number"
-                                id="editPrice"
-                                step="0.01"
-                                min="0"
-                                placeholder="0.00"
-                            />
-                        </div>
                     </div>
-                    <div class="editFormGroup">
-                        <label class="editFormLabel" for="editDescription"
-                            >Description</label
-                        >
-                        <textarea
-                            class="editFormTextarea"
-                            id="editDescription"
-                            rows="3"
-                        ></textarea>
-                    </div>
-                    <div class="editFormGroup">
-                        <label class="editFormLabel" for="editTags"
-                            >Tags
-                            <span class="editFormHint"
-                                >(comma-separated)</span
-                            ></label
-                        >
-                        <input
-                            class="editFormInput"
-                            type="text"
-                            id="editTags"
-                        />
-                    </div>
-                    <div class="editFormGroup">
-                        <label class="editFormLabel" for="editAllergens"
-                            >Allergens
-                            <span class="editFormHint"
-                                >(comma-separated)</span
-                            ></label
-                        >
-                        <input
-                            class="editFormInput"
-                            type="text"
-                            id="editAllergens"
-                        />
-                    </div>
-                    <div class="editFormGroup editFormCheckGroup">
-                        <label class="editFormLabel" for="editAvailable"
-                            >Available</label
-                        >
-                        <input
-                            type="checkbox"
-                            id="editAvailable"
-                            class="editFormCheckbox"
-                        />
-                    </div>
-                </form>
-                <div class="editPopupFooter">
+                </div>
+            </form>
+            <div class="addPanelFooter">
+                <button
+                    class="addPanelDeleteBtn"
+                    id="editDeleteBtn"
+                    type="button"
+                >
+                    Delete
+                </button>
+                <div class="addPanelFooterRight">
                     <button
-                        class="editPopupCancelBtn"
+                        class="addPanelCancelBtn"
                         id="editCancelBtn"
                         type="button"
+                    >
+                        Cancel <kbd>ESC</kbd>
+                    </button>
+                    <button
+                        class="addPanelSaveBtn"
+                        id="editSaveBtn"
+                        type="button"
+                    >
+                        Save changes
+                        <span class="kbdGroup"
+                            ><kbd>CTRL</kbd><kbd>ENTER&#8626;</kbd></span
+                        >
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div class="deleteModalOverlay" id="deleteModalOverlay">
+            <div class="deleteModal">
+                <h3 class="deleteModalTitle">Delete product?</h3>
+                <p class="deleteModalText">
+                    This action cannot be undone. The product will be
+                    permanently removed from your menu.
+                </p>
+                <div class="deleteModalActions">
+                    <button
+                        class="deleteModalCancelBtn"
+                        id="deleteModalCancelBtn"
                     >
                         Cancel
                     </button>
                     <button
-                        class="editPopupSaveBtn"
-                        id="editSaveBtn"
-                        type="button"
+                        class="deleteModalConfirmBtn"
+                        id="deleteModalConfirmBtn"
                     >
-                        Save
+                        Delete
                     </button>
                 </div>
             </div>

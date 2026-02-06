@@ -620,6 +620,21 @@ body {
 }
 
 /* Responsive Adjustments */
+@media (max-width: 1024px) {
+    .topBar {
+        padding: 32px 5% 0 5%;
+    }
+
+    .hygienePageContent {
+        padding-left: 5%;
+        padding-right: 5%;
+    }
+
+    .segmentedButton {
+        width: 160px;
+    }
+}
+
 @media (max-width: 768px) {
     .topBar {
         padding: 24px 5% 0 5%;
@@ -648,6 +663,30 @@ body {
     .homeButton {
         width: 48px;
         height: 48px;
+    }
+
+    .searchModule {
+        max-width: none;
+        flex: 1;
+        height: 48px;
+    }
+
+    .segmentedButton {
+        width: 140px;
+        font-size: 14px;
+    }
+
+    .transparencySection {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .transparencyIcon {
+        width: 40px;
+    }
+
+    .transparencyHeader {
+        font-size: 24px;
     }
 }
 

@@ -503,3 +503,56 @@ body {
     filter: brightness(0) saturate(100%) invert(14%) sepia(89%) saturate(5765%)
         hue-rotate(350deg) brightness(92%) contrast(107%);
 }
+
+/* ============================================
+   UNREAD NOTIFICATION STYLES
+   ============================================ */
+
+.notificationCard--unread {
+    position: relative;
+    background: #f9f7fb;
+    padding: 16px;
+    margin: -16px;
+    border-radius: 16px;
+}
+
+.notificationCard--unread::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 16px;
+    bottom: 16px;
+    width: 4px;
+    background: #913b9f;
+    border-radius: 2px;
+}
+
+.notificationCard--unread .notificationTime::before {
+    background-color: #913b9f;
+}
+
+/* Refund Badge */
+.refundBadge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    background: rgba(46, 125, 50, 0.1);
+    color: #2e7d32;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 16px;
+}
+
+/* Empty State */
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    text-align: center;
+}

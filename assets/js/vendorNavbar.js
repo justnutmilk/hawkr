@@ -78,7 +78,7 @@ function updateVendorName(name) {
 async function handleLogout() {
   try {
     await signOut(auth);
-    // Redirect will be handled by onAuthStateChanged
+    window.location.href = "../../index.html";
   } catch (error) {
     console.error("Logout error:", error);
     alert("Failed to logout. Please try again.");

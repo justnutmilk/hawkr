@@ -325,7 +325,8 @@ body {
         padding: 24px 5% 0 5%;
     }
 
-    .hawkerCenterSection {
+    .hawkerCenterSection,
+    .nowBrowsingHelper {
         padding-left: 5%;
         padding-right: 5%;
     }
@@ -345,6 +346,75 @@ body {
 
     .topActionButtons {
         gap: 1.5em;
+    }
+
+    .searchModule {
+        max-width: none;
+        flex: 1;
+        height: 48px;
+    }
+}
+
+@media (max-width: 480px) {
+    .topBar {
+        padding: 16px 4% 0 4%;
+    }
+
+    .hawkerCenterSection,
+    .nowBrowsingHelper {
+        padding-left: 4%;
+        padding-right: 4%;
+    }
+
+    .orderContent {
+        gap: 32px;
+    }
+
+    .topActionButtons {
+        gap: 1em;
+    }
+
+    .centerTitle {
+        font-size: 24px;
+        line-height: 1.2;
+    }
+
+    .stallName {
+        font-size: 18px;
+    }
+
+    .stallCardImage {
+        border-radius: 16px;
+    }
+
+    .stallCard {
+        gap: 16px;
+    }
+
+    .stallMeta {
+        gap: 12px;
+    }
+
+    .stallRating,
+    .stallHours {
+        font-size: 14px;
+    }
+
+    .cuisineTag {
+        padding: 4px 12px;
+        font-size: 14px;
+    }
+
+    .nowBrowsingLabel {
+        font-size: 14px;
+    }
+
+    .seeAllButton {
+        font-size: 14px;
+    }
+
+    .searchInput {
+        font-size: 16px;
     }
 }
 

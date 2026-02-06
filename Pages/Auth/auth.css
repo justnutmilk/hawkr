@@ -9,6 +9,11 @@
         format("truetype");
 }
 
+@font-face {
+    font-family: "Geist Mono";
+    src: url("../../fonts/GeistMono-VariableFont_wght.ttf") format("truetype");
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -29,79 +34,252 @@ body {
 }
 
 /* ============================================
-   AUTH CONTAINER - SPLIT LAYOUT
+   LIQUID GLASS TOP BAR (AUTH PAGES)
+   ============================================ */
+
+.authGlassTopBar {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 32px);
+    max-width: 600px;
+    height: 72px;
+    border-radius: 20px;
+    z-index: 1000;
+    cursor: grab;
+    user-select: none;
+    /* Purple tinted glass material */
+    background: linear-gradient(
+        135deg,
+        rgba(145, 59, 159, 0.08) 0%,
+        rgba(145, 59, 159, 0.04) 50%,
+        rgba(145, 59, 159, 0.06) 100%
+    );
+    backdrop-filter: blur(12px) saturate(1.4);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow:
+        0 8px 32px rgba(52, 21, 57, 0.12),
+        0 2px 8px rgba(0, 0, 0, 0.06),
+        inset 0 1px 1px rgba(255, 255, 255, 0.8),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.03);
+}
+
+.authGlassTopBar:active {
+    cursor: grabbing;
+}
+
+.authGlassTopBar.dragging {
+    cursor: grabbing;
+    transition: box-shadow 0.15s ease;
+    box-shadow:
+        0 16px 48px rgba(52, 21, 57, 0.18),
+        0 4px 12px rgba(0, 0, 0, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.9),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+}
+
+.authGlassTopBar.bouncing {
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.authGlassTopBarInner {
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    height: 100%;
+    position: relative;
+    z-index: 2;
+}
+
+/* Glass highlight - specular reflection */
+.authGlassHighlight {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 20px;
+    pointer-events: none;
+    z-index: 1;
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.4) 0%,
+            rgba(255, 255, 255, 0) 40%
+        ),
+        linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.1) 50%,
+            rgba(255, 255, 255, 0) 100%
+        );
+}
+
+/* Back Button - pill shape with icon and text */
+.authTopBarBack {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 56px;
+    padding: 0 20px 0 16px;
+    background: #ece6f0;
+    border: 1px solid transparent;
+    border-radius: 28px;
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 3;
+    text-decoration: none;
+    transition:
+        transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background 0.3s ease,
+        box-shadow 0.3s ease,
+        border-color 0.3s ease;
+}
+
+.authTopBarBack:hover {
+    background: rgba(236, 230, 240, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow:
+        0 4px 16px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    transform: scale(1.04);
+}
+
+.authTopBarBack:active {
+    animation: authLiquidBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes authLiquidBounce {
+    0% {
+        transform: scale(1);
+    }
+    20% {
+        transform: scale(0.85) rotate(-3deg);
+    }
+    40% {
+        transform: scale(1.12) rotate(2deg);
+    }
+    60% {
+        transform: scale(0.95) rotate(-1deg);
+    }
+    80% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.authTopBarBack svg {
+    width: 18px;
+    height: 18px;
+    color: #341539;
+    flex-shrink: 0;
+}
+
+.authTopBarBackText {
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #913b9f;
+}
+
+.authTopBarTitle {
+    flex: 1;
+    text-align: center;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 15px;
+    font-weight: 600;
+    color: #341539;
+    position: relative;
+    z-index: 3;
+}
+
+.authTopBarLogo {
+    height: 28px;
+    width: auto;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+}
+
+.authTopBarSpacer {
+    width: 90px;
+}
+
+/* No back button variant */
+.authGlassTopBar.no-back .authTopBarTitle {
+    text-align: center;
+}
+
+.authGlassTopBar.no-back .authTopBarSpacer {
+    display: none;
+}
+
+@media (max-width: 600px) {
+    .authGlassTopBar {
+        top: 8px;
+        width: calc(100% - 16px);
+        height: 56px;
+        border-radius: 16px;
+    }
+
+    .authTopBarBack {
+        height: 40px;
+        padding: 0 14px 0 10px;
+        border-radius: 20px;
+    }
+
+    .authTopBarBack svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .authTopBarBackText {
+        font-size: 13px;
+    }
+
+    .authTopBarSpacer {
+        width: 70px;
+    }
+
+    .authTopBarLogo {
+        height: 22px;
+    }
+
+    .authTopBarTitle {
+        font-size: 14px;
+    }
+}
+
+/* ============================================
+   AUTH CONTAINER - CENTERED LAYOUT
    ============================================ */
 
 .authContainer {
     display: flex;
     min-height: 100vh;
-}
-
-/* Left Panel - Branding */
-.authLeft {
-    flex: 1;
-    background: linear-gradient(135deg, #341539 0%, #5a2363 50%, #913b9f 100%);
-    display: flex;
     align-items: center;
     justify-content: center;
-    padding: 48px;
-    position: relative;
-    overflow: hidden;
-}
-
-.authLeft::before {
-    content: "";
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(
-        circle at 30% 70%,
-        rgba(255, 255, 255, 0.08) 0%,
-        transparent 50%
-    );
-    animation: floatGradient 20s ease-in-out infinite;
-}
-
-@keyframes floatGradient {
-    0%,
-    100% {
-        transform: translate(0, 0);
-    }
-    50% {
-        transform: translate(5%, -5%);
-    }
-}
-
-.authBranding {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-}
-
-.authLogo {
-    height: 80px;
-    margin-bottom: 32px;
-    filter: brightness(0) invert(1);
-}
-
-.authTagline {
-    color: rgba(255, 255, 255, 0.9);
-    font-family: "Source Serif", Georgia, serif;
-    font-size: 28px;
-    font-weight: 400;
-    line-height: 1.4;
-}
-
-/* Right Panel - Form */
-.authRight {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 48px;
     background: #f4f1f6;
+    padding-top: 104px;
+    padding-bottom: 24px;
+}
+
+.authRight {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    width: 100%;
 }
 
 .authFormContainer {
@@ -250,6 +428,139 @@ body {
     background: rgba(235, 0, 27, 0.08);
     border-radius: 8px;
     margin-top: 8px;
+}
+
+/* ============================================
+   INVALID CREDENTIALS NOTIFICATION (LIQUID GLASS)
+   ============================================ */
+
+.invalidCredentialsNotif {
+    position: fixed;
+    top: 110px;
+    right: -450px;
+    width: auto;
+    max-width: calc(100vw - 32px);
+    padding: 24px;
+    background: rgba(200, 150, 210, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: none;
+    border-radius: 24px;
+    box-shadow:
+        0 8px 32px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+    transition:
+        right 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        opacity 0.3s ease,
+        transform 0.3s ease;
+}
+
+.invalidCredentialsNotif.visible {
+    right: 16px;
+}
+
+.invalidCredentialsNotifClose {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #341539;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.invalidCredentialsNotifClose:hover {
+    background: rgba(255, 255, 255, 0.6);
+    color: #913b9f;
+}
+
+.invalidCredentialsNotifClose svg {
+    width: 14px;
+    height: 14px;
+}
+
+.invalidCredentialsImage {
+    width: 350px;
+    height: auto;
+}
+
+.invalidCredentialsHeader {
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #341539;
+    margin: 0;
+}
+
+.invalidCredentialsText {
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    color: #341539;
+    margin: 0;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.invalidCredentialsCta {
+    width: 100%;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #913b9f;
+    border-radius: 10px;
+    background: transparent;
+    color: #913b9f;
+    font-family: Aptos, sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    margin-top: 4px;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.invalidCredentialsCta:hover {
+    background: #913b9f;
+    color: #fff;
+}
+
+@media (max-width: 480px) {
+    .invalidCredentialsNotif {
+        width: calc(100vw - 32px);
+        right: -100vw;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+    }
+
+    .invalidCredentialsNotif.visible {
+        right: 16px;
+    }
+
+    .invalidCredentialsImage {
+        width: 200px;
+    }
+
+    .invalidCredentialsText {
+        white-space: normal;
+    }
 }
 
 /* Form Options Row */
@@ -642,30 +953,16 @@ body {
    ============================================ */
 
 @media (max-width: 968px) {
-    .authContainer {
-        flex-direction: column;
-    }
-
-    .authLeft {
-        padding: 32px;
-        min-height: 200px;
-    }
-
-    .authLogo {
-        height: 48px;
-        margin-bottom: 16px;
-    }
-
-    .authTagline {
-        font-size: 20px;
-    }
-
     .authRight {
         padding: 32px 24px;
     }
 }
 
 @media (max-width: 480px) {
+    .authRight {
+        padding: 24px 16px;
+    }
+
     .authTitle {
         font-size: 28px;
     }

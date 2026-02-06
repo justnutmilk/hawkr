@@ -173,34 +173,15 @@ body {
     padding: 32px 48px 0 48px;
 }
 
+/* Search module - vendor specific overrides */
 .searchModule {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    max-width: 500px;
     height: 48px;
     padding: 0px 16px 0px 20px;
     border-radius: 24px;
-    background: #f4f1f6;
 }
 
 .searchInput {
-    flex: 1 1 auto;
-    border: none;
-    outline: none;
-    background: transparent;
-    color: #49454f;
-    font-family: Aptos, sans-serif;
     font-size: 16px;
-    font-weight: 400;
-    padding: 0;
-    margin: 0;
-}
-
-.searchInput::placeholder {
-    color: #49454f;
-    opacity: 1;
 }
 
 .searchShortcut {
@@ -227,15 +208,6 @@ body {
     white-space: nowrap;
 }
 
-.searchIcon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    pointer-events: none;
-}
-
 .topBarActions {
     display: flex;
     align-items: center;
@@ -246,6 +218,170 @@ body {
 
 .topBarActions svg {
     cursor: pointer;
+}
+
+/* ============================================
+   VENDOR SEARCH RESULT VARIANTS
+   ============================================ */
+
+/* Override fonts and sizes for vendor search */
+.searchResultName {
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.searchResultSubtitle {
+    font-size: 12px;
+}
+
+.searchEmptyState {
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+}
+
+/* Vendor search result items - smaller and more compact */
+.searchResultItem {
+    padding: 8px 12px;
+    min-height: 65px;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 16px;
+}
+
+/* Quick actions (pages) can align center */
+.searchResultItem[data-type="page"] {
+    align-items: center;
+}
+
+.searchResultImage {
+    width: 48px;
+    height: 48px;
+}
+
+.searchResultImage.searchResultIcon {
+    border-radius: 12px;
+}
+
+.searchResultImage.searchResultIcon img {
+    width: 24px;
+    height: 24px;
+}
+
+/* Order & Transaction: icon + info with 16px gap, customer name pushed right */
+.searchResultOrder,
+.searchResultTransaction {
+    justify-content: flex-start;
+    gap: 16px;
+}
+
+.searchResultOrder .searchResultInfo,
+.searchResultTransaction .searchResultInfo {
+    flex: 1;
+}
+
+.searchResultCustomerName {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+/* Transaction ID styling */
+.searchResultTxnId {
+    color: #808080;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 11px;
+    font-weight: 400;
+}
+
+/* Stars row */
+.searchResultStars {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.searchResultStar {
+    width: 13px;
+    height: 13px;
+}
+
+/* Review layout */
+.searchResultReview {
+    padding: 12px;
+}
+
+.searchResultLeft {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+}
+
+.searchResultReviewContent {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.searchResultReviewTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.searchResultReviewBottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Locked toggle indicator */
+.searchResultToggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.searchResultToggleTrack {
+    width: 36px;
+    height: 20px;
+    background: #ccc;
+    border-radius: 10px;
+    position: relative;
+    transition: background 0.2s ease;
+}
+
+.searchResultToggle.on .searchResultToggleTrack {
+    background: #7cb342;
+}
+
+.searchResultToggleThumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    transition: left 0.2s ease;
+}
+
+.searchResultToggle.on .searchResultToggleThumb {
+    left: 18px;
+}
+
+.searchResultToggleLabel {
+    font-family: Aptos, sans-serif;
+    font-size: 11px;
+    color: #595959;
 }
 
 /* ============================================
@@ -536,7 +672,7 @@ body {
 }
 
 /* ============================================
-   SETTINGS DROPDOWN
+   SETTINGS DROPDOWN - Glassy Purple Style
    ============================================ */
 
 .settingsDropdownWrapper {
@@ -556,19 +692,30 @@ body {
     position: absolute;
     top: calc(100% + 12px);
     right: 0;
-    min-width: 160px;
+    min-width: 180px;
     padding: 16px;
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    border-radius: 24px;
+    /* Glassy purple effect */
+    background: rgba(200, 150, 210, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: none;
+    /* Multi-layer shadow with inset highlight */
+    box-shadow:
+        0 8px 32px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 9999;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(-8px);
+    transform: translateY(-10px);
     transition:
         opacity 0.3s ease,
         transform 0.3s ease,
         visibility 0.3s ease;
-    z-index: 100;
 }
 
 .settingsDropdownWrapper:hover .settingsDropdown {
@@ -581,10 +728,10 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 12px;
+    padding: 10px 12px;
     border-radius: 8px;
     font-family: Aptos, sans-serif;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 400;
     text-decoration: none;
     color: #341539;
@@ -597,7 +744,7 @@ body {
 }
 
 .settingsDropdownItem:hover {
-    background: #f4f1f6;
+    background: #ece6f0;
 }
 
 .settingsDropdownLogout {

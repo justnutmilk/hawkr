@@ -1,9 +1,1091 @@
 /* ============================================
+   VENDOR ONBOARDING - STRIPE-LIKE LAYOUT
+   ============================================ */
+
+.onboardingPage {
+    min-height: 100vh;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Liquid Glass Floating Top Bar - Purple tinted */
+.glassTopBar {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%) translateY(0) scale(1);
+    width: calc(100% - 32px);
+    max-width: 1400px;
+    height: 56px;
+    border-radius: 20px;
+    z-index: 1000;
+    cursor: grab;
+    user-select: none;
+    /* Purple tinted glass material */
+    background: linear-gradient(
+        135deg,
+        rgba(145, 59, 159, 0.08) 0%,
+        rgba(145, 59, 159, 0.04) 50%,
+        rgba(145, 59, 159, 0.06) 100%
+    );
+    backdrop-filter: blur(12px) saturate(1.4);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    /* Glass border - subtle purple edge */
+    border: 1px solid rgba(145, 59, 159, 0.15);
+    /* Layered shadows for depth */
+    box-shadow:
+        0 8px 32px rgba(52, 21, 57, 0.1),
+        0 2px 8px rgba(0, 0, 0, 0.04),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.03);
+    /* Smooth spring animation */
+    transition:
+        transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.3s ease;
+    transform-origin: center center;
+}
+
+.glassTopBar:active {
+    cursor: grabbing;
+}
+
+.glassTopBar.dragging {
+    cursor: grabbing;
+    transition: box-shadow 0.15s ease;
+    box-shadow:
+        0 16px 48px rgba(52, 21, 57, 0.18),
+        0 4px 12px rgba(0, 0, 0, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.9),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+}
+
+.glassTopBar.bouncing {
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.glassTopBarInner {
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    height: 100%;
+    position: relative;
+    z-index: 2;
+}
+
+/* Glass highlight - specular reflection */
+.glassHighlight {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 20px;
+    pointer-events: none;
+    z-index: 1;
+    /* Top highlight simulating light reflection */
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.5) 0%,
+            rgba(255, 255, 255, 0.1) 30%,
+            transparent 50%
+        ),
+        /* Subtle edge glow */
+        radial-gradient(
+                ellipse 80% 50% at 50% 0%,
+                rgba(255, 255, 255, 0.3) 0%,
+                transparent 50%
+            );
+}
+
+/* Back Button - Liquid Glass Style */
+.topBarBack {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #ece6f0;
+    border: 1px solid transparent;
+    box-shadow: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 3;
+    transition:
+        transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background 0.3s ease,
+        box-shadow 0.3s ease,
+        border-color 0.3s ease,
+        backdrop-filter 0.3s ease;
+}
+
+.topBarBack:hover {
+    background: rgba(236, 230, 240, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow:
+        0 4px 16px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    transform: scale(1.08);
+}
+
+.topBarBack:active {
+    animation: liquidBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes liquidBounce {
+    0% {
+        transform: scale(1);
+    }
+    20% {
+        transform: scale(0.85) rotate(-3deg);
+    }
+    40% {
+        transform: scale(1.12) rotate(2deg);
+    }
+    60% {
+        transform: scale(0.95) rotate(-1deg);
+    }
+    80% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.topBarBack svg {
+    width: 18px;
+    height: 18px;
+    color: #341539;
+}
+
+.topBarTitle {
+    flex: 1;
+    text-align: center;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 15px;
+    font-weight: 600;
+    color: #341539;
+    position: relative;
+    z-index: 3;
+}
+
+.topBarSpacer {
+    width: 36px;
+}
+
+/* Main Layout */
+.onboardingLayout {
+    display: flex;
+    flex: 1;
+    padding-top: 88px; /* Space for floating top bar */
+    min-height: 100vh;
+}
+
+/* Sidebar Navigation */
+.onboardingSidebar {
+    width: 280px;
+    padding: 32px 24px;
+    background: #fff;
+    border-right: 1px solid #e8e5eb;
+    flex-shrink: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    padding-top: 104px; /* Space for floating top bar + extra padding */
+    z-index: 1;
+    overflow-y: auto;
+}
+
+.sidebarNav {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.navSection {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.navSectionHeader {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.navSectionHeader.clickable {
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 8px;
+    margin: 0 -8px;
+    transition: background 0.15s ease;
+}
+
+.navSectionHeader.clickable:hover {
+    background: #f4f1f6;
+}
+
+.navSectionIcon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #d0d0d0;
+    background: #fff;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.navSection.active .navSectionIcon {
+    border-color: #913b9f;
+    background: #913b9f;
+}
+
+.navSection.active .navSectionIcon::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 6px;
+    height: 6px;
+    background: #fff;
+    border-radius: 50%;
+}
+
+.navSection.completed .navSectionIcon {
+    border-color: #34c759;
+    background: #34c759;
+}
+
+.navSection.completed .navSectionIcon::after {
+    content: "✓";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.navSectionTitle {
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: #341539;
+}
+
+.navSectionItems {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-left: 32px;
+    border-left: 2px solid #e8e5eb;
+    margin-left: 9px;
+}
+
+.navItem {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.navItem:hover {
+    background: #f4f1f6;
+}
+
+.navItem.active {
+    background: rgba(145, 59, 159, 0.08);
+}
+
+.navItemIndicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #d0d0d0;
+    flex-shrink: 0;
+}
+
+.navItem.active .navItemIndicator {
+    background: #913b9f;
+}
+
+.navItem.completed .navItemIndicator {
+    background: #34c759;
+}
+
+.navItemLabel {
+    font-family:
+        Aptos,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    font-size: 14px;
+    color: #595959;
+}
+
+.navItem.active .navItemLabel {
+    color: #913b9f;
+    font-weight: 500;
+}
+
+.navItem.completed .navItemLabel {
+    color: #341539;
+}
+
+/* Main Content Area */
+.onboardingMain {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    padding: 40px;
+    margin-left: 280px; /* Account for fixed sidebar */
+    overflow-y: auto;
+}
+
+.onboardingContent {
+    width: 100%;
+    max-width: 640px;
+    position: relative;
+    z-index: 2;
+}
+
+/* Step Content */
+.stepContent {
+    display: none;
+}
+
+.stepContent.active {
+    display: block;
+}
+
+.stepTitle {
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: #341539;
+    margin: 0 0 8px 0;
+}
+
+.stepDescription {
+    font-size: 16px;
+    color: #595959;
+    line-height: 1.5;
+    margin: 0 0 32px 0;
+}
+
+/* Form Styles */
+.formSection {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.formField {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.formLabel {
+    font-size: 14px;
+    font-weight: 600;
+    color: #341539;
+}
+
+.formHint {
+    font-size: 13px;
+    color: #808080;
+    margin: 0 0 4px 0;
+}
+
+.formInput {
+    width: 100%;
+    height: 48px;
+    padding: 0 16px;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    font-family: Aptos, sans-serif;
+    font-size: 15px;
+    color: #341539;
+    background: #fff;
+    transition: all 0.2s ease;
+}
+
+.formInput:focus {
+    outline: none;
+    border-color: #913b9f;
+    box-shadow: 0 0 0 3px rgba(145, 59, 159, 0.1);
+}
+
+.formInput::placeholder {
+    color: #a0a0a0;
+}
+
+/* Map Preview */
+.mapPreview {
+    width: 100%;
+    height: 160px;
+    border-radius: 8px;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 8px;
+    overflow: hidden;
+}
+
+.mapPlaceholder {
+    color: #808080;
+    font-size: 14px;
+}
+
+/* Phone Input - Flag and prefix outside input */
+.phoneFieldRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.phonePrefix {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #341539;
+    font-size: 15px;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.phoneFlag {
+    width: 24px;
+    height: 16px;
+    object-fit: contain;
+}
+
+.phoneFieldRow .formInput {
+    flex: 1;
+}
+
+/* Info Card */
+.infoCard {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background: #f0f4ff;
+    border: 1px solid #c7d7fe;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+.infoCardIcon {
+    color: #4f6bed;
+    flex-shrink: 0;
+}
+
+.infoCardContent {
+    font-size: 14px;
+    color: #4f6bed;
+    line-height: 1.5;
+}
+
+.infoCardContent strong {
+    display: block;
+    margin-bottom: 4px;
+}
+
+.infoCardContent p {
+    margin: 0;
+    opacity: 0.85;
+}
+
+/* Singpass Button */
+.singpassBtn {
+    width: 100%;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    background: #fff;
+    font-family: Aptos, sans-serif;
+    font-size: 15px;
+    color: #341539;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.singpassBtn:hover {
+    background: #f8f7fa;
+    border-color: #b0b0b0;
+}
+
+.singpassLogo {
+    height: 20px;
+}
+
+/* Form Divider */
+.formDivider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 24px 0;
+}
+
+.formDivider::before,
+.formDivider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #e0e0e0;
+}
+
+.formDivider span {
+    font-size: 13px;
+    color: #808080;
+}
+
+/* Optional Badge */
+.optionalBadge {
+    display: inline-flex;
+    padding: 4px 8px;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+    border: 1px solid #ac92ba;
+    background: #f4f1f6;
+    color: #913b9f;
+    font-family: Aptos, sans-serif;
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1;
+    flex-shrink: 0;
+    white-space: nowrap;
+    margin-left: 8px;
+}
+
+/* Notification Options */
+.notificationOption {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    gap: 16px;
+}
+
+.notificationOption.telegram {
+    background: linear-gradient(135deg, #e3f2fd 0%, #f0f7ff 100%);
+    border-color: #b3d4fc;
+}
+
+.notificationOptionInfo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.notificationOptionIcon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.notificationOptionIcon.browser {
+    background: #f4f1f6;
+    color: #913b9f;
+}
+
+.notificationOptionIcon.telegram {
+    background: #2196f3;
+    color: #fff;
+}
+
+.notificationOptionText {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.notificationOptionTitle {
+    font-size: 15px;
+    font-weight: 600;
+    color: #341539;
+}
+
+.notificationOptionDesc {
+    font-size: 13px;
+    color: #595959;
+}
+
+.connectBtn {
+    padding: 10px 20px;
+    background: #2196f3;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    white-space: nowrap;
+}
+
+.connectBtn:hover {
+    background: #1976d2;
+}
+
+.telegramConnectedState {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #e8f5e9;
+    border-radius: 8px;
+    color: #2e7d32;
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: -8px;
+}
+
+/* Review Sections */
+.reviewSections {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.reviewSection + .reviewSection {
+    margin-top: 24px;
+}
+
+.reviewSection {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.reviewSectionHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: #f8f7fa;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.reviewSectionHeader h3,
+.reviewSectionTitle {
+    font-size: 15px;
+    font-weight: 600;
+    color: #341539;
+    margin: 0;
+}
+
+.editBtn {
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #595959;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.editBtn:hover {
+    background: #f4f1f6;
+    border-color: #913b9f;
+    color: #913b9f;
+}
+
+.reviewGrid {
+    display: flex;
+    flex-direction: column;
+}
+
+.reviewItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.reviewItem:last-child {
+    border-bottom: none;
+}
+
+.reviewLabel {
+    font-family:
+        Aptos,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    font-size: 14px;
+    color: #808080;
+}
+
+.reviewValueWrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.reviewValue {
+    font-family:
+        Aptos,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    font-size: 14px;
+    color: #341539;
+    font-weight: 500;
+    text-align: right;
+}
+
+.reviewValue.empty {
+    color: #999;
+}
+
+/* Incomplete Badge - Stripe style */
+.incompleteBadge {
+    display: inline-flex;
+    padding: 2px 10px;
+    justify-content: center;
+    align-items: center;
+    border-radius: 6px;
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    color: #dc2626;
+    font-family: Aptos, system-ui, sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Submit Section */
+.submitSection {
+    margin-top: 24px;
+    padding: 20px;
+    background: #f8f7fa;
+    border-radius: 12px;
+}
+
+.checkboxLabel {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #595959;
+    line-height: 1.5;
+}
+
+.checkboxLabel input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+.checkboxCustom {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #d0d0d0;
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.checkboxLabel input:checked + .checkboxCustom {
+    background: #913b9f;
+    border-color: #913b9f;
+}
+
+.checkboxLabel input:checked + .checkboxCustom::after {
+    content: "✓";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.checkboxLabel a {
+    color: #913b9f;
+    text-decoration: none;
+}
+
+.checkboxLabel a:hover {
+    text-decoration: underline;
+}
+
+/* Step Footer */
+.stepFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.primaryBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    background: #341539;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-family: Aptos, sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.primaryBtn:hover {
+    background: #4a2150;
+}
+
+.primaryBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.primaryBtn.submitBtn {
+    background: #34c759;
+}
+
+.primaryBtn.submitBtn:hover:not(:disabled) {
+    background: #2da44e;
+}
+
+.primaryBtn.submitBtn:disabled,
+.primaryBtn.submitBtn.disabled {
+    background: #d1d5db;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+/* Terms Section */
+.termsSection {
+    margin-top: 24px;
+    padding: 20px;
+    background: #f8f7fa;
+    border-radius: 12px;
+}
+
+.termsCheckbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.termsCheckbox input {
+    display: none;
+}
+
+.termsCheckbox .checkmark {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #d0d0d0;
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.termsCheckbox input:checked + .checkmark {
+    background: #913b9f;
+    border-color: #913b9f;
+}
+
+.termsCheckbox input:checked + .checkmark::after {
+    content: "✓";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.termsText {
+    font-size: 14px;
+    color: #595959;
+    line-height: 1.5;
+}
+
+.termsText a {
+    color: #913b9f;
+    text-decoration: none;
+}
+
+.termsText a:hover {
+    text-decoration: underline;
+}
+
+.secondaryBtn {
+    padding: 14px 24px;
+    background: transparent;
+    color: #595959;
+    border: none;
+    border-radius: 10px;
+    font-family: Aptos, sans-serif;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.secondaryBtn:hover {
+    color: #341539;
+    background: #f4f1f6;
+}
+
+/* Uploaded File PDF styles */
+.uploadedFilePdf {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f4f1f6;
+    font-weight: 600;
+    color: #913b9f;
+}
+
+.uploadedFilePdfGreen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e8f5e9;
+    font-weight: 600;
+    color: #2e7d32;
+}
+
+/* ============================================
+   RESPONSIVE - Vendor Onboarding
+   ============================================ */
+
+@media (max-width: 900px) {
+    .onboardingLayout {
+        flex-direction: column;
+    }
+
+    .onboardingSidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        top: 0;
+        padding: 16px 20px;
+        border-right: none;
+        border-bottom: 1px solid #e8e5eb;
+    }
+
+    .sidebarNav {
+        flex-direction: row;
+        gap: 16px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+    }
+
+    .navSection {
+        flex-shrink: 0;
+    }
+
+    .navSectionItems {
+        display: none;
+    }
+
+    .onboardingMain {
+        padding: 24px 20px;
+    }
+
+    .stepTitle {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 600px) {
+    .glassTopBar {
+        top: 8px;
+        width: calc(100% - 16px);
+        height: 48px;
+        border-radius: 12px;
+    }
+
+    .onboardingLayout {
+        padding-top: 72px;
+    }
+
+    .notificationOption {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .notificationOptionInfo {
+        width: 100%;
+    }
+
+    .connectBtn,
+    .liquidGlassToggle {
+        align-self: flex-end;
+    }
+}
+
+/* ============================================
    ROLE SELECTION PAGE
    ============================================ */
 
 .roleSelectContainer {
-    max-width: 700px;
+    max-width: 900px;
 }
 
 .roleCards {
@@ -56,9 +1138,14 @@
     color: #7b1fa2;
 }
 
+.roleCardIcon.operatorIcon {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    color: #1565c0;
+}
+
 .roleCardTitle {
     color: #341539;
-    font-family: "Source Serif", Georgia, serif;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
     font-size: 24px;
     font-weight: 700;
     margin: 0;
@@ -119,6 +1206,106 @@
     border-bottom: 1px solid #e0e0e0;
 }
 
+.changeRoleBtn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    color: #595959;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.changeRoleBtn:hover {
+    border-color: #913b9f;
+    color: #913b9f;
+    background: rgba(145, 59, 159, 0.05);
+}
+
+/* Finish Card - Consumer Onboarding */
+.finishCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 48px 32px;
+    background: #f8f7fa;
+    border-radius: 16px;
+    border: 1px solid #e8e5eb;
+}
+
+.finishIcon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #e8f5e9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    color: #2e7d32;
+}
+
+.finishText {
+    color: #595959;
+    font-size: 16px;
+    line-height: 1.5;
+    max-width: 400px;
+    margin: 0;
+}
+
+/* ============================================
+   CONSUMER ONBOARDING - Source Serif Typography
+   ============================================ */
+
+.consumerOnboarding .stepTitle {
+    font-family: "Source Serif", Georgia, serif;
+}
+
+.consumerOnboarding .topBarTitle {
+    font-family: "Source Serif", Georgia, serif;
+}
+
+.consumerOnboarding .navSectionTitle {
+    font-family: "Source Serif", Georgia, serif;
+}
+
+.consumerOnboarding .reviewSectionTitle {
+    font-family: "Source Serif", Georgia, serif;
+}
+
+/* OAuth Badge - Industry standard locked field indicator */
+.oauthBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 8px;
+    padding: 2px 8px;
+    background: #f0f0f0;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #595959;
+    vertical-align: middle;
+}
+
+.oauthBadge svg {
+    flex-shrink: 0;
+}
+
+/* Locked input styling */
+.formInput:disabled {
+    background: #f5f5f5;
+    color: #808080;
+    cursor: not-allowed;
+}
+
 .onboardingLogo {
     height: 32px;
 }
@@ -170,7 +1357,7 @@
 
 .onboardingTitle {
     color: #341539;
-    font-family: "Source Serif", Georgia, serif;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
     font-size: 28px;
     font-weight: 700;
     margin-bottom: 8px;
@@ -217,7 +1404,9 @@
     font-size: 16px;
     color: #341539;
     background: #fff;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .onboardingFieldInput:focus {
@@ -259,51 +1448,7 @@
     font-size: 13px;
 }
 
-.toggleSwitch {
-    position: relative;
-    width: 52px;
-    height: 28px;
-    flex-shrink: 0;
-}
-
-.toggleSwitch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.toggleSlider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #e0e0e0;
-    border-radius: 28px;
-    transition: 0.3s;
-}
-
-.toggleSlider::before {
-    position: absolute;
-    content: "";
-    height: 22px;
-    width: 22px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    border-radius: 50%;
-    transition: 0.3s;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.toggleSwitch input:checked + .toggleSlider {
-    background-color: #913b9f;
-}
-
-.toggleSwitch input:checked + .toggleSlider::before {
-    transform: translateX(24px);
-}
+/* Liquid Glass Toggle styles are in ../../styles.css */
 
 /* Telegram Connect */
 .telegramConnect {
@@ -436,13 +1581,25 @@
 
 /* File Upload Areas */
 .uploadArea {
-    border: 2px dashed #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #e0e0e0;
     border-radius: 12px;
     padding: 32px;
     text-align: center;
     cursor: pointer;
     transition: all 0.2s ease;
     background: #fafafa;
+}
+
+/* Store photo upload - 16:9 aspect ratio to match display */
+#storePhotoUpload {
+    max-width: 400px;
+    aspect-ratio: 16 / 9;
+    border-radius: 24px;
+    padding: 24px;
 }
 
 .uploadArea:hover {
@@ -462,13 +1619,14 @@
 .uploadIcon {
     width: 48px;
     height: 48px;
-    margin: 0 auto 16px;
+    margin-bottom: 16px;
     color: #808080;
 }
 
 .uploadText {
     color: #595959;
     font-size: 14px;
+    margin: 0;
 }
 
 .uploadText strong {
@@ -478,10 +1636,10 @@
 .uploadHint {
     color: #808080;
     font-size: 12px;
-    margin-top: 8px;
+    margin: 8px 0 0 0;
 }
 
-/* Uploaded File Preview */
+/* Uploaded File Preview (Legacy) */
 .uploadedFile {
     display: flex;
     align-items: center;
@@ -527,6 +1685,86 @@
     justify-content: center;
 }
 
+/* File Preview - New Style with Image/PDF Preview */
+.filePreview {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.filePreviewBox {
+    position: relative;
+    width: 100%;
+    height: 280px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f4f1f6;
+    border: 1px solid #e0e0e0;
+}
+
+/* Store photo preview - matches hawker card aspect ratio (260:150 ≈ 16:9) */
+#storePhotoPreview .filePreviewBox {
+    max-width: 400px;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    border-radius: 24px;
+}
+
+.filePreviewImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.filePreviewPdf {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: #fff;
+}
+
+.filePreviewDelete {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #eb001b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.filePreviewDelete:hover {
+    background: #fff;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.filePreviewBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #e8f5e9;
+    border-radius: 8px;
+    color: #2e7d32;
+    font-size: 13px;
+    font-weight: 500;
+    width: fit-content;
+}
+
+.filePreviewBadge svg {
+    flex-shrink: 0;
+}
+
 /* Operating Hours Table */
 .hoursTable {
     width: 100%;
@@ -535,9 +1773,10 @@
 
 .hoursRow {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 16px;
     padding: 12px 0;
+    min-height: 60px;
     border-bottom: 1px solid #f0f0f0;
 }
 
@@ -550,10 +1789,13 @@
     color: #341539;
     font-size: 14px;
     font-weight: 500;
+    user-select: none;
+    pointer-events: none;
 }
 
+/* Hours toggle - uses liquid glass from styles.css */
 .hoursToggle {
-    width: 44px;
+    flex-shrink: 0;
 }
 
 .hoursSlots {
@@ -561,6 +1803,8 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    min-height: 36px;
+    justify-content: center;
 }
 
 .hoursSlot {
@@ -570,9 +1814,9 @@
 }
 
 .hoursTime {
-    width: 100px;
+    width: 130px;
     height: 36px;
-    padding: 0 8px;
+    padding: 0 12px;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     font-family: Aptos, sans-serif;
@@ -588,21 +1832,29 @@
 .hoursTo {
     color: #808080;
     font-size: 14px;
+    user-select: none;
+    pointer-events: none;
 }
 
 .hoursClosed {
     color: #808080;
     font-size: 14px;
     font-style: italic;
+    user-select: none;
+    pointer-events: none;
 }
 
 .hoursAddSlot {
     background: none;
     border: none;
     color: #913b9f;
+    font-family: Aptos, sans-serif;
     font-size: 13px;
+    font-weight: 600;
     cursor: pointer;
-    padding: 4px 8px;
+    padding: 4px 0;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .hoursAddSlot:hover {
@@ -610,22 +1862,25 @@
 }
 
 .hoursRemoveSlot {
-    width: 24px;
-    height: 24px;
+    background: none;
     border: none;
-    background: #f0f0f0;
-    border-radius: 4px;
-    cursor: pointer;
     color: #808080;
     font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    transition: color 0.2s ease;
 }
 
 .hoursRemoveSlot:hover {
-    background: #ffebee;
-    color: #eb001b;
+    color: #d32f2f;
 }
 
 /* Cuisine Tags */
@@ -646,33 +1901,132 @@
 }
 
 .cuisineTag {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 6px 12px;
-    background: #f4f1f6;
-    border-radius: 20px;
-    font-size: 14px;
-    color: #341539;
+    gap: 0;
+    position: relative;
 }
 
-.cuisineTag.halal {
-    background: #e8f5e9;
-    color: #2e7d32;
+.cuisineTagInner {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 16px;
+    padding-right: 28px;
+    border-radius: 48px;
+    background: #f2f2ff;
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: normal;
+    white-space: nowrap;
+}
+
+.cuisineTagInner.halal {
+    background: #eaf5e9;
+}
+
+.cuisineTagInner.kosher {
+    background: #eeeade;
+}
+
+.cuisineTagIcon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
 }
 
 .cuisineTagRemove {
-    width: 16px;
-    height: 16px;
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
     border: none;
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 50%;
+    color: #808080;
+    font-size: 16px;
+    font-weight: 600;
     cursor: pointer;
-    font-size: 12px;
+    padding: 0;
+    line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: inherit;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    transition: color 0.2s ease;
+}
+
+.cuisineTagRemove:hover {
+    color: #d32f2f;
+}
+
+/* Cuisine Suggestions - Drag and Drop */
+.cuisineSuggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 16px;
+    background: #f8f7fa;
+    border-radius: 12px;
+    border: 1px solid #e8e5eb;
+    transition: all 0.2s ease;
+}
+
+.cuisineSuggestionsLabel {
+    width: 100%;
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    margin-bottom: 4px;
+}
+
+.cuisineSuggestion {
+    display: inline-flex;
+    cursor: grab;
+    transition:
+        transform 0.15s ease,
+        opacity 0.15s ease;
+    user-select: none;
+}
+
+.cuisineSuggestion:hover {
+    transform: scale(1.05);
+}
+
+.cuisineSuggestion:active {
+    cursor: grabbing;
+}
+
+.cuisineSuggestion .cuisineTagInner {
+    padding-right: 16px;
+}
+
+.cuisineSuggestion.added {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+/* Drop zone active state */
+.cuisineContainer.snap-drop-active {
+    border-color: #913b9f;
+    background: rgba(145, 59, 159, 0.05);
+}
+
+/* Ghost element while dragging */
+.snap-ghost {
+    opacity: 0.9 !important;
+    transform: scale(1.05);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Dragging state on source element */
+.snap-dragging {
+    opacity: 0.5;
 }
 
 .cuisineInput {
@@ -683,6 +2037,102 @@
     font-family: Aptos, sans-serif;
     font-size: 14px;
     background: transparent;
+}
+
+/* Location Input - Operator Onboarding */
+.locationInputWrapper {
+    display: flex;
+    gap: 12px;
+}
+
+.locationInputWrapper .formInput {
+    flex: 1;
+}
+
+.addLocationBtn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 20px;
+    height: 48px;
+    background: #913b9f;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    white-space: nowrap;
+}
+
+.addLocationBtn:hover {
+    background: #7a3286;
+}
+
+.locationsList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.emptyLocations {
+    color: #808080;
+    font-size: 14px;
+    font-style: italic;
+    margin: 0;
+    padding: 16px;
+    text-align: center;
+    background: #f8f7fa;
+    border-radius: 8px;
+}
+
+.locationItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #f4f1f6;
+    border-radius: 8px;
+    border: 1px solid #e8e5eb;
+}
+
+.locationName {
+    color: #341539;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.locationRemove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: #808080;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.locationRemove:hover {
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+}
+
+/* Review Item Wide - for locations list */
+.reviewItemWide {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.reviewItemWide .reviewValue {
+    text-align: left;
 }
 
 /* Phone Input */

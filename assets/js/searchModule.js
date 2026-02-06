@@ -6,6 +6,7 @@
 import { db } from "../../firebase/config.js";
 import {
   collection,
+  collectionGroup,
   getDocs,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -95,10 +96,12 @@ async function fetchSearchableData() {
   if (dataLoaded) return;
 
   try {
-    // Fetch hawker centres
-    const hawkerCentresSnapshot = await getDocs(
-      collection(db, "hawkerCentres"),
-    );
+    // Fetch hawker centres and stalls in parallel (reduces requests)
+    const [hawkerCentresSnapshot, stallsSnapshot] = await Promise.all([
+      getDocs(collection(db, "hawkerCentres")),
+      getDocs(collection(db, "foodStalls")),
+    ]);
+
     const hawkerCentres = hawkerCentresSnapshot.docs.map((doc) => ({
       id: doc.id,
       type: "hawkerCentre",
@@ -108,8 +111,6 @@ async function fetchSearchableData() {
         `../../mock-data/Consumer Dashboard/hawker-center/${doc.data().name}.png`,
     }));
 
-    // Fetch food stalls
-    const stallsSnapshot = await getDocs(collection(db, "foodStalls"));
     const stalls = stallsSnapshot.docs.map((doc) => {
       const data = doc.data();
       // Find parent hawker centre name
@@ -128,22 +129,104 @@ async function fetchSearchableData() {
       };
     });
 
-    // Combine all searchable items
+    // Combine searchable items (without menu items initially for faster load)
     searchableItems = [...hawkerCentres, ...stalls, ...navigationPages];
 
-    // Set popular searches (first few hawker centres and stalls)
+    // Set popular searches
     popularSearches = [
       ...hawkerCentres.slice(0, 2).map((h) => ({ ...h, searchCount: 5 })),
       ...stalls.slice(0, 1).map((s) => ({ ...s, searchCount: 3 })),
     ];
 
     dataLoaded = true;
-    console.log("Search module loaded", searchableItems.length, "items");
+    console.log(
+      "Search module loaded",
+      searchableItems.length,
+      "items (basic)",
+    );
+
+    // Fetch menu items lazily in the background (non-blocking)
+    fetchMenuItemsInBackground(stalls, hawkerCentres);
   } catch (error) {
     console.error("Error fetching searchable data:", error);
     // Fallback to navigation pages only
     searchableItems = [...navigationPages];
     popularSearches = [];
+    dataLoaded = true;
+  }
+}
+
+// Fetch menu items in background to avoid rate limiting on initial load
+async function fetchMenuItemsInBackground(stalls, hawkerCentres) {
+  try {
+    // Small delay to avoid overwhelming Firebase
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    console.log("Fetching menu items via collectionGroup...");
+    console.log(
+      "Available stalls for mapping:",
+      stalls.map((s) => ({ id: s.id, name: s.name })),
+    );
+
+    const menuItemsSnapshot = await getDocs(collectionGroup(db, "menuItems"));
+    console.log("Menu items fetched:", menuItemsSnapshot.size, "documents");
+
+    if (menuItemsSnapshot.size === 0) {
+      console.warn(
+        "No menu items found in collectionGroup query. Check Firestore structure.",
+      );
+      return;
+    }
+    const menuItems = menuItemsSnapshot.docs.map((doc) => {
+      const data = doc.data();
+      // Get stall ID from the document path (foodStalls/{stallId}/menuItems/{itemId})
+      const stallId = doc.ref.parent.parent?.id;
+      const docPath = doc.ref.path;
+
+      // Find parent stall
+      const parentStall = stalls.find((s) => s.id === stallId);
+      // Find parent hawker centre
+      const parentHawkerCentre = hawkerCentres.find(
+        (h) => h.id === parentStall?.hawkerCentreId,
+      );
+
+      // Debug first few items
+      if (menuItemsSnapshot.docs.indexOf(doc) < 3) {
+        console.log("Menu item:", {
+          path: docPath,
+          stallId,
+          name: data.name,
+          parentStall: parentStall?.name,
+          parentHawkerCentre: parentHawkerCentre?.name,
+        });
+      }
+
+      return {
+        id: doc.id,
+        type: "menuItem",
+        name: data.name,
+        stallName: parentStall?.name || "",
+        hawkerCentreName: parentHawkerCentre?.name || "",
+        stallId: stallId,
+        hawkerCentreId: parentStall?.hawkerCentreId || "",
+        price: data.price,
+        category: data.category || "",
+        image: data.imageUrl || "",
+        keywords:
+          `${data.name} ${data.category || ""} ${data.description || ""} food dish meal`.toLowerCase(),
+      };
+    });
+
+    // Add menu items to searchable items
+    searchableItems = [
+      ...searchableItems.filter((i) => i.type !== "menuItem"),
+      ...menuItems,
+    ];
+
+    console.log("Search module loaded menu items:", menuItems.length, "items");
+  } catch (error) {
+    console.error("Error fetching menu items (non-fatal):", error);
+    // Menu items won't be searchable, but basic search still works
   }
 }
 
@@ -294,17 +377,13 @@ function searchItems(query) {
 // ============================================
 
 function renderSearchResultItem(item, isHistory = false) {
-  const displayName =
-    item.type === "stall" && item.parentName
-      ? `${item.name} • ${item.parentName}`
-      : item.name;
-
   const metaText = isHistory
     ? item.searchedAt
     : `${item.searchCount || 0} ${(item.searchCount || 0) === 1 ? "Search" : "Searches"}`;
 
   const metaClass = isHistory ? "searchResultMeta history" : "searchResultMeta";
 
+  // Page navigation items
   if (item.type === "page") {
     const bgColor = item.color || "#F6EEF9";
     return `
@@ -313,11 +392,40 @@ function renderSearchResultItem(item, isHistory = false) {
           <img src="${item.icon}" alt="${item.name}">
         </div>
         <div class="searchResultInfo">
-          <span class="searchResultName">${displayName}</span>
+          <span class="searchResultName">${item.name}</span>
           <span class="${metaClass}">${metaText}</span>
         </div>
       </div>
     `;
+  }
+
+  // Menu items: Name on top, "Stall Name • Hawker Centre Name" below, price on right
+  if (item.type === "menuItem") {
+    const stallName = item.stallName || "Unknown Stall";
+    const hawkerCentreName = item.hawkerCentreName || "";
+    const subtitle = hawkerCentreName
+      ? `${stallName} • ${hawkerCentreName}`
+      : stallName;
+    const priceDisplay = item.price ? `$${item.price.toFixed(2)}` : "";
+
+    return `
+      <div class="searchResultItem searchResultMenuItem" data-type="${item.type}" data-id="${item.id}" data-stall-id="${item.stallId}">
+        <div class="searchResultImage">
+          <img src="${item.image}" alt="${item.name}" onerror="this.style.display='none'">
+        </div>
+        <div class="searchResultInfo">
+          <span class="searchResultName">${item.name}</span>
+          <span class="searchResultSubtitle">${subtitle}</span>
+        </div>
+        <span class="searchResultPrice">${priceDisplay}</span>
+      </div>
+    `;
+  }
+
+  // Stalls: show stall name with parent hawker centre
+  let displayName = item.name;
+  if (item.type === "stall" && item.parentName) {
+    displayName = `${item.name} • ${item.parentName}`;
   }
 
   return `
@@ -334,11 +442,7 @@ function renderSearchResultItem(item, isHistory = false) {
 }
 
 function renderSearchResultItemSimple(item) {
-  const displayName =
-    item.type === "stall" && item.parentName
-      ? `${item.name} • ${item.parentName}`
-      : item.name;
-
+  // Page navigation items
   if (item.type === "page") {
     const bgColor = item.color || "#F6EEF9";
     return `
@@ -347,10 +451,39 @@ function renderSearchResultItemSimple(item) {
           <img src="${item.icon}" alt="${item.name}">
         </div>
         <div class="searchResultInfo">
-          <span class="searchResultName">${displayName}</span>
+          <span class="searchResultName">${item.name}</span>
         </div>
       </div>
     `;
+  }
+
+  // Menu items: Name on top, "Stall Name • Hawker Centre Name" below, price on right
+  if (item.type === "menuItem") {
+    const stallName = item.stallName || "Unknown Stall";
+    const hawkerCentreName = item.hawkerCentreName || "";
+    const subtitle = hawkerCentreName
+      ? `${stallName} • ${hawkerCentreName}`
+      : stallName;
+    const priceDisplay = item.price ? `$${item.price.toFixed(2)}` : "";
+
+    return `
+      <div class="searchResultItem searchResultMenuItem" data-type="${item.type}" data-id="${item.id}" data-stall-id="${item.stallId}">
+        <div class="searchResultImage">
+          <img src="${item.image}" alt="${item.name}" onerror="this.style.display='none'">
+        </div>
+        <div class="searchResultInfo">
+          <span class="searchResultName">${item.name}</span>
+          <span class="searchResultSubtitle">${subtitle}</span>
+        </div>
+        <span class="searchResultPrice">${priceDisplay}</span>
+      </div>
+    `;
+  }
+
+  // Stalls: show stall name with parent hawker centre
+  let displayName = item.name;
+  if (item.type === "stall" && item.parentName) {
+    displayName = `${item.name} • ${item.parentName}`;
   }
 
   return `
@@ -457,7 +590,8 @@ function renderSearchDropdown(query = "") {
       const type = item.dataset.type;
       const id = item.dataset.id;
       const url = item.dataset.url || null;
-      handleSearchResultClick(type, id, url);
+      const stallId = item.dataset.stallId || null;
+      handleSearchResultClick(type, id, url, stallId);
     });
 
     item.addEventListener("mousemove", (e) => {
@@ -517,12 +651,13 @@ function handleSearchKeydown(e) {
       const type = selectedItem.dataset.type;
       const id = selectedItem.dataset.id;
       const url = selectedItem.dataset.url || null;
-      handleSearchResultClick(type, id, url);
+      const stallId = selectedItem.dataset.stallId || null;
+      handleSearchResultClick(type, id, url, stallId);
     }
   }
 }
 
-function handleSearchResultClick(type, id, url = null) {
+function handleSearchResultClick(type, id, url = null, stallId = null) {
   const item = searchableItems.find(
     (i) => i.id.toString() === id.toString() && i.type === type,
   );
@@ -531,13 +666,19 @@ function handleSearchResultClick(type, id, url = null) {
     addToSearchHistory(item);
   }
 
-  // Navigate - remove .html for query param URLs
+  // Navigate to appropriate page
   if (type === "page" && url) {
     window.location.href = url;
   } else if (type === "hawkerCentre") {
-    window.location.href = `../Consumer Order/consumerHawkerCentre?id=${id}`;
+    window.location.href = `../Consumer Order/consumerHawkerCentre.html?id=${id}`;
   } else if (type === "stall") {
-    window.location.href = `../Consumer Order/consumerOrderShop?id=${id}`;
+    window.location.href = `../Consumer Order/consumerOrderShop.html?id=${id}`;
+  } else if (type === "menuItem") {
+    // Navigate to the stall page with the menu item highlighted/scrolled to
+    const targetStallId = stallId || item?.stallId;
+    if (targetStallId) {
+      window.location.href = `../Consumer Order/consumerOrderShop.html?id=${targetStallId}&item=${id}`;
+    }
   }
 }
 
@@ -549,11 +690,31 @@ async function initializeSearchModule() {
   const searchWrapper = document.querySelector(".searchModuleWrapper");
   const searchInput = document.getElementById("searchInput");
   const searchDropdown = document.getElementById("searchDropdown");
+  const searchModule = document.querySelector(".searchModule");
 
   if (!searchWrapper || !searchInput || !searchDropdown) return;
 
   // Load data from Firebase
   await fetchSearchableData();
+
+  // Handle click on the search module (for mobile collapsed state)
+  if (searchModule) {
+    searchModule.addEventListener("click", (e) => {
+      // On mobile, when input is hidden, clicking the icon should open the dropdown
+      if (window.innerWidth <= 768) {
+        e.preventDefault();
+        selectedResultIndex = -1;
+        searchHistory = getSearchHistoryFromStorage();
+        currentSearchQuery = "";
+
+        requestAnimationFrame(() => {
+          searchWrapper.classList.add("active");
+          renderSearchDropdown(currentSearchQuery);
+          setupSearchInputListener();
+        });
+      }
+    });
+  }
 
   searchInput.addEventListener("focus", async () => {
     selectedResultIndex = -1;

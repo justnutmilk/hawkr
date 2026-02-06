@@ -8,6 +8,7 @@ import {
   getHawkerCentreWithStalls,
 } from "../../firebase/services/hawkerCentres.js";
 import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
+import { initMobileMenu } from "../../assets/js/mobileMenu.js";
 
 // ============================================
 // API FUNCTIONS (Firebase Backend Calls)
@@ -195,7 +196,7 @@ function renderOrderPage(hawkerCenters) {
 
 function handleStallClick(stallId) {
   // Navigate to store profile page with stall ID
-  window.location.href = `consumerOrderShop?id=${stallId}`;
+  window.location.href = `consumerOrderShop.html?id=${stallId}`;
 }
 
 // ============================================
@@ -231,6 +232,7 @@ async function initializeOrderPage() {
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize navbar (auth, user display, logout)
   initConsumerNavbar();
+  initMobileMenu();
 
   initializeOrderPage();
 

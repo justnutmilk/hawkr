@@ -63,28 +63,20 @@ export async function getHawkerCentreWithStalls(centreId) {
  */
 export async function getAllHawkerCentres() {
   try {
-    const q = query(
-      collection(db, "hawkerCentres"),
-      where("isActive", "==", true),
-      orderBy("name"),
-    );
-
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map((doc) => ({
+    // First try simple query without filters to get all hawker centres
+    const snapshot = await getDocs(collection(db, "hawkerCentres"));
+    const centres = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
-  } catch (error) {
-    // If compound query fails (no index), try simpler query
-    console.warn("Compound query failed, trying simpler query:", error.message);
-    const snapshot = await getDocs(collection(db, "hawkerCentres"));
-    return snapshot.docs
-      .map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }))
+
+    // Filter out explicitly inactive centres and sort
+    return centres
       .filter((centre) => centre.isActive !== false)
       .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+  } catch (error) {
+    console.error("Error fetching hawker centres:", error);
+    return [];
   }
 }
 

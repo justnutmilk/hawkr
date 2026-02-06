@@ -2,41 +2,55 @@
 // IMPORTS
 // ============================================
 
+import { auth } from "../../firebase/config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getOrderById } from "../../firebase/services/orders.js";
 import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
+import { initMobileMenu } from "../../assets/js/mobileMenu.js";
 
 // ============================================
-// LOCAL STORAGE FUNCTIONS
+// AUTH STATE
 // ============================================
 
-function getOrderFromStorage() {
-  const order = localStorage.getItem("hawkrConfirmedOrder");
-  return order ? JSON.parse(order) : null;
-}
+let currentUser = null;
 
-function getCartFromStorage() {
-  const cart = localStorage.getItem("hawkrCart");
-  return cart ? JSON.parse(cart) : [];
-}
+// ============================================
+// URL HELPERS
+// ============================================
 
-function clearCart() {
-  localStorage.removeItem("hawkrCart");
+function getOrderIdFromUrl() {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get("orderId");
 }
 
 // ============================================
 // GENERATE ORDER NUMBER & TRANSACTION IDS
 // ============================================
 
-function generateOrderNumber() {
-  return Math.floor(Math.random() * 900) + 100;
+function generateOrderNumber(orderId) {
+  // Generate a numeric-only order number from the order ID
+  // Use a hash of the orderId to get consistent numbers
+  let hash = 0;
+  for (let i = 0; i < orderId.length; i++) {
+    const char = orderId.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  // Return a 3-digit number (100-999)
+  return Math.abs(hash % 900) + 100;
 }
 
-function generateTransactionId() {
-  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+function generateTransactionId(orderId) {
+  // Generate c2b-XXXXXXXXXX-FOOD format
+  // Use the orderId to generate consistent 10 alphanumeric characters
+  const chars =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let id = "";
-  for (let i = 0; i < 20; i++) {
-    id += chars.charAt(Math.floor(Math.random() * chars.length));
+  for (let i = 0; i < 10; i++) {
+    const charIndex = orderId.charCodeAt(i % orderId.length) + i;
+    id += chars.charAt(Math.abs(charIndex) % chars.length);
   }
-  return `c2b-${id.substring(0, 10)}-FOOD`;
+  return `c2b-${id}-FOOD`;
 }
 
 // ============================================
@@ -117,10 +131,7 @@ function getClockIcon() {
 
 function getOrderConfirmedIcon() {
   return `
-        <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34" fill="none">
-            <path d="M18.3825 18.1724L11.7325 11.5224C11.5267 11.3166 11.3634 11.0722 11.252 10.8033C11.1407 10.5344 11.0833 10.2462 11.0833 9.95518C11.0833 9.66413 11.1407 9.37593 11.252 9.10703C11.3634 8.83813 11.5267 8.59381 11.7325 8.388C11.9383 8.18219 12.1826 8.01894 12.4515 7.90756C12.7204 7.79618 13.0086 7.73885 13.2997 7.73885C13.5907 7.73885 13.8789 7.79618 14.1478 7.90756C14.4167 8.01894 14.661 8.18219 14.8668 8.388L19.9497 13.4708L29.4658 3.95467C29.8815 3.53902 30.4452 3.30552 31.033 3.30552C31.3241 3.30552 31.6123 3.36284 31.8812 3.47423C32.1501 3.58561 32.3944 3.74886 32.6002 3.95467C32.806 4.16047 32.9692 4.4048 33.0806 4.6737C33.192 4.94259 33.2493 5.2308 33.2493 5.52185C33.2493 5.8129 33.192 6.1011 33.0806 6.37C32.9692 6.6389 32.806 6.88323 32.6002 7.08903L21.5168 18.1724C21.3115 18.3789 21.0673 18.5428 20.7983 18.6547C20.5294 18.7666 20.241 18.8241 19.9497 18.8241C19.6584 18.8241 19.37 18.7666 19.101 18.6547C18.8321 18.5428 18.5879 18.3789 18.3825 18.1724Z" fill="#5C5F62"/>
-            <path d="M3.73333 3.73333V24.2667H10.2667C11.7133 24.2667 12.8576 25.5024 13.8619 26.5888L14.0672 26.8128C14.7504 27.5427 15.7211 28 16.8 28C17.8789 28 18.8496 27.5427 19.5309 26.8109L19.7363 26.5888H19.7381C20.7424 25.5024 21.8867 24.2667 23.3333 24.2667H29.8667V20.5333C29.8667 20.0383 30.0633 19.5635 30.4134 19.2134C30.7635 18.8633 31.2383 18.6667 31.7333 18.6667C32.2284 18.6667 32.7032 18.8633 33.0533 19.2134C33.4033 19.5635 33.6 20.0383 33.6 20.5333V30.8C33.6 31.5426 33.305 32.2548 32.7799 32.7799C32.2548 33.305 31.5426 33.6 30.8 33.6H2.8C2.05739 33.6 1.3452 33.305 0.820101 32.7799C0.294999 32.2548 0 31.5426 0 30.8V2.8C0 2.05739 0.294999 1.3452 0.820101 0.820101C1.3452 0.294999 2.05739 0 2.8 0H11.2C11.6951 0 12.1699 0.196666 12.5199 0.546734C12.87 0.896802 13.0667 1.3716 13.0667 1.86667C13.0667 2.36174 12.87 2.83653 12.5199 3.1866C12.1699 3.53667 11.6951 3.73333 11.2 3.73333H3.73333Z" fill="#5C5F62"/>
-        </svg>
+        <img src="../../images/squirrelOrderConfirmed.svg" alt="Order confirmed" class="orderConfirmedIconImage" />
     `;
 }
 
@@ -130,19 +141,34 @@ function getOrderConfirmedIcon() {
 
 function renderOrderConfirmedBanner(orderNumber) {
   return `
-        <div class="orderConfirmedBanner">
+        <div class="orderConfirmedSection">
+            <span class="orderConfirmedTitle">Order Confirmed</span>
             <div class="orderConfirmedIcon">
                 ${getOrderConfirmedIcon()}
             </div>
-            <span class="orderConfirmedText">Order confirmed.</span>
+            <span class="orderNumberLabel">Your order number is:</span>
             <span class="orderNumber">#${orderNumber}</span>
         </div>
     `;
 }
 
 function renderOrderItem(item) {
+  // Render customizations/variants
+  const customizationsHTML = (item.customizations || [])
+    .map((c) => {
+      const priceStr =
+        c.priceAdjustment > 0 ? `+${formatPrice(c.priceAdjustment)}` : "";
+      return `
+        <div class="orderItemVariant">
+          <span class="orderItemVariantName">${c.option || c.name}</span>
+          ${priceStr ? `<span class="orderItemVariantPrice">${priceStr}</span>` : ""}
+        </div>
+      `;
+    })
+    .join("");
+
   const specialRequestHTML = item.specialRequest
-    ? `<span class="specialRequest">"${item.specialRequest}"</span>`
+    ? `<span class="specialRequest">↳ "${item.specialRequest}"</span>`
     : "";
 
   return `
@@ -151,18 +177,20 @@ function renderOrderItem(item) {
                 src="${item.image}"
                 alt="${item.name}"
                 class="orderItemImage"
-                onerror="this.style.background='#f4f1f6'"
+                onerror="this.src='../../images/placeholder-food.svg'; this.style.background='#f4f1f6'; this.style.padding='16px'; this.style.objectFit='contain';"
             />
             <div class="orderItemDetails">
                 <div class="orderItemRow">
                     <div class="orderItemNameGroup">
                         <span class="itemName">${item.name}</span>
                         <span class="storeName">${item.stall.name}</span>
+                        ${customizationsHTML}
+                        ${specialRequestHTML}
                     </div>
                     <span class="price">${formatPrice(item.price)}</span>
                 </div>
                 <div class="orderItemRow">
-                    ${specialRequestHTML || "<span></span>"}
+                    <span></span>
                     <span class="qtyCount">${item.quantity}</span>
                 </div>
             </div>
@@ -215,6 +243,11 @@ function renderCollectionDetails(details) {
 }
 
 function renderTransactionDetails(payment, transactionIds) {
+  // Format payment details string (handle cases with no lastFour like GrabPay/PayNow)
+  const paymentDetails = payment.lastFour
+    ? `${payment.brand} ${payment.lastFour}`
+    : payment.brand;
+
   return `
         <section class="transactionDetailsSection">
             <span class="sectionLabel">Transaction Details</span>
@@ -227,12 +260,11 @@ function renderTransactionDetails(payment, transactionIds) {
                 />
                 <div class="paymentInfo">
                     <span class="paymentMethod">${payment.type}</span>
-                    <span class="paymentMethodDetails">${payment.brand} ${payment.lastFour}</span>
+                    <span class="paymentMethodDetails">${paymentDetails}</span>
                 </div>
             </div>
             <div class="transactionIds">
                 <span class="transactionId">Hawkr Transaction ID: ${transactionIds.hawkr}</span>
-                <span class="transactionId">Stripe Transaction ID: ${transactionIds.stripe}</span>
             </div>
         </section>
     `;
@@ -291,39 +323,165 @@ function handleBackClick() {
 async function initializeConfirmedPage() {
   showLoading();
 
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 300));
+  const orderId = getOrderIdFromUrl();
 
-  // Try to get order from storage, or use cart items
-  let orderData = getOrderFromStorage();
-
-  if (!orderData) {
-    // If no confirmed order, create one from cart
-    const cartItems = getCartFromStorage();
-    const items = cartItems.length > 0 ? cartItems : mockOrderItems;
-
-    const transactionId = generateTransactionId();
-
-    orderData = {
-      orderNumber: generateOrderNumber(),
-      items: items,
-      collectionDetails: defaultCollectionDetails,
-      paymentMethod: defaultPaymentMethod,
-      transactionIds: {
-        hawkr: transactionId,
-        stripe: transactionId,
-      },
-      createdAt: new Date().toISOString(),
-    };
-
-    // Save to storage
-    localStorage.setItem("hawkrConfirmedOrder", JSON.stringify(orderData));
-
-    // Clear the cart after order is confirmed
-    clearCart();
+  if (!orderId) {
+    // No order ID in URL - show error
+    renderError("No order found. Please return to the menu.");
+    return;
   }
 
-  renderConfirmedPage(orderData);
+  try {
+    // Fetch order from Firebase
+    const order = await getOrderById(orderId);
+
+    if (!order) {
+      renderError("Order not found. Please contact support.");
+      return;
+    }
+
+    // Format order data for display
+    const orderData = {
+      orderNumber: order.orderNumber || generateOrderNumber(orderId), // Use saved order number from Firebase
+      items: order.items.map((item) => ({
+        id: item.menuItemId,
+        menuItemId: item.menuItemId,
+        name: item.name,
+        price: item.unitPrice,
+        image: item.imageUrl || "",
+        quantity: item.quantity,
+        stall: {
+          id: order.stallId,
+          name: order.stallName || "Unknown Stall",
+        },
+        customizations: item.customizations || [],
+        specialRequest: item.notes || "",
+      })),
+      collectionDetails: order.collectionDetails || defaultCollectionDetails,
+      paymentMethod: formatPaymentMethodForDisplay(
+        order.paymentDetails || { type: order.paymentMethod },
+      ),
+      transactionIds: {
+        hawkr: order.hawkrTransactionId || generateTransactionId(orderId), // Use saved transaction ID from Firebase
+      },
+      createdAt: order.createdAt,
+    };
+
+    renderConfirmedPage(orderData);
+  } catch (error) {
+    console.error("Error fetching order:", error);
+    renderError("Failed to load order details. Please try again.");
+  }
+}
+
+function renderError(message) {
+  const container = document.getElementById("confirmedContent");
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="errorState">
+      <h2>Oops!</h2>
+      <p>${message}</p>
+      <a href="../Consumer Dashboard/consumerDashboard.html" class="errorBackBtn">Back to Home</a>
+    </div>
+  `;
+}
+
+/**
+ * Format payment method data for display
+ */
+function formatPaymentMethodForDisplay(paymentMethod) {
+  if (!paymentMethod) return defaultPaymentMethod;
+
+  // Handle Stripe saved card
+  if (paymentMethod.id && paymentMethod.brand) {
+    return {
+      type: "Credit Card",
+      brand: capitalizeFirst(paymentMethod.brand),
+      lastFour: paymentMethod.lastFour || "****",
+      icon: getPaymentIcon(paymentMethod.brand),
+    };
+  }
+
+  // Handle wallet payments (GrabPay, PayNow, Apple Pay, Google Pay)
+  if (paymentMethod.type) {
+    const type = paymentMethod.type.toLowerCase();
+
+    if (type === "grabpay") {
+      return {
+        type: "GrabPay",
+        brand: "GrabPay",
+        lastFour: "",
+        icon: "../../Payment Methods/GrabPay.svg",
+      };
+    }
+
+    if (type === "paynow") {
+      return {
+        type: "PayNow",
+        brand: "PayNow",
+        lastFour: "",
+        icon: "../../Payment Methods/PayNow.svg",
+      };
+    }
+
+    if (type === "alipay") {
+      return {
+        type: "Alipay",
+        brand: "支付宝",
+        lastFour: "",
+        icon: "../../Payment Methods/AliPay.svg",
+      };
+    }
+
+    if (type === "wallet") {
+      return {
+        type: "Digital Wallet",
+        brand: capitalizeFirst(paymentMethod.brand || "Wallet"),
+        lastFour: "",
+        icon: "../../Payment Methods/visaCard.svg",
+      };
+    }
+
+    // Handle card type
+    if (type === "card") {
+      return {
+        type: "Credit/Debit Card",
+        brand: capitalizeFirst(paymentMethod.brand || "Card"),
+        lastFour: paymentMethod.lastFour || "****",
+        icon: getPaymentIcon(paymentMethod.brand),
+      };
+    }
+
+    // Default card display
+    return {
+      type: "Credit/Debit Card",
+      brand: capitalizeFirst(paymentMethod.brand || "Card"),
+      lastFour: paymentMethod.lastFour || "****",
+      icon: getPaymentIcon(paymentMethod.brand),
+    };
+  }
+
+  return defaultPaymentMethod;
+}
+
+function capitalizeFirst(str) {
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
+function getPaymentIcon(brand) {
+  if (!brand) return "../../Payment Methods/visaCard.svg";
+
+  const brandLower = brand.toLowerCase();
+  const icons = {
+    visa: "../../Payment Methods/visaCard.svg",
+    mastercard: "../../Payment Methods/masterCardCard.svg",
+    amex: "../../Payment Methods/americanExpressCard.svg",
+    unionpay: "../../Payment Methods/unionPayCard.svg",
+  };
+
+  return icons[brandLower] || "../../Payment Methods/visaCard.svg";
 }
 
 // ============================================
@@ -333,8 +491,13 @@ async function initializeConfirmedPage() {
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize navbar (auth, user display, logout)
   initConsumerNavbar();
+  initMobileMenu();
 
-  initializeConfirmedPage();
+  // Listen for auth state and then initialize
+  onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+    await initializeConfirmedPage();
+  });
 
   // Back button handler
   const backButton = document.getElementById("backButton");

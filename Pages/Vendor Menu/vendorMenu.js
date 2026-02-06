@@ -23,6 +23,8 @@ import {
   updateMenuItem as firebaseUpdateMenuItem,
   deleteMenuItem as firebaseDeleteMenuItem,
 } from "../../firebase/services/foodStalls.js";
+import { initMiniLiquidGlassToggle } from "../../assets/js/liquidGlassToggle.js";
+import Snap from "../../drag and drop/snap.esm.js";
 
 // ============================================
 // STATE
@@ -33,6 +35,11 @@ let currentStallId = null;
 let currentUser = null;
 let editingItemId = null;
 let selectedImageFile = null;
+let addVariants = []; // Variants for add form
+let editVariants = []; // Variants for edit form
+let addAllergens = []; // Allergens for add form
+let editAllergens = []; // Allergens for edit form
+let isLoading = true; // Track loading state
 
 // Check authentication state
 onAuthStateChanged(auth, async (user) => {
@@ -91,14 +98,17 @@ async function loadMenuItems() {
       tags: doc.data().tags || [],
       allergens: doc.data().allergens || [],
       imageUrl: doc.data().imageUrl || "",
+      customizations: doc.data().customizations || [],
     }));
 
+    isLoading = false;
     renderMenu();
     bindEditButtons();
   } catch (error) {
     console.error("Error loading menu items:", error);
     // Show empty state
     menuItems = [];
+    isLoading = false;
     renderMenu();
     bindEditButtons();
   }
@@ -111,7 +121,10 @@ async function loadMenuItems() {
 const allergenIcons = {
   seafood: "../../assets/icons/seafood.svg",
   nuts: "../../assets/icons/nuts.svg",
+  peanuts: "../../assets/icons/nuts.svg",
   dairy: "../../assets/icons/dairy.svg",
+  eggs: "../../assets/icons/egg.svg",
+  soy: "../../assets/icons/soy.svg",
 };
 
 function renderMenuItem(item) {
@@ -217,8 +230,22 @@ function renderMenu() {
       </div>
     </div>
     ${
-      categories.length > 0
+      isLoading
         ? `
+    <div class="menuCategoryPillsSkeleton">
+      <div class="skeletonPill"></div>
+      <div class="skeletonPill"></div>
+      <div class="skeletonPill"></div>
+    </div>
+    <div class="menuSectionSkeleton">
+      <div class="skeletonSectionTitle"></div>
+      <div class="menuSkeletonGrid">
+        ${Array(3).fill('<div class="menuItemSkeleton"><div class="skeletonImage"></div><div class="skeletonText skeletonTitle"></div><div class="skeletonText skeletonCategory"></div><div class="skeletonText skeletonPrice"></div><div class="skeletonAllergens"><div class="skeletonText skeletonAllergenLabel"></div><div class="skeletonAllergenTags"><div class="skeletonText skeletonAllergenTag"></div><div class="skeletonText skeletonAllergenTag"></div><div class="skeletonText skeletonAllergenTag"></div></div></div><div class="skeletonFooter"><div class="skeletonText skeletonAvailability"></div><div class="skeletonText skeletonButton"></div></div></div>').join("")}
+      </div>
+    </div>
+    `
+        : categories.length > 0
+          ? `
     <div class="menuCategoryPills" id="menuCategoryPills">
       ${categories
         .map(
@@ -242,7 +269,7 @@ function renderMenu() {
         .join("")}
     </div>
     `
-        : `
+          : `
     <div class="emptyMenuState">
       <p>No menu items yet. Click "Add item" to create your first product.</p>
     </div>
@@ -264,20 +291,79 @@ function openEditPopup(itemId) {
   setCategoryValue("editCategory", "editCustomCategory", item.category);
   document.getElementById("editPrice").value = item.price;
   document.getElementById("editDescription").value = item.description;
-  document.getElementById("editTags").value = (item.tags || []).join(", ");
-  document.getElementById("editAllergens").value = (item.allergens || []).join(
-    ", ",
-  );
   document.getElementById("editAvailable").checked = item.available;
 
-  document.getElementById("editOverlay").classList.add("active");
+  // Load existing variants/customizations
+  editVariants = (item.customizations || []).map((c) => ({
+    name: c.name || "",
+    options: [...(c.options || [])],
+    priceAdjustments: [
+      ...(c.priceAdjustments || c.options?.map(() => 0) || []),
+    ],
+    required: c.required !== false, // Default to true
+    multiSelect: c.multiSelect || false,
+  }));
+  renderAllVariants("editVariantsBuilder", editVariants);
+
+  // Load existing allergens
+  editAllergens = [...(item.allergens || [])];
+  renderAllergenTags("editAllergenContainer", editAllergens);
+  updateAllergenSuggestionStates("editAllergenSuggestions", editAllergens);
+  initAllergenInput("edit");
+
+  document.getElementById("editPanelOverlay").classList.add("active");
+  document.getElementById("editPanel").classList.add("active");
   document.body.style.overflow = "hidden";
+
+  // Initialize availability toggle
+  const editAvailableToggle = document.getElementById("editAvailableToggle");
+  if (editAvailableToggle) {
+    editAvailableToggle.dataset.init = "";
+    initMiniLiquidGlassToggle(editAvailableToggle);
+  }
 }
 
 function closeEditPopup() {
   editingItemId = null;
-  document.getElementById("editOverlay").classList.remove("active");
+  document.getElementById("editPanelOverlay").classList.remove("active");
+  document.getElementById("editPanel").classList.remove("active");
   document.body.style.overflow = "";
+}
+
+// ============================================
+// DELETE FUNCTIONALITY
+// ============================================
+
+function openDeleteModal() {
+  document.getElementById("deleteModalOverlay").classList.add("active");
+}
+
+function closeDeleteModal() {
+  document.getElementById("deleteModalOverlay").classList.remove("active");
+}
+
+async function deleteMenuItem() {
+  if (!editingItemId || !currentStallId) return;
+
+  const confirmBtn = document.getElementById("deleteModalConfirmBtn");
+  const originalText = confirmBtn.textContent;
+  confirmBtn.textContent = "Deleting...";
+  confirmBtn.disabled = true;
+
+  try {
+    await firebaseDeleteMenuItem(currentStallId, editingItemId);
+
+    // Reload menu items
+    await loadMenuItems();
+    closeDeleteModal();
+    closeEditPopup();
+  } catch (error) {
+    console.error("Error deleting menu item:", error);
+    alert("Failed to delete item. Please try again.");
+  } finally {
+    confirmBtn.textContent = originalText;
+    confirmBtn.disabled = false;
+  }
 }
 
 async function saveMenuItem() {
@@ -294,17 +380,9 @@ async function saveMenuItem() {
       category: getCategoryValue("editCategory", "editCustomCategory"),
       price: parseFloat(document.getElementById("editPrice").value) || 0,
       description: document.getElementById("editDescription").value.trim(),
-      tags: document
-        .getElementById("editTags")
-        .value.split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
-      allergens: document
-        .getElementById("editAllergens")
-        .value.split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
+      allergens: [...editAllergens],
       isAvailable: document.getElementById("editAvailable").checked,
+      customizations: getCleanVariants(editVariants),
     };
 
     await firebaseUpdateMenuItem(currentStallId, editingItemId, updates);
@@ -338,6 +416,23 @@ function openAddPanel() {
   document.getElementById("addImageInput").value = "";
   document.getElementById("addImagePreview").style.display = "none";
   document.getElementById("addImageBtnText").textContent = "Upload";
+
+  // Reset variants
+  addVariants = [];
+  renderAllVariants("addVariantsBuilder", addVariants);
+
+  // Reset allergens
+  addAllergens = [];
+  renderAllergenTags("addAllergenContainer", addAllergens);
+  updateAllergenSuggestionStates("addAllergenSuggestions", addAllergens);
+  initAllergenInput("add");
+
+  // Initialize availability toggle
+  const addAvailableToggle = document.getElementById("addAvailableToggle");
+  if (addAvailableToggle) {
+    addAvailableToggle.dataset.init = "";
+    initMiniLiquidGlassToggle(addAvailableToggle);
+  }
 }
 
 function closeAddPanel() {
@@ -390,14 +485,9 @@ async function addMenuItem() {
       category: getCategoryValue("addCategory", "addCustomCategory"),
       price: parseFloat(document.getElementById("addPrice").value) || 0,
       description: document.getElementById("addDescription").value.trim(),
-      tags: document
-        .getElementById("addTags")
-        .value.split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
-      allergens: Array.from(
-        document.querySelectorAll(".addFormAllergenCheck:checked"),
-      ).map((cb) => cb.value),
+      allergens: [...addAllergens],
+      customizations: getCleanVariants(addVariants),
+      isAvailable: document.getElementById("addAvailable").checked,
     };
 
     // Add item to get the ID first
@@ -463,6 +553,425 @@ function setCategoryValue(selectId, inputId, category) {
     input.style.display = "block";
     input.value = category;
   }
+}
+
+// ============================================
+// VARIANTS BUILDER
+// ============================================
+
+function renderVariantGroup(variant, index, containerId) {
+  const isAdd = containerId === "addVariantsBuilder";
+  const prefix = isAdd ? "add" : "edit";
+  const isRequired = variant.required !== false; // Default to true
+  const isMultiSelect = variant.multiSelect || false;
+
+  return `
+    <div class="variantGroup" data-index="${index}">
+      <div class="variantGroupHeader">
+        <input
+          type="text"
+          class="variantGroupName"
+          placeholder="Variant name (e.g., Size, Spice Level)"
+          value="${variant.name || ""}"
+          data-index="${index}"
+          data-prefix="${prefix}"
+        />
+        <button type="button" class="variantGroupRemove" data-index="${index}" data-prefix="${prefix}">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="variantTogglesRow">
+        <div class="variantToggleItem">
+          <label class="liquidGlassToggle mini variantRequiredToggle" data-index="${index}" data-prefix="${prefix}">
+            <input
+              type="checkbox"
+              class="variantRequiredCheck"
+              ${isRequired ? "checked" : ""}
+              data-index="${index}"
+              data-prefix="${prefix}"
+            />
+            <span class="toggleTrack">
+              <span class="toggleThumb"></span>
+            </span>
+          </label>
+          <span class="variantToggleLabel">Required</span>
+        </div>
+        <div class="variantToggleItem">
+          <label class="liquidGlassToggle mini variantMultiSelectToggle" data-index="${index}" data-prefix="${prefix}">
+            <input
+              type="checkbox"
+              class="variantMultiSelectCheck"
+              ${isMultiSelect ? "checked" : ""}
+              data-index="${index}"
+              data-prefix="${prefix}"
+            />
+            <span class="toggleTrack">
+              <span class="toggleThumb"></span>
+            </span>
+          </label>
+          <span class="variantToggleLabel">Allow multiple selections</span>
+        </div>
+      </div>
+      <div class="variantOptions" data-index="${index}">
+        ${variant.options.map((opt, optIndex) => renderVariantOption(opt, variant.priceAdjustments?.[optIndex] || 0, index, optIndex, prefix)).join("")}
+      </div>
+      <button type="button" class="addVariantOptionBtn" data-index="${index}" data-prefix="${prefix}">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 3.33334V12.6667M3.33333 8H12.6667" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Add option
+      </button>
+    </div>
+  `;
+}
+
+function renderVariantOption(
+  optionName,
+  priceAdjustment,
+  groupIndex,
+  optIndex,
+  prefix,
+) {
+  return `
+    <div class="variantOption" data-group="${groupIndex}" data-opt="${optIndex}">
+      <input
+        type="text"
+        class="variantOptionName"
+        placeholder="Option (e.g., Small, Medium)"
+        value="${optionName || ""}"
+        data-group="${groupIndex}"
+        data-opt="${optIndex}"
+        data-prefix="${prefix}"
+      />
+      <div class="variantPriceWrapper">
+        <span class="variantPricePrefix">+S$</span>
+        <input
+          type="number"
+          class="variantPriceInput"
+          placeholder="0.00"
+          step="0.01"
+          min="0"
+          value="${priceAdjustment || ""}"
+          data-group="${groupIndex}"
+          data-opt="${optIndex}"
+          data-prefix="${prefix}"
+        />
+      </div>
+      <button type="button" class="variantOptionRemove" data-group="${groupIndex}" data-opt="${optIndex}" data-prefix="${prefix}">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  `;
+}
+
+function renderAllVariants(containerId, variants) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  container.innerHTML = variants
+    .map((v, i) => renderVariantGroup(v, i, containerId))
+    .join("");
+  bindVariantEvents(containerId);
+}
+
+function bindVariantEvents(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const isAdd = containerId === "addVariantsBuilder";
+  const variants = isAdd ? addVariants : editVariants;
+
+  // Group name changes
+  container.querySelectorAll(".variantGroupName").forEach((input) => {
+    input.addEventListener("input", (e) => {
+      const index = parseInt(e.target.dataset.index);
+      variants[index].name = e.target.value;
+    });
+  });
+
+  // Initialize mini liquid glass toggles for required
+  container.querySelectorAll(".variantRequiredToggle").forEach((toggle) => {
+    const index = parseInt(toggle.dataset.index);
+    initMiniLiquidGlassToggle(toggle, (checked) => {
+      variants[index].required = checked;
+    });
+  });
+
+  // Initialize mini liquid glass toggles for multi-select
+  container.querySelectorAll(".variantMultiSelectToggle").forEach((toggle) => {
+    const index = parseInt(toggle.dataset.index);
+    initMiniLiquidGlassToggle(toggle, (checked) => {
+      variants[index].multiSelect = checked;
+    });
+  });
+
+  // Option name changes
+  container.querySelectorAll(".variantOptionName").forEach((input) => {
+    input.addEventListener("input", (e) => {
+      const groupIndex = parseInt(e.target.dataset.group);
+      const optIndex = parseInt(e.target.dataset.opt);
+      variants[groupIndex].options[optIndex] = e.target.value;
+    });
+  });
+
+  // Price adjustment changes
+  container.querySelectorAll(".variantPriceInput").forEach((input) => {
+    input.addEventListener("input", (e) => {
+      const groupIndex = parseInt(e.target.dataset.group);
+      const optIndex = parseInt(e.target.dataset.opt);
+      variants[groupIndex].priceAdjustments[optIndex] =
+        parseFloat(e.target.value) || 0;
+    });
+  });
+
+  // Remove variant group
+  container.querySelectorAll(".variantGroupRemove").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const index = parseInt(e.currentTarget.dataset.index);
+      variants.splice(index, 1);
+      renderAllVariants(containerId, variants);
+    });
+  });
+
+  // Add option to group
+  container.querySelectorAll(".addVariantOptionBtn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const index = parseInt(e.currentTarget.dataset.index);
+      variants[index].options.push("");
+      variants[index].priceAdjustments.push(0);
+      renderAllVariants(containerId, variants);
+    });
+  });
+
+  // Remove option from group
+  container.querySelectorAll(".variantOptionRemove").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const groupIndex = parseInt(e.currentTarget.dataset.group);
+      const optIndex = parseInt(e.currentTarget.dataset.opt);
+      variants[groupIndex].options.splice(optIndex, 1);
+      variants[groupIndex].priceAdjustments.splice(optIndex, 1);
+      // Remove the group if no options left
+      if (variants[groupIndex].options.length === 0) {
+        variants.splice(groupIndex, 1);
+      }
+      renderAllVariants(containerId, variants);
+    });
+  });
+}
+
+function addVariantGroup(isAdd) {
+  const variants = isAdd ? addVariants : editVariants;
+  const containerId = isAdd ? "addVariantsBuilder" : "editVariantsBuilder";
+
+  variants.push({
+    name: "",
+    options: [""],
+    priceAdjustments: [0],
+    multiSelect: false,
+  });
+
+  renderAllVariants(containerId, variants);
+}
+
+function getCleanVariants(variants) {
+  // Filter out empty variant groups and options
+  return variants
+    .filter((v) => v.name.trim() && v.options.some((opt) => opt.trim()))
+    .map((v) => ({
+      name: v.name.trim(),
+      options: v.options.filter((opt) => opt.trim()),
+      priceAdjustments: v.priceAdjustments.filter((_, i) =>
+        v.options[i]?.trim(),
+      ),
+      required: v.required !== false, // Default to true
+      multiSelect: v.multiSelect || false,
+    }));
+}
+
+// ============================================
+// ALLERGEN INPUT
+// ============================================
+
+function getAllergenIcon(allergen) {
+  const allergenLower = allergen.toLowerCase();
+  const iconPath = allergenIcons[allergenLower];
+  return iconPath || null;
+}
+
+function renderAllergenTags(containerId, allergens) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  // Remove existing tags (keep the input)
+  container.querySelectorAll(".allergenTag").forEach((tag) => tag.remove());
+
+  const input = container.querySelector(".allergenInput");
+
+  allergens.forEach((allergen) => {
+    const tag = document.createElement("span");
+    tag.className = "allergenTag";
+    tag.dataset.allergen = allergen;
+
+    const iconPath = getAllergenIcon(allergen);
+    const iconHTML = iconPath
+      ? `<img src="${iconPath}" alt="${allergen}">`
+      : "";
+
+    tag.innerHTML = `
+      <span class="allergenTagInner">${iconHTML}${allergen}</span>
+      <button class="allergenTagRemove" type="button">&times;</button>
+    `;
+
+    tag.querySelector(".allergenTagRemove").addEventListener("click", () => {
+      const isAdd = containerId === "addAllergenContainer";
+      removeAllergenTag(allergen, isAdd);
+    });
+
+    container.insertBefore(tag, input);
+  });
+}
+
+function updateAllergenSuggestionStates(suggestionsId, allergens) {
+  const suggestionsContainer = document.getElementById(suggestionsId);
+  if (!suggestionsContainer) return;
+
+  const suggestions = suggestionsContainer.querySelectorAll(
+    ".allergenSuggestion",
+  );
+  suggestions.forEach((suggestion) => {
+    const allergen = suggestion.dataset.allergen;
+    if (allergens.includes(allergen)) {
+      suggestion.classList.add("added");
+    } else {
+      suggestion.classList.remove("added");
+    }
+  });
+}
+
+function addAllergenTag(allergen, isAdd) {
+  const allergens = isAdd ? addAllergens : editAllergens;
+  const containerId = isAdd ? "addAllergenContainer" : "editAllergenContainer";
+  const suggestionsId = isAdd
+    ? "addAllergenSuggestions"
+    : "editAllergenSuggestions";
+
+  // Capitalize first letter
+  const capitalized =
+    allergen.charAt(0).toUpperCase() + allergen.slice(1).toLowerCase();
+
+  // Check if already exists
+  if (allergens.includes(capitalized)) return;
+
+  allergens.push(capitalized);
+  renderAllergenTags(containerId, allergens);
+  updateAllergenSuggestionStates(suggestionsId, allergens);
+}
+
+function removeAllergenTag(allergen, isAdd) {
+  const allergens = isAdd ? addAllergens : editAllergens;
+  const containerId = isAdd ? "addAllergenContainer" : "editAllergenContainer";
+  const suggestionsId = isAdd
+    ? "addAllergenSuggestions"
+    : "editAllergenSuggestions";
+
+  const index = allergens.indexOf(allergen);
+  if (index > -1) {
+    allergens.splice(index, 1);
+  }
+
+  renderAllergenTags(containerId, allergens);
+  updateAllergenSuggestionStates(suggestionsId, allergens);
+}
+
+function initAllergenInput(prefix) {
+  const isAdd = prefix === "add";
+  const containerId = isAdd ? "addAllergenContainer" : "editAllergenContainer";
+  const inputId = isAdd ? "addAllergenInput" : "editAllergenInput";
+  const suggestionsId = isAdd
+    ? "addAllergenSuggestions"
+    : "editAllergenSuggestions";
+  const panelId = isAdd ? "addPanel" : "editPanel";
+
+  const container = document.getElementById(containerId);
+  const input = document.getElementById(inputId);
+  const suggestionsContainer = document.getElementById(suggestionsId);
+  const panel = document.getElementById(panelId);
+
+  if (!container || !input) return;
+
+  // Handle Enter key to add custom allergen
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const val = input.value.trim();
+      if (val) {
+        addAllergenTag(val, isAdd);
+        input.value = "";
+      }
+    } else if (e.key === "Backspace" && !input.value) {
+      // Remove last tag on backspace if input is empty
+      const allergens = isAdd ? addAllergens : editAllergens;
+      if (allergens.length) {
+        const lastAllergen = allergens[allergens.length - 1];
+        removeAllergenTag(lastAllergen, isAdd);
+      }
+    }
+  });
+
+  // Click on container focuses input
+  container.addEventListener("click", (e) => {
+    if (e.target === container) {
+      input.focus();
+    }
+  });
+
+  // Click on suggestion to add
+  if (suggestionsContainer) {
+    suggestionsContainer.addEventListener("click", (e) => {
+      const suggestion = e.target.closest(".allergenSuggestion");
+      if (suggestion && !suggestion.classList.contains("added")) {
+        const allergen = suggestion.dataset.allergen;
+        if (allergen) {
+          addAllergenTag(allergen, isAdd);
+        }
+      }
+    });
+  }
+
+  // Initialize drag and drop
+  if (panel) {
+    initAllergenDragDrop(panel, isAdd);
+  }
+}
+
+function initAllergenDragDrop(panel, isAdd) {
+  const allergens = isAdd ? addAllergens : editAllergens;
+  const suggestionsId = isAdd
+    ? "addAllergenSuggestions"
+    : "editAllergenSuggestions";
+
+  const snap = new Snap(panel, {
+    draggableSelector: `#${suggestionsId} [data-draggable]:not(.added)`,
+    dropZoneSelector: "[data-droppable]",
+    distance: 3,
+    onDropZoneEnter: ({ dropZone }) => {
+      dropZone.classList.add("snap-drop-active");
+    },
+    onDropZoneLeave: ({ dropZone }) => {
+      dropZone.classList.remove("snap-drop-active");
+    },
+    onDrop: ({ element, dropZone }) => {
+      dropZone.classList.remove("snap-drop-active");
+      const allergen = element.dataset.allergen;
+      if (allergen && !allergens.includes(allergen)) {
+        addAllergenTag(allergen, isAdd);
+      }
+    },
+  });
 }
 
 // Re-binds event listeners on elements created by renderMenu()
@@ -606,9 +1115,9 @@ document.addEventListener("DOMContentLoaded", () => {
     addImageBtnText.textContent = "Upload";
   });
 
-  // Edit popup close handlers
+  // Edit panel close handlers
   document
-    .getElementById("editPopupClose")
+    .getElementById("editPanelClose")
     .addEventListener("click", closeEditPopup);
   document
     .getElementById("editCancelBtn")
@@ -616,9 +1125,33 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("editSaveBtn")
     .addEventListener("click", saveMenuItem);
-  document.getElementById("editOverlay").addEventListener("click", (e) => {
-    if (e.target === e.currentTarget) closeEditPopup();
-  });
+  document
+    .getElementById("editPanelOverlay")
+    .addEventListener("click", closeEditPopup);
+
+  // Delete button and modal handlers
+  document
+    .getElementById("editDeleteBtn")
+    .addEventListener("click", openDeleteModal);
+  document
+    .getElementById("deleteModalCancelBtn")
+    .addEventListener("click", closeDeleteModal);
+  document
+    .getElementById("deleteModalConfirmBtn")
+    .addEventListener("click", deleteMenuItem);
+  document
+    .getElementById("deleteModalOverlay")
+    .addEventListener("click", (e) => {
+      if (e.target === e.currentTarget) closeDeleteModal();
+    });
+
+  // Variant group buttons
+  document
+    .getElementById("addVariantGroupBtn")
+    .addEventListener("click", () => addVariantGroup(true));
+  document
+    .getElementById("editVariantGroupBtn")
+    .addEventListener("click", () => addVariantGroup(false));
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
@@ -635,6 +1168,22 @@ document.addEventListener("DOMContentLoaded", () => {
     if (modifier && e.key === "a") {
       e.preventDefault();
       openAddPanel();
+    }
+    // Ctrl+Enter to save when add/edit panel is open
+    if (modifier && e.key === "Enter") {
+      const addPanelActive = document
+        .getElementById("addPanel")
+        ?.classList.contains("active");
+      const editPanelActive = document
+        .getElementById("editPanel")
+        ?.classList.contains("active");
+      if (addPanelActive) {
+        e.preventDefault();
+        addMenuItem();
+      } else if (editPanelActive) {
+        e.preventDefault();
+        saveMenuItem();
+      }
     }
     // "n" key (no modifier) navigates to create order page
     if (

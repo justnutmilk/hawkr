@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
@@ -8,42 +8,67 @@
         <link rel="stylesheet" href="onboarding.css" />
     </head>
     <body>
-        <div class="authContainer">
-            <div class="authLeft">
-                <div class="authBranding">
-                    <img
-                        src="../../images/hawkr logo.svg"
-                        alt="Hawkr Logo"
-                        class="authLogo"
-                    />
-                    <p class="authTagline">
-                        Singapore's Hawker Culture,<br />At Your Fingertips
-                    </p>
-                </div>
+        <!-- Liquid Glass Top Bar -->
+        <header class="authGlassTopBar" id="authGlassTopBar">
+            <div class="authGlassTopBarInner">
+                <a href="register.html" class="authTopBarBack">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    <span class="authTopBarBackText">Back</span>
+                </a>
+                <span class="authTopBarTitle">Select role</span>
+                <div class="authTopBarSpacer"></div>
             </div>
+            <div class="authGlassHighlight"></div>
+        </header>
 
+        <div class="authContainer">
             <div class="authRight">
                 <div class="authFormContainer roleSelectContainer">
                     <div class="authHeader">
                         <h1 class="authTitle">Choose Your Role</h1>
                         <p class="authSubtitle">
-                            This selection is permanent and cannot be changed later.
-                            Please choose carefully.
+                            This selection is permanent and cannot be changed
+                            later. Please choose carefully.
                         </p>
                     </div>
 
                     <div class="roleCards">
                         <button class="roleCard" id="customerRole">
                             <div class="roleCardIcon customerIcon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="48"
+                                    height="48"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path
+                                        d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
+                                    ></path>
                                     <circle cx="12" cy="7" r="4"></circle>
                                 </svg>
                             </div>
                             <h3 class="roleCardTitle">Customer</h3>
                             <p class="roleCardDesc">
-                                Browse hawker centres, order food, leave reviews,
-                                and discover Singapore's best hawker food.
+                                Browse hawker centres, order food, leave
+                                reviews, and discover Singapore's best hawker
+                                food.
                             </p>
                             <ul class="roleCardFeatures">
                                 <li>Order from any hawker stall</li>
@@ -55,15 +80,29 @@
 
                         <button class="roleCard" id="vendorRole">
                             <div class="roleCardIcon vendorIcon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="48"
+                                    height="48"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path
+                                        d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
+                                    ></path>
+                                    <polyline
+                                        points="9 22 9 12 15 12 15 22"
+                                    ></polyline>
                                 </svg>
                             </div>
                             <h3 class="roleCardTitle">Stall Owner</h3>
                             <p class="roleCardDesc">
-                                Manage your hawker stall, receive orders,
-                                and grow your business with Hawkr.
+                                Manage your hawker stall, receive orders, and
+                                grow your business with Hawkr.
                             </p>
                             <ul class="roleCardFeatures">
                                 <li>Manage your menu and prices</li>
@@ -72,9 +111,51 @@
                                 <li>Respond to customer feedback</li>
                             </ul>
                         </button>
+
+                        <button class="roleCard" id="operatorRole">
+                            <div class="roleCardIcon operatorIcon">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="48"
+                                    height="48"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <rect
+                                        x="2"
+                                        y="7"
+                                        width="20"
+                                        height="14"
+                                        rx="2"
+                                        ry="2"
+                                    ></rect>
+                                    <path
+                                        d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"
+                                    ></path>
+                                </svg>
+                            </div>
+                            <h3 class="roleCardTitle">Centre Operator</h3>
+                            <p class="roleCardDesc">
+                                Manage your hawker centre, oversee vendors, and
+                                monitor centre-wide operations.
+                            </p>
+                            <ul class="roleCardFeatures">
+                                <li>Oversee all stalls in your centre</li>
+                                <li>View centre-wide analytics</li>
+                                <li>Manage vendor onboarding</li>
+                                <li>Monitor centre performance</li>
+                            </ul>
+                        </button>
                     </div>
 
-                    <div class="formError formErrorGeneral" id="generalError"></div>
+                    <div
+                        class="formError formErrorGeneral"
+                        id="generalError"
+                    ></div>
                 </div>
             </div>
         </div>

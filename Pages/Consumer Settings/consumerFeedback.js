@@ -3,6 +3,16 @@
 // ============================================
 
 import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
+import { initMobileMenu } from "../../assets/js/mobileMenu.js";
+import { initLiquidGlassToggle } from "../../assets/js/liquidGlassToggle.js";
+import { auth } from "../../firebase/config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getCustomerOrders } from "../../firebase/services/orders.js";
+import {
+  submitFeedback,
+  hasFeedbackForOrder,
+  getCustomer,
+} from "../../firebase/services/customers.js";
 
 // ============================================
 // CONSUMER FEEDBACK FLOW
@@ -11,6 +21,10 @@ import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
 // Steps: 1 = Select Order, 2 = Rate Experience, 3 = Review & Submit, 4 = Success
 let currentStep = 1;
 let selectedOrder = null;
+let currentUser = null;
+let recentOrders = [];
+let isLoading = false;
+
 let feedbackData = {
   rating: 0,
   tags: [],
@@ -30,69 +44,6 @@ const quickTags = [
   "Portion size",
   "Cleanliness",
   "Packaging",
-];
-
-// ============================================
-// MOCK ORDER DATA (orders from last 14 days)
-// ============================================
-
-const mockRecentOrders = [
-  {
-    id: "c2b-j29Sksix93Q-FOOD",
-    stallName: "Chinese Foods Private Limited",
-    venue: "Maxwell Food Centre",
-    date: new Date(2026, 1, 3, 12, 30),
-    items: ["Char Kway Teow", "Hokkien Mee"],
-    total: 23.9,
-  },
-  {
-    id: "c2b-j29jsS9L3sQ-FOOD",
-    stallName: "Chinese Good Foods Cuisines",
-    venue: "Maxwell Food Centre",
-    date: new Date(2026, 1, 2, 18, 45),
-    items: ["Chicken Rice", "Laksa", "Mee Goreng"],
-    total: 67.0,
-  },
-  {
-    id: "c2b-k48Lmn7pQ2R-FOOD",
-    stallName: "Hainanese Delights",
-    venue: "Chinatown Complex",
-    date: new Date(2026, 1, 1, 13, 15),
-    items: ["Hainanese Chicken Rice", "Kopi"],
-    total: 15.5,
-  },
-  {
-    id: "c2b-m92Xyz3aB5C-FOOD",
-    stallName: "Laksa King",
-    venue: "Old Airport Road",
-    date: new Date(2026, 0, 30, 12, 0),
-    items: ["Katong Laksa"],
-    total: 8.0,
-  },
-  {
-    id: "c2b-n83Abc4dE6F-FOOD",
-    stallName: "Ah Heng Curry Chicken",
-    venue: "Hong Lim Market",
-    date: new Date(2026, 0, 28, 19, 30),
-    items: ["Curry Chicken Noodles"],
-    total: 12.5,
-  },
-  {
-    id: "c2b-p74Ghi5jK7L-FOOD",
-    stallName: "Tian Tian Hainanese",
-    venue: "Maxwell Food Centre",
-    date: new Date(2026, 0, 26, 12, 45),
-    items: ["Chicken Rice (Large)", "Vegetables"],
-    total: 18.0,
-  },
-  {
-    id: "c2b-q65Mno6pQ8R-FOOD",
-    stallName: "Hill Street Tai Hwa",
-    venue: "Crawford Lane",
-    date: new Date(2026, 0, 24, 11, 30),
-    items: ["Bak Chor Mee (Dry)", "Fish Ball Soup"],
-    total: 28.0,
-  },
 ];
 
 // ============================================
@@ -117,7 +68,10 @@ function formatPrice(amount) {
 function getOrdersWithinDays(orders, days) {
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - days);
-  return orders.filter((order) => order.date >= cutoffDate);
+  return orders.filter((order) => {
+    const orderDate = order.date || order.createdAt;
+    return orderDate >= cutoffDate;
+  });
 }
 
 // ============================================
@@ -181,24 +135,28 @@ function renderProgressBar() {
 }
 
 function renderOrderCard(order) {
+  const items = order.items || [];
+  const itemNames = items.map((item) => item.name);
   const itemsSummary =
-    order.items.length > 2
-      ? `${order.items.slice(0, 2).join(", ")} +${order.items.length - 2} more`
-      : order.items.join(", ");
+    itemNames.length > 2
+      ? `${itemNames.slice(0, 2).join(", ")} +${itemNames.length - 2} more`
+      : itemNames.join(", ") || "No items";
 
   const isSelected = selectedOrder && selectedOrder.id === order.id;
+  const hasFeedback = order.hasFeedback;
 
   return `
-    <div class="orderCard ${isSelected ? "selected" : ""}" data-order-id="${order.id}">
+    <div class="orderCard ${isSelected ? "selected" : ""} ${hasFeedback ? "has-feedback" : ""}" data-order-id="${order.id}">
       <div class="orderCardLeft">
-        <span class="orderStallName">${order.stallName}</span>
+        <span class="orderStallName">${order.stallName || "Unknown Stall"}</span>
         <div class="orderMeta">
           <span class="orderDate">${formatDate(order.date)}</span>
           <span class="orderItems">${itemsSummary}</span>
         </div>
+        ${hasFeedback ? '<span class="feedbackBadge">Feedback submitted</span>' : ""}
       </div>
       <div class="orderCardRight">
-        <span class="orderTotal">${formatPrice(order.total)}</span>
+        <span class="orderTotal">${formatPrice(order.total || 0)}</span>
         <a href="consumerTransactionDetail.html?id=${encodeURIComponent(order.id)}" class="viewReceiptLink" onclick="event.stopPropagation(); sessionStorage.setItem('transactionDetailReferrer', 'consumerFeedback.html');">View receipt</a>
       </div>
     </div>
@@ -206,9 +164,37 @@ function renderOrderCard(order) {
 }
 
 function renderSelectOrder() {
-  const recentOrders = getOrdersWithinDays(mockRecentOrders, 14);
+  const eligibleOrders = getOrdersWithinDays(recentOrders, 14);
+  // Filter out orders that already have feedback
+  const ordersWithoutFeedback = eligibleOrders.filter((o) => !o.hasFeedback);
 
-  if (recentOrders.length === 0) {
+  if (!currentUser) {
+    return `
+      <div class="nowGivingSection">
+        <span class="nowGivingLabel">Now Giving:</span>
+        <span class="nowGivingTitle">Feedback</span>
+      </div>
+      ${renderProgressBar()}
+      <div class="emptyState">
+        <h2 class="emptyStateTitle">Please log in</h2>
+        <p class="emptyStateText">You need to be logged in to leave feedback on your orders.</p>
+        <a href="../Auth/login.html" class="primaryButton">Log In</a>
+      </div>
+    `;
+  }
+
+  if (isLoading) {
+    return `
+      <div class="nowGivingSection">
+        <span class="nowGivingLabel">Now Giving:</span>
+        <span class="nowGivingTitle">Feedback</span>
+      </div>
+      ${renderProgressBar()}
+      <div class="loadingSpinner"></div>
+    `;
+  }
+
+  if (eligibleOrders.length === 0) {
     return `
       <div class="nowGivingSection">
         <span class="nowGivingLabel">Now Giving:</span>
@@ -221,12 +207,14 @@ function renderSelectOrder() {
       </div>
       <div class="emptyState">
         <h2 class="emptyStateTitle">No recent orders</h2>
-        <p class="emptyStateText">You can leave feedback for orders made in the last 14 days. If you need help with an older order, contact support.</p>
+        <p class="emptyStateText">You can leave feedback for orders made in the last 14 days. Make an order to leave feedback!</p>
+        <a href="../Consumer Order/consumerOrder.html" class="primaryButton">Order Food</a>
       </div>
     `;
   }
 
-  const orderCardsHTML = recentOrders
+  // Show all eligible orders but allow selection only for those without feedback
+  const orderCardsHTML = eligibleOrders
     .map((order) => renderOrderCard(order))
     .join("");
 
@@ -285,18 +273,20 @@ function renderQuickTags() {
 
 function renderFeedbackHeader() {
   if (!selectedOrder) return "";
+  const venueName =
+    selectedOrder.collectionDetails?.venueName || selectedOrder.venueName || "";
   return `
     <div class="nowGivingSection">
       <span class="nowGivingLabel">Now Giving Feedback For:</span>
       <span class="nowGivingTitle">${selectedOrder.stallName}</span>
-      <span class="nowGivingMeta">${selectedOrder.venue} &bull; ${formatDate(selectedOrder.date)}</span>
+      <span class="nowGivingMeta">${venueName} &bull; ${formatDate(selectedOrder.date)}</span>
     </div>
   `;
 }
 
 function getTextareaPlaceholder() {
   if (feedbackData.rating <= 2) {
-    return "That doesn't sound great… Tell us what happened, and we'll make sure to look into it.";
+    return "That doesn't sound great... Tell us what happened, and we'll make sure to look into it.";
   } else if (feedbackData.rating >= 4) {
     return "Awesome! Tell us what you enjoyed so we can help improve everyone's experience.";
   }
@@ -364,7 +354,22 @@ function renderRateExperience() {
         placeholder="${getTextareaPlaceholder()}"
         maxlength="1000"
       >${feedbackData.text}</textarea>
-      <span class="charCount"><span id="charCount">${feedbackData.text.length}</span>/1000</span>
+      <div class="textareaFooter">
+        <span class="charCount"><span id="charCount">${feedbackData.text.length}</span>/1000</span>
+        <span class="aiAnalysisNotice">
+          <img src="../../assets/icons/hawkrAi.svg" alt="HawkrAI" class="aiNoticeIcon" />
+          HawkrAI
+          <span class="aiAnalysisTooltip">
+            <img src="../../images/hawkrAILogo.svg" alt="HawkrAI" class="aiTooltipLogo" />
+            <span class="aiTooltipText">Your feedback will be analyzed by AI to determine sentiment. AI may not always be accurate.</span>
+            <span class="aiTooltipLinks">
+              <a href="../HawkrAI/hawkrAI.html">Learn more</a>
+              <span class="aiTooltipDivider">•</span>
+              <a href="../Privacy/privacy.html">Privacy Policy</a>
+            </span>
+          </span>
+        </span>
+      </div>
     </div>
 
     <div class="inlineNotice">
@@ -419,6 +424,11 @@ function renderReviewSummary() {
       </div>
       `
       : "";
+
+  const venueName =
+    selectedOrder?.collectionDetails?.venueName ||
+    selectedOrder?.venueName ||
+    "";
 
   return `
     <div class="reviewSummary">
@@ -546,11 +556,11 @@ function renderFeedbackPage() {
 
 function attachEventListeners() {
   // Step 1: Order selection
-  const orderCards = document.querySelectorAll(".orderCard");
+  const orderCards = document.querySelectorAll(".orderCard:not(.has-feedback)");
   orderCards.forEach((card) => {
     card.addEventListener("click", () => {
       const orderId = card.dataset.orderId;
-      selectedOrder = mockRecentOrders.find((o) => o.id === orderId);
+      selectedOrder = recentOrders.find((o) => o.id === orderId);
       renderFeedbackPage();
     });
   });
@@ -626,177 +636,10 @@ function attachEventListeners() {
 
   const contactMeToggle = document.getElementById("contactMeToggle");
   if (contactMeToggle) {
-    // Liquid glass toggle - supports both click and drag
     const toggleLabel = contactMeToggle.closest(".liquidGlassToggle");
-    const toggleTrack = toggleLabel?.querySelector(".toggleTrack");
-    const toggleThumb = toggleLabel?.querySelector(".toggleThumb");
-
-    if (toggleTrack && toggleThumb) {
-      let isAnimating = false;
-      let isDragging = false;
-      let hasDragged = false;
-      let startX = 0;
-      let thumbStartLeft = 0;
-
-      const minLeft = 2;
-      const maxLeft = 22; // 64px track - 40px glass - 2px padding
-      const halfwayPoint = (minLeft + maxLeft) / 2;
-      const animationDuration = 350;
-      const dragThreshold = 5;
-
-      // Helper functions for compatibility
-      const getMaxLeft = () => maxLeft;
-      const getHalfwayPoint = () => halfwayPoint;
-
-      // Animate toggle with glass effect (for click on track)
-      const animateToggle = (willBeChecked) => {
-        if (isAnimating) return;
-        isAnimating = true;
-
-        toggleThumb.classList.add("glass");
-
-        setTimeout(() => {
-          toggleThumb.classList.add("animating");
-          toggleThumb.style.left = willBeChecked
-            ? getMaxLeft() + "px"
-            : minLeft + "px";
-
-          setTimeout(() => {
-            if (willBeChecked) {
-              toggleTrack.classList.add("green");
-            } else {
-              toggleTrack.classList.remove("green");
-            }
-          }, animationDuration / 2);
-
-          setTimeout(() => {
-            contactMeToggle.checked = willBeChecked;
-            feedbackData.contactMe = willBeChecked;
-            toggleThumb.classList.remove("glass", "animating");
-            toggleThumb.style.left = "";
-            toggleTrack.classList.remove("green");
-            isAnimating = false;
-          }, animationDuration);
-        }, 50);
-      };
-
-      // Start drag
-      const startDrag = (e) => {
-        if (isAnimating) return;
-        e.preventDefault();
-
-        isDragging = true;
-        hasDragged = false;
-        startX = e.type.includes("mouse") ? e.clientX : e.touches[0].clientX;
-
-        const computedStyle = window.getComputedStyle(toggleThumb);
-        thumbStartLeft =
-          parseInt(computedStyle.left) ||
-          (contactMeToggle.checked ? getMaxLeft() : minLeft);
-
-        toggleThumb.classList.add("glass");
-      };
-
-      // During drag
-      const doDrag = (e) => {
-        if (!isDragging) return;
-
-        const clientX = e.type.includes("mouse")
-          ? e.clientX
-          : e.touches[0].clientX;
-        const deltaX = clientX - startX;
-
-        if (Math.abs(deltaX) > dragThreshold) {
-          hasDragged = true;
-        }
-
-        const maxLeft = getMaxLeft();
-        let newLeft = thumbStartLeft + deltaX;
-        newLeft = Math.max(minLeft, Math.min(maxLeft, newLeft));
-        toggleThumb.style.left = newLeft + "px";
-
-        if (newLeft > getHalfwayPoint()) {
-          toggleTrack.classList.add("green");
-        } else {
-          toggleTrack.classList.remove("green");
-        }
-      };
-
-      // End drag
-      const endDrag = () => {
-        if (!isDragging) return;
-        isDragging = false;
-
-        const currentLeft = parseInt(toggleThumb.style.left) || thumbStartLeft;
-        const maxLeft = getMaxLeft();
-        const halfwayPoint = getHalfwayPoint();
-
-        if (hasDragged) {
-          const shouldBeChecked = currentLeft > halfwayPoint;
-
-          toggleThumb.classList.add("animating");
-          toggleThumb.style.left = shouldBeChecked
-            ? maxLeft + "px"
-            : minLeft + "px";
-
-          if (shouldBeChecked) {
-            toggleTrack.classList.add("green");
-          } else {
-            toggleTrack.classList.remove("green");
-          }
-
-          setTimeout(() => {
-            contactMeToggle.checked = shouldBeChecked;
-            feedbackData.contactMe = shouldBeChecked;
-            toggleThumb.classList.remove("glass", "animating");
-            toggleThumb.style.left = "";
-            toggleTrack.classList.remove("green");
-          }, animationDuration);
-        } else {
-          const willBeChecked = !contactMeToggle.checked;
-
-          toggleThumb.classList.add("animating");
-          toggleThumb.style.left = willBeChecked
-            ? maxLeft + "px"
-            : minLeft + "px";
-
-          setTimeout(() => {
-            if (willBeChecked) {
-              toggleTrack.classList.add("green");
-            } else {
-              toggleTrack.classList.remove("green");
-            }
-          }, animationDuration / 2);
-
-          setTimeout(() => {
-            contactMeToggle.checked = willBeChecked;
-            feedbackData.contactMe = willBeChecked;
-            toggleThumb.classList.remove("glass", "animating");
-            toggleThumb.style.left = "";
-            toggleTrack.classList.remove("green");
-          }, animationDuration);
-        }
-      };
-
-      // Mouse events
-      toggleThumb.addEventListener("mousedown", startDrag);
-      document.addEventListener("mousemove", doDrag);
-      document.addEventListener("mouseup", endDrag);
-
-      // Touch events
-      toggleThumb.addEventListener("touchstart", startDrag, { passive: false });
-      document.addEventListener("touchmove", doDrag, { passive: false });
-      document.addEventListener("touchend", endDrag);
-
-      // Click on track (not thumb) triggers animated toggle
-      toggleTrack.addEventListener("click", (e) => {
-        if (e.target === toggleThumb || toggleThumb.contains(e.target)) return;
-        animateToggle(!contactMeToggle.checked);
-      });
-
-      // Prevent default checkbox behavior
-      contactMeToggle.addEventListener("click", (e) => {
-        e.preventDefault();
+    if (toggleLabel) {
+      initLiquidGlassToggle(toggleLabel, (isChecked) => {
+        feedbackData.contactMe = isChecked;
       });
     }
   }
@@ -839,13 +682,50 @@ function attachEventListeners() {
     });
   }
 
-  const submitFeedback = document.getElementById("submitFeedback");
-  if (submitFeedback) {
-    submitFeedback.addEventListener("click", () => {
-      if (feedbackData.confirmed) {
-        // Simulate submission
-        currentStep = 4;
-        renderFeedbackPage();
+  const submitFeedbackBtn = document.getElementById("submitFeedback");
+  if (submitFeedbackBtn) {
+    submitFeedbackBtn.addEventListener("click", async () => {
+      if (feedbackData.confirmed && currentUser && selectedOrder) {
+        submitFeedbackBtn.disabled = true;
+        submitFeedbackBtn.textContent = "Submitting...";
+
+        try {
+          // Get customer name for the feedback
+          let customerName = "Anonymous";
+          try {
+            const customer = await getCustomer(currentUser.uid);
+            if (customer && customer.name) {
+              customerName = customer.name;
+            }
+          } catch (e) {
+            console.warn("Could not fetch customer name:", e);
+          }
+
+          // Submit feedback to Firebase
+          await submitFeedback(currentUser.uid, {
+            orderId: selectedOrder.id,
+            stallId: selectedOrder.stallId,
+            stallName: selectedOrder.stallName,
+            venueName:
+              selectedOrder.collectionDetails?.venueName ||
+              selectedOrder.venueName ||
+              "",
+            rating: feedbackData.rating,
+            tags: feedbackData.tags,
+            text: feedbackData.text,
+            contactMe: feedbackData.contactMe,
+            customerName: customerName,
+          });
+
+          // Move to success step
+          currentStep = 4;
+          renderFeedbackPage();
+        } catch (error) {
+          console.error("Error submitting feedback:", error);
+          alert("Failed to submit feedback. Please try again.");
+          submitFeedbackBtn.disabled = false;
+          submitFeedbackBtn.textContent = "Submit feedback";
+        }
       }
     });
   }
@@ -875,38 +755,90 @@ function handleBackClick() {
 }
 
 // ============================================
+// DATA FETCHING
+// ============================================
+
+async function fetchRecentOrders() {
+  if (!currentUser) return [];
+
+  try {
+    isLoading = true;
+    renderFeedbackPage();
+
+    // Fetch orders from Firebase
+    const orders = await getCustomerOrders(50);
+
+    // Transform orders to include date and check for existing feedback
+    const transformedOrders = await Promise.all(
+      orders.map(async (order) => {
+        const orderDate = order.createdAt?.toDate
+          ? order.createdAt.toDate()
+          : new Date(order.createdAt);
+
+        // Check if feedback already exists
+        const hasFeedback = await hasFeedbackForOrder(
+          currentUser.uid,
+          order.id,
+        );
+
+        return {
+          ...order,
+          date: orderDate,
+          venueName: order.collectionDetails?.venueName || "",
+          hasFeedback: hasFeedback,
+        };
+      }),
+    );
+
+    isLoading = false;
+    return transformedOrders;
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    isLoading = false;
+    return [];
+  }
+}
+
+// ============================================
 // INITIALIZATION
 // ============================================
 
-function checkUrlParams() {
+async function checkUrlParams() {
   const urlParams = new URLSearchParams(window.location.search);
   const orderId = urlParams.get("order");
-  const stallId = urlParams.get("stall");
 
-  if (orderId) {
+  if (orderId && recentOrders.length > 0) {
     // Pre-select the order if passed via URL
-    selectedOrder = mockRecentOrders.find((o) => o.id === orderId);
-    if (selectedOrder) {
+    selectedOrder = recentOrders.find((o) => o.id === orderId);
+    if (selectedOrder && !selectedOrder.hasFeedback) {
       currentStep = 2; // Skip to rating step
-    }
-  } else if (stallId) {
-    // Filter orders by stall if passed
-    const stallOrders = mockRecentOrders.filter((o) =>
-      o.stallName.toLowerCase().includes(stallId.toLowerCase()),
-    );
-    if (stallOrders.length === 1) {
-      selectedOrder = stallOrders[0];
-      currentStep = 2;
+    } else {
+      selectedOrder = null; // Don't pre-select if already has feedback
     }
   }
+}
+
+async function initializePage() {
+  if (!currentUser) {
+    renderFeedbackPage();
+    return;
+  }
+
+  recentOrders = await fetchRecentOrders();
+  await checkUrlParams();
+  renderFeedbackPage();
 }
 
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize navbar (auth, user display, logout)
   initConsumerNavbar();
+  initMobileMenu();
 
-  checkUrlParams();
-  renderFeedbackPage();
+  // Listen for auth state
+  onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+    await initializePage();
+  });
 
   // Back button handler
   const backButton = document.getElementById("backButton");

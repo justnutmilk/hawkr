@@ -178,19 +178,58 @@ body {
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    border: 1px solid #e0e0e0;
-    background: #fff;
+    background: #ece6f0;
+    border: 1px solid transparent;
+    box-shadow: none;
     text-decoration: none;
     color: #341539;
     cursor: pointer;
-    transition: background 0.2s ease;
     position: absolute;
     left: 48px;
     flex-shrink: 0;
+    transition:
+        transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background 0.3s ease,
+        box-shadow 0.3s ease,
+        border-color 0.3s ease,
+        backdrop-filter 0.3s ease;
 }
 
 .backButton:hover {
-    background: #f4f1f6;
+    background: rgba(236, 230, 240, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow:
+        0 4px 16px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    transform: scale(1.08);
+}
+
+.backButton:active {
+    animation: liquidBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes liquidBounce {
+    0% {
+        transform: scale(1);
+    }
+    20% {
+        transform: scale(0.85) rotate(-3deg);
+    }
+    40% {
+        transform: scale(1.12) rotate(2deg);
+    }
+    60% {
+        transform: scale(0.95) rotate(-1deg);
+    }
+    80% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 .searchModule {
@@ -776,4 +815,86 @@ body {
     font-size: 14px;
     font-weight: 400;
     line-height: normal;
+}
+
+/* ============================================
+   SETTINGS DROPDOWN - Glassy Purple Style
+   ============================================ */
+
+.settingsDropdownWrapper {
+    position: relative;
+}
+
+.settingsButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.settingsDropdown {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    min-width: 180px;
+    padding: 16px;
+    border-radius: 24px;
+    background: rgba(200, 150, 210, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: none;
+    box-shadow:
+        0 8px 32px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease,
+        visibility 0.3s ease;
+}
+
+.settingsDropdownWrapper:hover .settingsDropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.settingsDropdownItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-family: Aptos, sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    text-decoration: none;
+    color: #341539;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    transition: background 0.15s ease;
+}
+
+.settingsDropdownItem:hover {
+    background: #ece6f0;
+}
+
+.settingsDropdownLogout {
+    color: #eb001b;
+}
+
+.settingsDropdownLogout svg {
+    stroke: #eb001b;
 }

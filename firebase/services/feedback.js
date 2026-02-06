@@ -3,7 +3,7 @@
  * Handles feedback CRUD operations
  */
 
-import { db } from "../config.js";
+import { db, app } from "../config.js";
 import {
   collection,
   doc,
@@ -21,6 +21,10 @@ import {
   runTransaction,
   increment,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getFunctions,
+  httpsCallable,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 
 /**
  * Submit new feedback
@@ -74,7 +78,9 @@ export async function submitFeedback(feedbackData) {
 
       // Calculate new average rating
       const newTotalReviews = currentReviews + 1;
-      const newRating = ((currentRating * currentReviews) + feedbackData.rating) / newTotalReviews;
+      const newRating =
+        (currentRating * currentReviews + feedbackData.rating) /
+        newTotalReviews;
 
       // Create feedback document
       const feedbackRef = doc(collection(db, "feedback"));
@@ -88,8 +94,12 @@ export async function submitFeedback(feedbackData) {
         comment: feedbackData.comment || "",
         tags: feedbackData.tags || [],
         contactRequested: feedbackData.contactRequested || false,
-        contactEmail: feedbackData.contactRequested ? (feedbackData.contactEmail || "") : "",
-        contactPhone: feedbackData.contactRequested ? (feedbackData.contactPhone || "") : "",
+        contactEmail: feedbackData.contactRequested
+          ? feedbackData.contactEmail || ""
+          : "",
+        contactPhone: feedbackData.contactRequested
+          ? feedbackData.contactPhone || ""
+          : "",
         isPublic: feedbackData.isPublic !== false, // Default to true
         stallResponse: null,
         stallResponseDate: null,
@@ -148,7 +158,7 @@ export async function getFeedbackByStall(stallId, options = {}) {
       collection(db, "feedback"),
       where("stallId", "==", stallId),
       orderBy("createdAt", "desc"),
-      limit(limitCount)
+      limit(limitCount),
     );
 
     if (publicOnly) {
@@ -157,7 +167,7 @@ export async function getFeedbackByStall(stallId, options = {}) {
         where("stallId", "==", stallId),
         where("isPublic", "==", true),
         orderBy("createdAt", "desc"),
-        limit(limitCount)
+        limit(limitCount),
       );
     }
 
@@ -195,7 +205,7 @@ export async function getFeedbackByCustomer(customerId, options = {}) {
       collection(db, "feedback"),
       where("customerId", "==", customerId),
       orderBy("createdAt", "desc"),
-      limit(limitCount)
+      limit(limitCount),
     );
 
     if (lastDoc) {
@@ -228,7 +238,7 @@ export async function getFeedbackByOrder(orderId) {
     const q = query(
       collection(db, "feedback"),
       where("orderId", "==", orderId),
-      limit(1)
+      limit(1),
     );
 
     const snapshot = await getDocs(q);
@@ -252,7 +262,14 @@ export async function getFeedbackByOrder(orderId) {
  */
 export async function updateFeedback(feedbackId, updates) {
   try {
-    const allowedUpdates = ["comment", "tags", "isPublic", "contactRequested", "contactEmail", "contactPhone"];
+    const allowedUpdates = [
+      "comment",
+      "tags",
+      "isPublic",
+      "contactRequested",
+      "contactEmail",
+      "contactPhone",
+    ];
     const filteredUpdates = {};
 
     for (const key of allowedUpdates) {
@@ -317,7 +334,9 @@ export async function deleteFeedback(feedbackId) {
         if (currentReviews > 1) {
           // Recalculate rating without this feedback
           const newTotalReviews = currentReviews - 1;
-          const newRating = ((currentRating * currentReviews) - feedbackData.rating) / newTotalReviews;
+          const newRating =
+            (currentRating * currentReviews - feedbackData.rating) /
+            newTotalReviews;
 
           transaction.update(stallRef, {
             rating: Math.round(newRating * 10) / 10,
@@ -352,7 +371,7 @@ export async function getStallFeedbackStats(stallId) {
   try {
     const q = query(
       collection(db, "feedback"),
-      where("stallId", "==", stallId)
+      where("stallId", "==", stallId),
     );
 
     const snapshot = await getDocs(q);
@@ -381,12 +400,68 @@ export async function getStallFeedbackStats(stallId) {
     });
 
     if (stats.totalReviews > 0) {
-      stats.averageRating = Math.round((totalRating / stats.totalReviews) * 10) / 10;
+      stats.averageRating =
+        Math.round((totalRating / stats.totalReviews) * 10) / 10;
     }
 
     return stats;
   } catch (error) {
     console.error("Error getting feedback stats:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get order details for a feedback (for refund info)
+ * @param {string} orderId - Order document ID
+ * @returns {Promise<object|null>}
+ */
+export async function getOrderForFeedback(orderId) {
+  if (!orderId) return null;
+
+  try {
+    const orderDoc = await getDoc(doc(db, "orders", orderId));
+    if (!orderDoc.exists()) return null;
+
+    return {
+      id: orderDoc.id,
+      ...orderDoc.data(),
+    };
+  } catch (error) {
+    console.error("Error getting order for feedback:", error);
+    throw error;
+  }
+}
+
+/**
+ * Resolve feedback with optional refund
+ * Calls the resolveFeedback Cloud Function
+ * @param {string} feedbackId - Feedback document ID
+ * @param {string} response - Response message to customer
+ * @param {string} refundType - "none" | "full" | "partial"
+ * @param {number} refundAmount - Amount for partial refund (in dollars)
+ * @returns {Promise<object>} - { success, refundStatus, refundAmount }
+ */
+export async function resolveFeedbackWithResponse(
+  feedbackId,
+  response,
+  refundType = "none",
+  refundAmount = 0,
+) {
+  try {
+    const functions = getFunctions(app);
+    const resolveFn = httpsCallable(functions, "resolveFeedback");
+
+    const result = await resolveFn({
+      feedbackId,
+      response,
+      refundType,
+      refundAmount,
+    });
+
+    return result.data;
+  } catch (error) {
+    console.error("Error resolving feedback:", error);
     throw error;
   }
 }

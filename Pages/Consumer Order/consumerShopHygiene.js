@@ -3,6 +3,7 @@
 // ============================================
 
 import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
+import { initMobileMenu } from "../../assets/js/mobileMenu.js";
 
 // ============================================
 // MOCK DATA (Simulating Backend Database)
@@ -317,6 +318,7 @@ async function initializePage() {
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize navbar (auth, user display, logout)
   initConsumerNavbar();
+  initMobileMenu();
 
   initializePage();
 

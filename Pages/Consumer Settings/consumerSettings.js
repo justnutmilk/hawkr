@@ -3,6 +3,8 @@
 // ============================================
 
 import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
+import { initLiquidGlassToggle } from "../../assets/js/liquidGlassToggle.js";
+import { initMobileMenu } from "../../assets/js/mobileMenu.js";
 import { auth, db } from "../../firebase/config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
@@ -10,65 +12,27 @@ import {
   getDoc,
   updateDoc,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getPaymentMethods,
+  deletePaymentMethod,
+} from "../../firebase/services/stripe.js";
 
 // ============================================
-// MOCK USER DATA
+// USER DATA
 // ============================================
 
 // Current user ID (set on auth)
 let currentUserId = null;
 
-const mockUserData = {
-  name: "Jane Doe",
+// User data object (populated from Firebase and Stripe)
+let userData = {
+  name: "",
   password: "••••••••••",
-  email: "janedoelovesyou@hotmail.com",
-  phoneNumber: "+65 8793 9383",
+  email: "",
+  phoneNumber: "",
   telegramLinked: false,
   browserNotifications: true,
-  paymentMethods: [
-    {
-      type: "MasterCard",
-      lastFour: "0392",
-      expiry: "03/33",
-      logo: "../../Payment Methods/masterCardCard.svg",
-      cardClass: "mastercard",
-    },
-    {
-      type: "Visa",
-      lastFour: "9402",
-      expiry: "03/28",
-      logo: "../../Payment Methods/visaCard.svg",
-      cardClass: "visa",
-    },
-    {
-      type: "Apple Pay",
-      lastFour: "",
-      expiry: "03/28",
-      logo: "../../Payment Methods/applePayCard.svg",
-      cardClass: "applepay",
-    },
-    {
-      type: "Google Pay",
-      lastFour: "",
-      expiry: "05/29",
-      logo: "../../Payment Methods/googlePayCard.svg",
-      cardClass: "googlepay",
-    },
-    {
-      type: "American Express",
-      lastFour: "1004",
-      expiry: "11/27",
-      logo: "../../Payment Methods/americanExpressCard.svg",
-      cardClass: "amex",
-    },
-    {
-      type: "UnionPay",
-      lastFour: "6218",
-      expiry: "08/30",
-      logo: "../../Payment Methods/unionPayCard.svg",
-      cardClass: "unionpay",
-    },
-  ],
+  paymentMethods: [], // Populated from Stripe
 };
 
 // ============================================
@@ -116,10 +80,14 @@ function renderPersonalDetails(user) {
             <span class="detailLabel">Phone Number</span>
             <span class="optionalBadge">Optional</span>
           </div>
-          <span class="detailValuePhone">
-            <img src="${icons.singapore}" alt="SG" />
-            ${user.phoneNumber}
-          </span>
+          ${
+            user.phoneNumber
+              ? `<span class="detailValuePhone">
+                <img src="${icons.singapore}" alt="SG" />
+                ${user.phoneNumber}
+              </span>`
+              : `<span class="detailValueNotProvided">Not provided</span>`
+          }
         </div>
       </div>
     </div>
@@ -169,9 +137,11 @@ function renderNotificationsSection(user) {
             <span class="notificationMethodTitle">Browser</span>
             <span class="notificationMethodDescription">Shows pop-ups for order updates only while you're on this page.</span>
           </div>
-          <label class="toggleSwitch">
+          <label class="liquidGlassToggle" id="browserToggleLabel">
             <input type="checkbox" id="browserToggle" ${user.browserNotifications ? "checked" : ""} />
-            <span class="toggleSlider"></span>
+            <span class="toggleTrack">
+              <span class="toggleThumb ${user.browserNotifications ? "glass" : ""}"></span>
+            </span>
           </label>
         </div>
       </div>
@@ -185,7 +155,7 @@ function renderPaymentCard(card, editMode = false) {
     : `&bull;&bull;&bull;&bull;  &bull;&bull;&bull;&bull;  &bull;&bull;&bull;&bull;  &bull;&bull;&bull;&bull;`;
 
   const removeButton = editMode
-    ? `<button class="removeCardButton" data-card-type="${card.type}" data-card-last-four="${card.lastFour}">Remove Card</button>`
+    ? `<button class="removeCardButton" data-card-id="${card.id || ""}" data-card-type="${card.type}" data-card-last-four="${card.lastFour}">Remove Card</button>`
     : "";
 
   return `
@@ -204,21 +174,31 @@ function renderPaymentCard(card, editMode = false) {
 let paymentEditMode = false;
 
 function renderPaymentSection(user) {
-  const cardsHTML = user.paymentMethods
-    .map((card) => renderPaymentCard(card, paymentEditMode))
-    .join("");
+  const hasPaymentMethods =
+    user.paymentMethods && user.paymentMethods.length > 0;
 
-  const editButton = paymentEditMode
-    ? `<button class="actionButton saveButton" id="editPayment">
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M1.5 7L5 10.5L11.5 2.5" stroke="#341539" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        Save changes
-      </button>`
-    : `<button class="actionButton editButton" id="editPayment">
-        <img src="${icons.edit}" alt="Edit" />
-        Edit
-      </button>`;
+  // Always render remove buttons, CSS will handle visibility via editMode class
+  const cardsHTML = hasPaymentMethods
+    ? user.paymentMethods.map((card) => renderPaymentCard(card, true)).join("")
+    : `<div class="emptyState">
+        <img src="../../images/noCards.svg" alt="No payment methods" class="emptyStateImage" />
+        <span class="emptyStateTitle">No payment methods</span>
+        <span class="emptyStateDescription">Add a card to make checkout faster and easier.</span>
+      </div>`;
+
+  const editButton = hasPaymentMethods
+    ? paymentEditMode
+      ? `<button class="actionButton saveButton" id="editPayment">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M1.5 7L5 10.5L11.5 2.5" stroke="#341539" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Save changes
+        </button>`
+      : `<button class="actionButton editButton" id="editPayment">
+          <img src="${icons.edit}" alt="Edit" />
+          Edit
+        </button>`
+    : "";
 
   const addCardButton = paymentEditMode
     ? ""
@@ -227,9 +207,9 @@ function renderPaymentSection(user) {
         Add Card
       </button>`;
 
-  const cardsContainerClass = paymentEditMode
-    ? "paymentCardsVertical"
-    : "paymentCardsScroll";
+  const containerClass = paymentEditMode
+    ? "paymentCardsContainer editMode"
+    : "paymentCardsContainer";
 
   const descriptionText = paymentEditMode
     ? "Saved payment methods, PCI DSS compliant. We use Stripe for secure payment processing."
@@ -245,7 +225,7 @@ function renderPaymentSection(user) {
         </div>
       </div>
       <span class="paymentDescription">${descriptionText} <a href="404.html" class="paymentDescriptionLink">Learn more ></a></span>
-      <div class="${cardsContainerClass}">
+      <div class="${containerClass}" id="paymentCardsContainer">
         ${cardsHTML}
       </div>
     </div>
@@ -341,7 +321,7 @@ function openEditDetails() {
   const overlay = document.getElementById("editDetailsOverlay");
   if (!popup || !overlay) return;
 
-  popup.innerHTML = renderEditDetailsPopup(mockUserData);
+  popup.innerHTML = renderEditDetailsPopup(userData);
   overlay.classList.add("active");
   document.body.style.overflow = "hidden";
 
@@ -371,7 +351,7 @@ function closeEditDetails() {
   }
 }
 
-function saveEditDetails() {
+async function saveEditDetails() {
   const name = document.getElementById("editName").value.trim();
   const password = document.getElementById("editPassword").value;
   const email = document.getElementById("editEmail").value.trim();
@@ -386,15 +366,47 @@ function saveEditDetails() {
     return;
   }
 
-  if (name) mockUserData.name = name;
-  if (password) mockUserData.password = "••••••••••";
-  if (email) mockUserData.email = email;
-  mockUserData.phoneNumber = phoneRaw
-    ? `+65 ${phoneDigits.slice(0, 4)} ${phoneDigits.slice(4)}`
-    : "";
+  const saveBtn = document.getElementById("editDetailsSave");
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Saving...";
+  }
 
-  closeEditDetails();
-  renderSettingsPage(mockUserData);
+  try {
+    // Build update object for Firebase
+    const updates = {};
+    if (name) updates.displayName = name; // Use 'displayName' to match Firebase schema
+    if (phoneRaw) {
+      updates.phone = `+65 ${phoneDigits.slice(0, 4)} ${phoneDigits.slice(4)}`;
+    } else {
+      updates.phone = "";
+    }
+
+    // Save to Firebase if authenticated
+    if (currentUserId) {
+      await updateDoc(doc(db, "customers", currentUserId), updates);
+      console.log("Saved user details to Firebase:", updates);
+    }
+
+    // Update local state
+    if (name) userData.name = name;
+    if (password) userData.password = "••••••••••";
+    if (email) userData.email = email;
+    userData.phoneNumber = phoneRaw
+      ? `+65 ${phoneDigits.slice(0, 4)} ${phoneDigits.slice(4)}`
+      : "";
+
+    closeEditDetails();
+    renderSettingsPage(userData);
+  } catch (error) {
+    console.error("Error saving details:", error);
+    alert("Failed to save changes. Please try again.");
+
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Save changes";
+    }
+  }
 }
 
 // ============================================
@@ -574,14 +586,14 @@ function saveAddCard() {
     cardClass: config.cardClass,
   };
 
-  mockUserData.paymentMethods.push(newCard);
+  userData.paymentMethods.push(newCard);
 
   closeAddCard();
 
   // Re-render payment section
   const paymentSection = document.getElementById("paymentSection");
   if (paymentSection) {
-    paymentSection.outerHTML = renderPaymentSection(mockUserData);
+    paymentSection.outerHTML = renderPaymentSection(userData);
     attachPaymentListeners();
   }
 }
@@ -613,8 +625,8 @@ function renderRemoveCardPopup(cardType, cardLastFour) {
   `;
 }
 
-function openRemoveCardConfirmation(cardType, cardLastFour) {
-  pendingRemoveCard = { cardType, cardLastFour };
+function openRemoveCardConfirmation(cardId, cardType, cardLastFour) {
+  pendingRemoveCard = { cardId, cardType, cardLastFour };
 
   const popup = document.getElementById("removeCardPopup");
   const overlay = document.getElementById("removeCardOverlay");
@@ -650,20 +662,45 @@ function closeRemoveCard() {
   pendingRemoveCard = null;
 }
 
-function confirmRemoveCard() {
+async function confirmRemoveCard() {
   if (!pendingRemoveCard) return;
 
-  const { cardType, cardLastFour } = pendingRemoveCard;
-  mockUserData.paymentMethods = mockUserData.paymentMethods.filter(
-    (card) => !(card.type === cardType && card.lastFour === cardLastFour),
-  );
+  const { cardId, cardType, cardLastFour } = pendingRemoveCard;
 
-  closeRemoveCard();
+  // Show loading state on the remove button
+  const confirmBtn = document.getElementById("removeCardConfirm");
+  if (confirmBtn) {
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = "Removing...";
+  }
 
-  const paymentSection = document.getElementById("paymentSection");
-  if (paymentSection) {
-    paymentSection.outerHTML = renderPaymentSection(mockUserData);
-    attachPaymentListeners();
+  try {
+    // Delete from Stripe if we have a card ID
+    if (cardId) {
+      await deletePaymentMethod(cardId);
+      console.log("Deleted payment method from Stripe:", cardId);
+    }
+
+    // Remove from local state
+    userData.paymentMethods = userData.paymentMethods.filter(
+      (card) => card.id !== cardId,
+    );
+
+    closeRemoveCard();
+
+    const paymentSection = document.getElementById("paymentSection");
+    if (paymentSection) {
+      paymentSection.outerHTML = renderPaymentSection(userData);
+      attachPaymentListeners();
+    }
+  } catch (error) {
+    console.error("Error removing card:", error);
+    alert("Failed to remove card. Please try again.");
+
+    if (confirmBtn) {
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = "Remove";
+    }
   }
 }
 
@@ -722,7 +759,7 @@ window.onTelegramAuth = async function (user) {
     });
 
     // Update local state
-    mockUserData.telegramLinked = true;
+    userData.telegramLinked = true;
 
     // Re-render the page to show connected status
     rerenderTelegramSection();
@@ -759,7 +796,7 @@ async function handleTelegramUnlink() {
       telegramAuthDate: null,
     });
 
-    mockUserData.telegramLinked = false;
+    userData.telegramLinked = false;
 
     rerenderTelegramSection();
   } catch (error) {
@@ -773,7 +810,116 @@ async function handleTelegramUnlink() {
  */
 function rerenderTelegramSection() {
   // Re-render the entire settings page to update Telegram section
-  renderSettingsPage(mockUserData);
+  renderSettingsPage(userData);
+}
+
+// ============================================
+// PAYMENT CARD MORPH ANIMATION (FLIP technique)
+// ============================================
+
+/**
+ * Animate payment cards morphing between horizontal and vertical layouts
+ * Smoothly animates position AND width expansion/contraction
+ */
+function animatePaymentCardsMorph(toEditMode) {
+  const container = document.getElementById("paymentCardsContainer");
+  if (!container) return;
+
+  const cards = container.querySelectorAll(".cardOutside");
+  if (cards.length === 0) return;
+
+  // FIRST: Capture initial positions and widths
+  const firstState = Array.from(cards).map((card) => {
+    const rect = card.getBoundingClientRect();
+    return { left: rect.left, top: rect.top, width: rect.width };
+  });
+
+  // Lock current widths before changing layout
+  cards.forEach((card, index) => {
+    card.style.width = `${firstState[index].width}px`;
+  });
+
+  // Apply the final state class
+  if (toEditMode) {
+    container.classList.add("editMode");
+  } else {
+    container.classList.remove("editMode");
+  }
+
+  // Force layout recalculation
+  container.offsetHeight;
+
+  // Get the target width for edit mode
+  const targetWidth = container.getBoundingClientRect().width;
+
+  // LAST: Get final positions
+  const lastState = Array.from(cards).map((card, index) => {
+    const rect = card.getBoundingClientRect();
+    // In edit mode, cards should be full width; otherwise use natural width
+    const finalWidth = toEditMode ? targetWidth : firstState[index].width;
+    return { left: rect.left, top: rect.top, width: finalWidth };
+  });
+
+  // For collapsing (exiting edit mode), we need to recalculate positions
+  // based on the original horizontal layout
+  if (!toEditMode) {
+    // Temporarily remove width locks to get natural positions
+    cards.forEach((card) => {
+      card.style.width = "";
+    });
+    container.offsetHeight;
+
+    // Recapture the natural positions
+    Array.from(cards).forEach((card, index) => {
+      const rect = card.getBoundingClientRect();
+      lastState[index] = {
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+      };
+    });
+
+    // Re-lock to first state width for animation
+    cards.forEach((card, index) => {
+      card.style.width = `${firstState[index].width}px`;
+    });
+  }
+
+  // INVERT & PLAY: Animate each card
+  cards.forEach((card, index) => {
+    const first = firstState[index];
+    const last = lastState[index];
+
+    // Calculate deltas
+    const deltaX = first.left - last.left;
+    const deltaY = first.top - last.top;
+
+    // Set initial state without transition
+    card.style.transition = "none";
+    card.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+    card.style.width = `${first.width}px`;
+
+    // Force reflow
+    card.offsetHeight;
+
+    // PLAY: Animate to final state
+    card.style.transition =
+      "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), width 0.5s cubic-bezier(0.4, 0, 0.2, 1)";
+    card.style.transform = "translate(0, 0)";
+    card.style.width = `${last.width}px`;
+
+    // Clean up inline styles after animation
+    const cleanup = () => {
+      card.style.transform = "";
+      card.style.transition = "";
+      card.style.width = "";
+    };
+
+    card.addEventListener("transitionend", cleanup, { once: true });
+
+    // Fallback cleanup
+    setTimeout(cleanup, 600);
+  });
 }
 
 // ============================================
@@ -786,9 +932,49 @@ function attachPaymentListeners() {
   if (editPayment) {
     editPayment.addEventListener("click", function () {
       paymentEditMode = !paymentEditMode;
+
+      // Animate the cards morphing with FLIP technique
+      animatePaymentCardsMorph(paymentEditMode);
+
+      // Update button and add card visibility
       const paymentSection = document.getElementById("paymentSection");
       if (paymentSection) {
-        paymentSection.outerHTML = renderPaymentSection(mockUserData);
+        const sectionHeader = paymentSection.querySelector(".sectionHeader");
+        const descriptionEl = paymentSection.querySelector(
+          ".paymentDescription",
+        );
+
+        if (sectionHeader) {
+          const addCardButton = paymentEditMode
+            ? ""
+            : `<button class="actionButton addCard" id="addCard">
+                <img src="${icons.add}" alt="Add" />
+                Add Card
+              </button>`;
+
+          const editButton = paymentEditMode
+            ? `<button class="actionButton saveButton" id="editPayment">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1.5 7L5 10.5L11.5 2.5" stroke="#341539" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Save changes
+              </button>`
+            : `<button class="actionButton editButton" id="editPayment">
+                <img src="${icons.edit}" alt="Edit" />
+                Edit
+              </button>`;
+
+          sectionHeader.querySelector(".sectionActions").innerHTML =
+            `${addCardButton}${editButton}`;
+        }
+
+        if (descriptionEl) {
+          descriptionEl.textContent = paymentEditMode
+            ? "Saved payment methods, PCI DSS compliant. We use Stripe for secure payment processing."
+            : "Secure payment methods, PCI DSS compliant. We use Stripe for secure payment processing.";
+        }
+
+        // Re-attach listeners after updating buttons
         attachPaymentListeners();
       }
     });
@@ -806,19 +992,20 @@ function attachPaymentListeners() {
   const removeButtons = document.querySelectorAll(".removeCardButton");
   removeButtons.forEach((button) => {
     button.addEventListener("click", function () {
+      const cardId = this.dataset.cardId;
       const cardType = this.dataset.cardType;
       const cardLastFour = this.dataset.cardLastFour;
-      openRemoveCardConfirmation(cardType, cardLastFour);
+      openRemoveCardConfirmation(cardId, cardType, cardLastFour);
     });
   });
 }
 
 function attachEventListeners() {
-  // Browser notifications toggle
-  const browserToggle = document.getElementById("browserToggle");
-  if (browserToggle) {
-    browserToggle.addEventListener("change", function () {
-      mockUserData.browserNotifications = this.checked;
+  // Browser notifications toggle - use liquid glass toggle
+  const browserToggleLabel = document.getElementById("browserToggleLabel");
+  if (browserToggleLabel) {
+    initLiquidGlassToggle(browserToggleLabel, (isChecked) => {
+      userData.browserNotifications = isChecked;
     });
   }
 
@@ -832,7 +1019,7 @@ function attachEventListeners() {
   const telegramWidgetContainer = document.getElementById(
     "telegramLoginWidget",
   );
-  if (telegramWidgetContainer && !mockUserData.telegramLinked) {
+  if (telegramWidgetContainer && !userData.telegramLinked) {
     initTelegramLoginWidget();
   }
 
@@ -892,25 +1079,110 @@ async function initializeSettingsPage() {
       const customerDoc = await getDoc(doc(db, "customers", currentUserId));
       if (customerDoc.exists()) {
         const customerData = customerDoc.data();
+        console.log("Customer data from Firebase:", customerData);
 
-        // Update mock data with Firebase data
-        if (customerData.name) mockUserData.name = customerData.name;
-        if (customerData.phone) mockUserData.phoneNumber = customerData.phone;
+        // Update user data with Firebase data
+        // Field is 'displayName' in Firebase, not 'name'
+        if (customerData.displayName) userData.name = customerData.displayName;
+        if (customerData.phone) userData.phoneNumber = customerData.phone;
 
         // Telegram status
-        mockUserData.telegramLinked = customerData.telegramLinked || false;
+        userData.telegramLinked = customerData.telegramLinked || false;
 
-        // Browser notifications
+        // Browser notifications - check both root level and preferences object
         if (customerData.browserNotifications !== undefined) {
-          mockUserData.browserNotifications = customerData.browserNotifications;
+          userData.browserNotifications = customerData.browserNotifications;
+        } else if (
+          customerData.preferences?.browserNotifications !== undefined
+        ) {
+          userData.browserNotifications =
+            customerData.preferences.browserNotifications;
         }
       }
     } catch (error) {
       console.error("Error loading customer data:", error);
     }
+
+    // Load saved payment methods from Stripe
+    try {
+      const stripePaymentMethods = await getPaymentMethods();
+      console.log("Raw Stripe payment methods:", stripePaymentMethods);
+      userData.paymentMethods = stripePaymentMethods.map((pm) => {
+        // Backend returns: { id, type, brand, lastFour, expMonth, expYear }
+        const brand = pm.brand || "unknown";
+        const brandConfig = getBrandConfig(brand);
+        return {
+          id: pm.id, // Stripe payment method ID (needed for deletion)
+          type: brandConfig.displayName,
+          lastFour: pm.lastFour || "",
+          expiry:
+            pm.expMonth && pm.expYear
+              ? `${String(pm.expMonth).padStart(2, "0")}/${String(pm.expYear).slice(-2)}`
+              : "",
+          logo: brandConfig.logo,
+          cardClass: brandConfig.cardClass,
+        };
+      });
+      console.log("Mapped payment methods:", userData.paymentMethods);
+    } catch (error) {
+      console.error("Error loading payment methods:", error);
+      userData.paymentMethods = [];
+    }
   }
 
-  renderSettingsPage(mockUserData);
+  renderSettingsPage(userData);
+}
+
+/**
+ * Get brand configuration for display
+ */
+function getBrandConfig(brand) {
+  const brandConfigs = {
+    visa: {
+      displayName: "Visa",
+      logo: "../../Payment Methods/visaCard.svg",
+      cardClass: "visa",
+    },
+    mastercard: {
+      displayName: "MasterCard",
+      logo: "../../Payment Methods/masterCardCard.svg",
+      cardClass: "mastercard",
+    },
+    amex: {
+      displayName: "American Express",
+      logo: "../../Payment Methods/americanExpressCard.svg",
+      cardClass: "amex",
+    },
+    unionpay: {
+      displayName: "UnionPay",
+      logo: "../../Payment Methods/unionPayCard.svg",
+      cardClass: "unionpay",
+    },
+    discover: {
+      displayName: "Discover",
+      logo: "../../Payment Methods/visaCard.svg",
+      cardClass: "visa",
+    },
+    diners: {
+      displayName: "Diners Club",
+      logo: "../../Payment Methods/visaCard.svg",
+      cardClass: "visa",
+    },
+    jcb: {
+      displayName: "JCB",
+      logo: "../../Payment Methods/visaCard.svg",
+      cardClass: "visa",
+    },
+  };
+
+  const config = brandConfigs[brand.toLowerCase()];
+  return (
+    config || {
+      displayName: brand.charAt(0).toUpperCase() + brand.slice(1),
+      logo: "../../Payment Methods/visaCard.svg",
+      cardClass: "visa",
+    }
+  );
 }
 
 // ============================================
@@ -920,12 +1192,14 @@ async function initializeSettingsPage() {
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize navbar (auth, user display, logout)
   initConsumerNavbar();
+  initMobileMenu();
 
   // Wait for auth state before initializing
   onAuthStateChanged(auth, (user) => {
     if (user) {
       currentUserId = user.uid;
-      mockUserData.email = user.email || mockUserData.email;
+      userData.email = user.email || userData.email;
+      userData.name = user.displayName || userData.name;
       initializeSettingsPage();
     } else {
       // Redirect to login if not authenticated

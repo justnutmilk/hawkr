@@ -305,3 +305,161 @@
     content: "•";
     margin-right: 4px;
 }
+
+/* Menu Item specific styles */
+.searchResultMenuItem {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.searchResultMenuItem .searchResultInfo {
+    flex: 1;
+}
+
+.searchResultSubtitle {
+    color: #595959;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.searchResultPrice {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+
+@media (max-width: 768px) {
+    .searchModuleWrapper {
+        max-width: none;
+        flex: 0 0 auto;
+        width: auto;
+    }
+
+    /* Collapse search bar to circular icon on mobile */
+    .searchModule {
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        border-radius: 50%;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .searchModule .searchInput {
+        display: none;
+    }
+
+    .searchModule .searchIcon {
+        width: 24px;
+        height: 24px;
+    }
+
+    /* When search is active, show full dropdown */
+    .searchModuleWrapper.active .searchModule {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .searchDropdown {
+        width: 100%;
+        left: 0;
+        transform: none;
+    }
+
+    .searchModuleWrapper.active .searchDropdown {
+        width: calc(100vw - 10%);
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .searchDropdownHeader {
+        padding: 16px 20px;
+    }
+
+    .searchDropdownHeader .searchInputLarge {
+        font-size: 16px;
+    }
+
+    .searchDropdownContent {
+        padding: 20px 24px;
+        gap: 20px;
+    }
+
+    .searchResultImage {
+        width: 50px;
+        height: 50px;
+    }
+
+    .searchResultName {
+        font-size: 16px;
+    }
+
+    .searchResultPrice {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .searchModule {
+        height: 44px;
+        padding: 0px 14px 0px 18px;
+    }
+
+    .searchInput {
+        font-size: 15px;
+    }
+
+    .searchIcon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .searchModuleWrapper.active .searchDropdown {
+        width: calc(100vw - 8%);
+    }
+
+    .searchDropdownHeader {
+        padding: 14px 16px;
+    }
+
+    .searchDropdownContent {
+        padding: 16px 20px;
+        gap: 16px;
+    }
+
+    .searchResultItem {
+        padding: 10px 12px;
+        margin: 0 -12px;
+        gap: 12px;
+    }
+
+    .searchResultImage {
+        width: 44px;
+        height: 44px;
+    }
+
+    .searchResultName {
+        font-size: 15px;
+    }
+
+    .searchResultMeta {
+        font-size: 12px;
+    }
+
+    .searchResultPrice {
+        font-size: 15px;
+    }
+}

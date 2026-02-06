@@ -3,80 +3,13 @@
 // ============================================
 
 import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
-
-// ============================================
-// MOCK DATA (Simulating Backend Database)
-// ============================================
-
-const mockFavourites = [
-  {
-    id: 1,
-    name: "Hainanese Chicken Rice",
-    image:
-      "../../mock-data/Consumer Dashboard/hawker-center/Maxwell Food Centre.png",
-    rating: 4.8,
-    price: 5.5,
-    stallName: "Tian Tian Hainanese Chicken Rice",
-    hawkerCentre: "Maxwell Food Centre",
-    allergens: [],
-  },
-  {
-    id: 2,
-    name: "Century Egg Porridge",
-    image:
-      "../../mock-data/Consumer Dashboard/hawker-center/Maxwell Food Centre.png",
-    rating: 4.5,
-    price: 4.0,
-    stallName: "Zhen Zhen Porridge",
-    hawkerCentre: "Maxwell Food Centre",
-    allergens: [],
-  },
-  {
-    id: 3,
-    name: "Mala Xiang Guo",
-    image:
-      "../../mock-data/Consumer Dashboard/hawker-center/Maxwell Food Centre.png",
-    rating: 4.7,
-    price: 12.0,
-    stallName: "Spice World",
-    hawkerCentre: "Chinatown Complex",
-    allergens: ["Seafood"],
-  },
-  {
-    id: 4,
-    name: "Char Kway Teow",
-    image:
-      "../../mock-data/Consumer Dashboard/hawker-center/Maxwell Food Centre.png",
-    rating: 4.6,
-    price: 6.0,
-    stallName: "Outram Park Fried Kway Teow",
-    hawkerCentre: "Hong Lim Market",
-    allergens: ["Seafood", "Nuts"],
-  },
-];
-
-// ============================================
-// MOCK API FUNCTIONS (Simulating Backend Calls)
-// ============================================
-
-const api = {
-  async fetchFavourites() {
-    await this.simulateNetworkDelay();
-    return mockFavourites;
-  },
-
-  async removeFavourite(id) {
-    await this.simulateNetworkDelay();
-    const index = mockFavourites.findIndex((item) => item.id === id);
-    if (index > -1) mockFavourites.splice(index, 1);
-    return true;
-  },
-
-  simulateNetworkDelay() {
-    const delay = Math.random() * 300 + 200;
-    return new Promise((resolve) => setTimeout(resolve, delay));
-  },
-};
+import { initMobileMenu } from "../../assets/js/mobileMenu.js";
+import { auth } from "../../firebase/config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFavourites,
+  removeFromFavourites,
+} from "../../firebase/services/customers.js";
 
 // ============================================
 // ICON SVG TEMPLATES
@@ -94,11 +27,6 @@ const icons = {
   </svg>`,
 };
 
-const tagIcons = {
-  halal: "../../assets/icons/halal.png",
-  kosher: "../../assets/icons/kosher.svg",
-};
-
 // Allergen icon mapping
 const allergenIcons = {
   seafood: "../../assets/icons/seafood.svg",
@@ -111,6 +39,7 @@ const allergenIcons = {
 // ============================================
 
 let favourites = [];
+let currentUser = null;
 
 // ============================================
 // RENDER FUNCTIONS
@@ -157,11 +86,14 @@ function renderAllergens(allergens) {
 
 function renderFavouriteCard(item) {
   const allergensHTML = renderAllergens(item.allergens);
+  const imageUrl = item.imageUrl || "../../images/placeholder-food.jpg";
+  const rating = item.rating || 0;
+  const price = item.price || 0;
 
   return `
-    <div class="favouriteCard" data-id="${item.id}">
+    <div class="favouriteCard" data-id="${item.id}" data-menu-item-id="${item.menuItemId}">
       <div class="favouriteCardImage">
-        <img src="${item.image}" alt="${item.name}" onerror="this.style.display='none'">
+        <img src="${imageUrl}" alt="${item.name}" onerror="this.src='../../images/placeholder-food.jpg'">
         <button class="favouriteButton" data-id="${item.id}" aria-label="Remove from favourites">
           ${icons.heartFilled}
         </button>
@@ -171,12 +103,12 @@ function renderFavouriteCard(item) {
         <div class="favouriteCardMeta">
           <span class="favouriteCardRating">
             ${icons.star}
-            ${item.rating}
+            ${rating.toFixed(1)}
           </span>
-          <span class="favouriteCardPrice">${formatPrice(item.price)}</span>
+          <span class="favouriteCardPrice">${formatPrice(price)}</span>
         </div>
         ${allergensHTML}
-        <span class="favouriteCardLocation">${item.stallName} <span class="locationSeparator">·</span> ${item.hawkerCentre}</span>
+        <span class="favouriteCardLocation">${item.stallName || "Unknown Stall"} <span class="locationSeparator">·</span> ${item.hawkerCentreName || "Unknown Location"}</span>
       </div>
     </div>
   `;
@@ -185,7 +117,7 @@ function renderFavouriteCard(item) {
 function renderEmptyState() {
   return `
     <div class="emptyState">
-      ${icons.emptyHeart}
+      <img src="../../images/favouritesEmptyState.svg" alt="Sad squirrel" class="emptyStateImage" />
       <h3 class="emptyStateTitle">No favourite items yet</h3>
       <p class="emptyStateDescription">
         When you find food you love, tap the heart icon to save them here for quick access.
@@ -195,9 +127,27 @@ function renderEmptyState() {
   `;
 }
 
+function renderLoginPrompt() {
+  return `
+    <div class="emptyState">
+      <img src="../../images/favouritesEmptyState.svg" alt="Sad squirrel" class="emptyStateImage" />
+      <h3 class="emptyStateTitle">Please log in</h3>
+      <p class="emptyStateDescription">
+        Log in to view and manage your favourite items.
+      </p>
+      <a href="../Auth/login.html" class="emptyStateButton">Log In</a>
+    </div>
+  `;
+}
+
 function renderFavouritesGrid() {
   const container = document.getElementById("favouritesGrid");
   if (!container) return;
+
+  if (!currentUser) {
+    container.innerHTML = renderLoginPrompt();
+    return;
+  }
 
   if (favourites.length === 0) {
     container.innerHTML = renderEmptyState();
@@ -239,7 +189,7 @@ function attachCardListeners() {
   document.querySelectorAll(".favouriteButton").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       e.stopPropagation();
-      const id = parseInt(btn.dataset.id, 10);
+      const id = btn.dataset.id;
       await handleRemoveFavourite(id);
     });
   });
@@ -248,20 +198,27 @@ function attachCardListeners() {
   document.querySelectorAll(".favouriteCard").forEach((card) => {
     card.addEventListener("click", (e) => {
       if (e.target.closest(".favouriteButton")) return;
-      const id = card.dataset.id;
-      handleCardClick(id);
+      const menuItemId = card.dataset.menuItemId;
+      handleCardClick(menuItemId);
     });
   });
 }
 
 async function handleRemoveFavourite(id) {
-  await api.removeFavourite(id);
-  favourites = favourites.filter((item) => item.id !== id);
-  renderFavouritesGrid();
+  if (!currentUser) return;
+
+  try {
+    await removeFromFavourites(currentUser.uid, id);
+    favourites = favourites.filter((item) => item.id !== id);
+    renderFavouritesGrid();
+  } catch (error) {
+    console.error("Error removing favourite:", error);
+    alert("Failed to remove favourite. Please try again.");
+  }
 }
 
-function handleCardClick(id) {
-  window.location.href = `../Consumer Order/consumerOrderItem.html?id=${id}`;
+function handleCardClick(menuItemId) {
+  window.location.href = `../Consumer Order/consumerOrderItem.html?id=${menuItemId}`;
 }
 
 // ============================================
@@ -295,11 +252,25 @@ async function initializePage() {
   try {
     showLoading();
 
-    favourites = await api.fetchFavourites();
+    if (!currentUser) {
+      renderPage();
+      return;
+    }
+
+    // Fetch favourites from Firebase
+    favourites = await getFavourites(currentUser.uid);
 
     renderPage();
   } catch (error) {
     console.error("Failed to initialize favourites page:", error);
+    const container = document.getElementById("favouritesPageContent");
+    if (container) {
+      container.innerHTML = `
+        <div class="emptyState">
+          <p>Failed to load favourites. Please try again.</p>
+        </div>
+      `;
+    }
   }
 }
 
@@ -310,8 +281,13 @@ async function initializePage() {
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize navbar (auth, user display, logout)
   initConsumerNavbar();
+  initMobileMenu();
 
-  initializePage();
+  // Listen for auth state and then initialize
+  onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+    await initializePage();
+  });
 
   // Back button handler
   const backButton = document.getElementById("backButton");

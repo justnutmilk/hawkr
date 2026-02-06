@@ -42,6 +42,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Setup tab switching
   setupTabSwitching();
+
+  // Setup keyboard shortcuts (n key for new order)
+  setupKeyboardShortcuts();
 });
 
 /**
@@ -60,19 +63,37 @@ async function loadVendorData(userId) {
         currentVendor.storeName || currentVendor.displayName || "My Store",
       );
 
-      // Get vendor's stall
-      const stallsQuery = query(
-        collection(db, "foodStalls"),
-        where("ownerId", "==", userId),
-        limit(1),
-      );
-      const stallsSnapshot = await getDocs(stallsQuery);
+      // Get vendor's stall - first try using stallId from vendor profile
+      let stallDoc = null;
+      if (currentVendor.stallId) {
+        console.log("Vendor has stallId in profile:", currentVendor.stallId);
+        const stallRef = doc(db, "foodStalls", currentVendor.stallId);
+        const stallSnap = await getDoc(stallRef);
+        if (stallSnap.exists()) {
+          stallDoc = { id: stallSnap.id, ...stallSnap.data() };
+        }
+      }
 
-      if (!stallsSnapshot.empty) {
-        currentStall = {
-          id: stallsSnapshot.docs[0].id,
-          ...stallsSnapshot.docs[0].data(),
-        };
+      // Fallback: query by ownerId
+      if (!stallDoc) {
+        console.log("Querying stalls by ownerId:", userId);
+        const stallsQuery = query(
+          collection(db, "foodStalls"),
+          where("ownerId", "==", userId),
+          limit(1),
+        );
+        const stallsSnapshot = await getDocs(stallsQuery);
+        if (!stallsSnapshot.empty) {
+          stallDoc = {
+            id: stallsSnapshot.docs[0].id,
+            ...stallsSnapshot.docs[0].data(),
+          };
+        }
+      }
+
+      if (stallDoc) {
+        currentStall = stallDoc;
+        console.log("Found stall:", currentStall.id, currentStall.name);
 
         // Load orders for this stall
         await loadOrders(currentStall.id);
@@ -125,7 +146,7 @@ async function loadOrders(stallId) {
 
       return {
         id: doc.id,
-        orderNumber: doc.id.slice(-4).toUpperCase(),
+        orderNumber: data.orderNumber || doc.id.slice(-4).toUpperCase(),
         customerName: data.customerName || "Customer",
         date: formatDate(createdAt),
         time: formatTime(createdAt),
@@ -135,10 +156,11 @@ async function loadOrders(stallId) {
           qty: item.quantity || 1,
           name: item.name || "Item",
           price: item.totalPrice || item.unitPrice || 0,
+          customizations: item.customizations || [],
           note: item.notes || null,
         })),
         total: data.total || 0,
-        transactionId: data.transactionId || doc.id,
+        transactionId: data.hawkrTransactionId || data.transactionId || doc.id,
       };
     });
 
@@ -191,14 +213,28 @@ function formatTime(date) {
  * Render order entry (item within an order)
  */
 function renderOrderEntry(item) {
+  // Render customizations/variants
+  const customizationsHTML = (item.customizations || [])
+    .map((c) => {
+      const priceStr =
+        c.priceAdjustment > 0 ? `+$${c.priceAdjustment.toFixed(2)}` : "";
+      return `
+        <div class="orderEntryVariant">
+          <span class="orderEntryVariantName">${c.option || c.name}</span>
+          ${priceStr ? `<span class="orderEntryVariantPrice">${priceStr}</span>` : ""}
+        </div>
+      `;
+    })
+    .join("");
+
   return `
     <div class="orderEntry">
       <span class="orderEntryQty">${item.qty}</span>
       <div class="orderEntryDetails">
         <span class="orderEntryName">${item.name}</span>
+        ${customizationsHTML}
         ${item.note ? `<span class="orderEntryNote">${item.note}</span>` : ""}
       </div>
-      ${item.price !== null ? `<span class="orderEntryPrice">$${item.price.toFixed(2)}</span>` : ""}
     </div>
   `;
 }

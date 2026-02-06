@@ -5,6 +5,7 @@
 import { auth, db } from "../../firebase/config.js";
 import { getStallWithMenu } from "../../firebase/services/foodStalls.js";
 import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
+import { initMobileMenu } from "../../assets/js/mobileMenu.js";
 
 // ============================================
 // API FUNCTIONS (Firebase Backend Calls)
@@ -135,7 +136,10 @@ const icons = {
 const allergenIcons = {
   seafood: "../../assets/icons/seafood.svg",
   nuts: "../../assets/icons/nuts.svg",
-  dairy: "../../assets/icons/dairy",
+  peanuts: "../../assets/icons/nuts.svg",
+  dairy: "../../assets/icons/dairy.svg",
+  eggs: "../../assets/icons/egg.svg",
+  soy: "../../assets/icons/soy.svg",
 };
 
 // ============================================
@@ -241,6 +245,18 @@ function renderShopHeader(shop) {
 }
 
 function renderProductsSection(products) {
+  // Handle empty products state
+  if (!products || products.length === 0) {
+    return `
+        <section class="productsSection">
+            <div class="emptyProductsState">
+                <img src="../../images/stallEmptyState.svg" alt="No products yet" class="emptyProductsImage">
+                <p class="emptyProductsText">This stall hasn't added any menu items yet.</p>
+            </div>
+        </section>
+    `;
+  }
+
   const productCardsHTML = products
     .map((product) => renderProductCard(product))
     .join("");
@@ -303,9 +319,11 @@ function renderReviewCard(review) {
 }
 
 function renderRatingsSection(rating, reviews) {
-  const reviewsHTML = reviews
-    .map((review) => renderReviewCard(review))
-    .join("");
+  const hasReviews = reviews && reviews.length > 0;
+
+  const reviewsHTML = hasReviews
+    ? reviews.map((review) => renderReviewCard(review)).join("")
+    : `<p class="emptyReviewsText">No feedback for this stall yet. Be the first to leave a review!</p>`;
 
   return `
         <section class="ratingsSection">
@@ -314,9 +332,9 @@ function renderRatingsSection(rating, reviews) {
                 <a href="../Consumer Settings/consumerFeedback.html" class="leaveFeedbackBtn">Leave feedback</a>
             </div>
             <div class="ratingsOverview">
-                <span class="storeRatingNumber">${rating.average}</span>
-                <div class="storeStars">${renderStoreStars(rating.average)}</div>
-                <span class="ratingCount">${rating.count} Ratings</span>
+                <span class="storeRatingNumber">${rating.count > 0 ? rating.average : "-"}</span>
+                <div class="storeStars">${renderStoreStars(rating.count > 0 ? rating.average : 0)}</div>
+                <span class="ratingCount">${rating.count} ${rating.count === 1 ? "Rating" : "Ratings"}</span>
             </div>
             <div class="reviewsList">
                 ${reviewsHTML}
@@ -372,16 +390,13 @@ function renderShopPage(shop) {
     shopHeaderHTML + productsHTML + ratingsHTML + hygieneHTML;
 
   // Add click handlers to product cards
+  const stallId = shop.id;
   container.querySelectorAll(".productCard").forEach((card) => {
-    card.addEventListener("click", () => {
-      const productId = card.dataset.productId;
-      handleProductClick(productId);
+    card.addEventListener("click", function () {
+      const productId = this.dataset.productId;
+      window.location.href = `consumerOrderItem.html?stallId=${stallId}&itemId=${productId}`;
     });
   });
-}
-
-function handleProductClick(productId) {
-  window.location.href = `consumerOrderItem.html?id=${productId}`;
 }
 
 // ============================================
@@ -431,6 +446,7 @@ async function initializeShopPage() {
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize navbar (auth, user display, logout)
   initConsumerNavbar();
+  initMobileMenu();
 
   initializeShopPage();
 

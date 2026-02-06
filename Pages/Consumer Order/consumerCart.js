@@ -2,27 +2,38 @@
 // FIREBASE IMPORTS
 // ============================================
 
-import { auth, db } from "../../firebase/config.js";
+import { auth } from "../../firebase/config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
   getCart,
-  getCartWithTotals,
   updateCartItemQuantity,
+  updateCartItemNotes,
+  updateCartItem,
+  removeFromCart,
   clearCart,
-} from "../../firebase/services/orders.js";
-import { getHawkerCentreById } from "../../firebase/services/hawkerCentres.js";
+} from "../../firebase/services/customers.js";
+import { createOrder } from "../../firebase/services/orders.js";
+import { getMenuItem } from "../../firebase/services/foodStalls.js";
+import {
+  loadStripe,
+  createSetupIntent,
+  getPaymentMethods,
+  createPaymentIntent,
+  processPayment,
+  saveCard,
+  createCardElement,
+  getCardIcon,
+  createPaymentRequest,
+  mountPaymentRequestButton,
+  processGrabPayPayment,
+  processPayNowPayment,
+  processAliPayPayment,
+} from "../../firebase/services/stripe.js";
 import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
+import { initMobileMenu } from "../../assets/js/mobileMenu.js";
 
 // Check authentication state
 let currentUser = null;
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    // User is not signed in - redirect to login
-    window.location.href = "../Auth/login.html";
-  } else {
-    currentUser = user;
-  }
-});
 
 // ============================================
 // DEFAULT DATA (For collection/payment details)
@@ -42,86 +53,171 @@ const defaultPaymentMethod = {
   icon: "../../Payment Methods/MasterCard.svg",
 };
 
+// Payment methods (loaded from Stripe)
+let savedPaymentMethods = [];
+
+// Selected payment method state
+let selectedPaymentMethod = null;
+let selectedWallet = null; // 'grabpay', 'paynow', 'alipay', or null
+
+// Stripe state
+let stripeInstance = null;
+let cardElement = null;
+let setupIntentClientSecret = null;
+let paymentRequestInstance = null;
+
+// ============================================
+// PAYMENT ERROR HANDLING
+// ============================================
+
+/**
+ * Redirect to the payment unsuccessful page with error details
+ * @param {string} errorMessage - The error message to display
+ * @param {string} paymentMethod - The payment method that failed (optional)
+ */
+function redirectToPaymentFailed(errorMessage, paymentMethod = null) {
+  const params = new URLSearchParams();
+  params.set("error", errorMessage);
+  if (paymentMethod) {
+    params.set("method", paymentMethod);
+  }
+  window.location.href = `consumerOrderUnsuccessful.html?${params.toString()}`;
+}
+
 // ============================================
 // API FUNCTIONS (Firebase Backend Calls)
 // ============================================
 
-const api = {
-  async fetchCartData() {
-    try {
-      const cart = await getCartWithTotals();
+async function fetchCartData() {
+  if (!currentUser) {
+    // Fallback to localStorage for guests
+    return fetchCartFromLocalStorage();
+  }
 
-      // Transform Firebase cart data to match expected format
-      const items = (cart.items || []).map((item, index) => ({
-        id: index, // Use index as ID for cart operations
-        menuItemId: item.menuItemId,
-        name: item.name,
-        price: item.unitPrice,
-        image:
-          item.imageUrl ||
-          "../../mock-data/Consumer Dashboard/hawker-center/Maxwell Food Centre.png",
-        quantity: item.quantity,
-        stall: {
-          id: item.stallId,
-          name: item.stallName || "Unknown Stall",
-        },
-        specialRequest: item.notes || "",
-      }));
+  try {
+    const cartItems = await getCart(currentUser.uid);
 
-      // Get collection details from first item's stall (if available)
-      let collectionDetails = defaultCollectionDetails;
-      if (items.length > 0 && items[0].stall.id) {
-        try {
-          // Try to get hawker centre info for the stall
-          // For now, use default collection details
-          collectionDetails = {
-            ...defaultCollectionDetails,
-            // Could be enhanced to get actual hawker centre details
-          };
-        } catch (e) {
-          console.log("Using default collection details");
-        }
-      }
+    // Transform Firebase cart data to match expected format
+    const items = cartItems.map((item) => ({
+      id: item.id, // Firebase document ID
+      menuItemId: item.menuItemId,
+      name: item.name,
+      price: item.price,
+      basePrice: item.basePrice || item.price,
+      image: item.imageUrl || "",
+      quantity: item.quantity,
+      stall: {
+        id: item.stallId,
+        name: item.stallName || "Unknown Stall",
+      },
+      specialRequest: item.notes || "",
+      selectedVariants: item.selectedVariants || [],
+    }));
 
-      return {
-        items,
-        collectionDetails,
-        paymentMethod: defaultPaymentMethod,
-        subtotal: cart.subtotal || 0,
-        total: cart.total || 0,
-      };
-    } catch (error) {
-      console.error("Error fetching cart data:", error);
-      return {
-        items: [],
-        collectionDetails: defaultCollectionDetails,
-        paymentMethod: defaultPaymentMethod,
-        subtotal: 0,
-        total: 0,
-      };
+    const subtotal = items.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0,
+    );
+
+    return {
+      items,
+      collectionDetails: defaultCollectionDetails,
+      paymentMethod: defaultPaymentMethod,
+      subtotal,
+      total: subtotal,
+    };
+  } catch (error) {
+    console.error("Error fetching cart data:", error);
+    return {
+      items: [],
+      collectionDetails: defaultCollectionDetails,
+      paymentMethod: defaultPaymentMethod,
+      subtotal: 0,
+      total: 0,
+    };
+  }
+}
+
+function fetchCartFromLocalStorage() {
+  const cartItems = JSON.parse(localStorage.getItem("hawkrCart") || "[]");
+
+  const items = cartItems.map((item, index) => ({
+    id: `local-${index}`,
+    menuItemId: item.menuItemId,
+    name: item.name,
+    price: item.price,
+    basePrice: item.basePrice || item.price,
+    image: item.imageUrl || "",
+    quantity: item.quantity,
+    stall: {
+      id: item.stallId,
+      name: item.stallName || "Unknown Stall",
+    },
+    specialRequest: item.notes || "",
+    selectedVariants: item.selectedVariants || [],
+  }));
+
+  const subtotal = items.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0,
+  );
+
+  return {
+    items,
+    collectionDetails: defaultCollectionDetails,
+    paymentMethod: defaultPaymentMethod,
+    subtotal,
+    total: subtotal,
+  };
+}
+
+async function updateItemQuantity(cartItemId, newQuantity) {
+  if (!currentUser) {
+    // Update localStorage for guests
+    return updateLocalStorageQuantity(cartItemId, newQuantity);
+  }
+
+  try {
+    if (newQuantity <= 0) {
+      await removeFromCart(currentUser.uid, cartItemId);
+    } else {
+      await updateCartItemQuantity(currentUser.uid, cartItemId, newQuantity);
     }
-  },
+    return true;
+  } catch (error) {
+    console.error("Error updating cart item quantity:", error);
+    return false;
+  }
+}
 
-  async updateItemQuantity(itemIndex, newQuantity) {
-    try {
-      await updateCartItemQuantity(itemIndex, newQuantity);
-      return true;
-    } catch (error) {
-      console.error("Error updating cart item quantity:", error);
-      return false;
-    }
-  },
+function updateLocalStorageQuantity(cartItemId, newQuantity) {
+  const index = parseInt(cartItemId.replace("local-", ""));
+  const cart = JSON.parse(localStorage.getItem("hawkrCart") || "[]");
 
-  async clearCart() {
-    try {
-      await clearCart();
-      return true;
-    } catch (error) {
-      console.error("Error clearing cart:", error);
-      return false;
-    }
-  },
-};
+  if (newQuantity <= 0) {
+    cart.splice(index, 1);
+  } else {
+    cart[index].quantity = newQuantity;
+  }
+
+  localStorage.setItem("hawkrCart", JSON.stringify(cart));
+  return true;
+}
+
+async function clearUserCart() {
+  if (!currentUser) {
+    localStorage.removeItem("hawkrCart");
+    return true;
+  }
+
+  try {
+    await clearCart(currentUser.uid);
+    return true;
+  } catch (error) {
+    console.error("Error clearing cart:", error);
+    return false;
+  }
+}
 
 // ============================================
 // STATE
@@ -166,6 +262,17 @@ function getClockIcon() {
 // ============================================
 
 function renderCartItem(item) {
+  // Build variants display string
+  const variantsDisplay =
+    item.selectedVariants && item.selectedVariants.length > 0
+      ? item.selectedVariants.map((v) => v.option).join(", ")
+      : "";
+
+  // Build special request display
+  const specialRequestDisplay = item.specialRequest
+    ? `<span class="cartItemSpecialRequest">↳ "${item.specialRequest}"</span>`
+    : "";
+
   return `
         <div class="cartItem" data-item-id="${item.id}">
             <img
@@ -178,7 +285,9 @@ function renderCartItem(item) {
                 <div class="cartItemTop">
                     <div class="cartItemInfo">
                         <span class="foodName">${item.name}</span>
+                        ${variantsDisplay ? `<span class="cartItemVariants">${variantsDisplay}</span>` : ""}
                         <span class="storeName">${item.stall.name}</span>
+                        ${specialRequestDisplay}
                     </div>
                     <button class="editBtn" data-item-id="${item.id}">
                         <span class="editBtnText">Edit</span>
@@ -254,21 +363,74 @@ function renderCollectionDetails(details) {
     `;
 }
 
-function renderPaymentDetails(payment) {
+function renderPaymentDetails() {
+  let savedCardsHTML = "";
+
+  if (savedPaymentMethods.length > 0) {
+    savedCardsHTML = savedPaymentMethods
+      .map(
+        (method) => `
+          <label class="paymentOption ${selectedPaymentMethod?.id === method.id ? "selected" : ""}" data-payment-id="${method.id}">
+              <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="${method.id}"
+                  ${selectedPaymentMethod?.id === method.id ? "checked" : ""}
+              />
+              <div class="paymentOptionContent">
+                  <img src="${getCardIcon(method.brand)}" alt="${method.brand}" class="paymentOptionIcon" />
+                  <span class="paymentOptionDetails">•••• ${method.lastFour}</span>
+                  ${method.isDefault ? '<span class="paymentOptionDefault">Default</span>' : ""}
+              </div>
+              <div class="paymentOptionCheck">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path d="M20 6L9 17L4 12" stroke="#913b9f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+              </div>
+          </label>
+        `,
+      )
+      .join("");
+  } else {
+    savedCardsHTML = `
+      <div class="noPaymentMethods">
+        <p>No saved payment methods</p>
+      </div>
+    `;
+  }
+
   return `
         <section class="paymentDetailsSection">
-            <span class="sectionLabel">Payment Details</span>
-            <div class="paymentMethodCard">
-                <img
-                    src="${payment.icon}"
-                    alt="${payment.brand}"
-                    class="paymentMethodImage"
-                    onerror="this.style.background='#f4f1f6'"
-                />
-                <div class="paymentInfo">
-                    <span class="paymentMethod">${payment.type}</span>
-                    <span class="paymentMethodDetails">${payment.brand} ${payment.lastFour}</span>
-                </div>
+            <span class="sectionLabel">Payment Method</span>
+
+            <div class="savedPaymentMethods">
+                ${savedCardsHTML}
+            </div>
+
+            <button class="addNewCardBtn" id="addNewCardBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 5V19M5 12H19" stroke="#913b9f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Add new card</span>
+            </button>
+
+            <div class="paymentDivider">
+                <span class="paymentDividerLine"></span>
+                <span class="paymentDividerText">or pay with</span>
+                <span class="paymentDividerLine"></span>
+            </div>
+
+            <div class="digitalWallets">
+                <div id="paymentRequestButton"></div>
+                <button class="walletBtn" data-wallet="grabpay">
+                    <img src="../../images/GrabPay logo.svg" alt="GrabPay" />
+                </button>
+                <button class="walletBtn" data-wallet="alipay">
+                    <img src="../../images/AliPay logo.svg" alt="AliPay" />
+                </button>
+                <button class="walletBtn" data-wallet="paynow">
+                    <img src="../../images/PayNow logo.svg" alt="PayNow" />
+                </button>
             </div>
         </section>
     `;
@@ -324,7 +486,7 @@ function renderCartPage(cartData) {
   const collectionDetailsHTML = renderCollectionDetails(
     cartData.collectionDetails,
   );
-  const paymentDetailsHTML = renderPaymentDetails(cartData.paymentMethod);
+  const paymentDetailsHTML = renderPaymentDetails();
   const checkoutSectionHTML = renderCheckoutSection(cartData.items);
 
   container.innerHTML =
@@ -358,6 +520,24 @@ function attachEventListeners() {
   editButtons.forEach((btn) => {
     btn.addEventListener("mousemove", handleEditBtnMouseMove);
   });
+
+  // Payment method selection
+  const paymentOptions = document.querySelectorAll(".paymentOption");
+  paymentOptions.forEach((option) => {
+    option.addEventListener("click", handlePaymentMethodSelect);
+  });
+
+  // Add new card button
+  const addNewCardBtn = document.getElementById("addNewCardBtn");
+  if (addNewCardBtn) {
+    addNewCardBtn.addEventListener("click", handleAddNewCard);
+  }
+
+  // Digital wallet buttons
+  const walletBtns = document.querySelectorAll(".walletBtn");
+  walletBtns.forEach((btn) => {
+    btn.addEventListener("click", handleWalletSelect);
+  });
 }
 
 function handleEditBtnMouseMove(e) {
@@ -374,7 +554,7 @@ function handleCartClick(e) {
   const target = e.target.closest("button");
   if (!target) return;
 
-  const itemId = parseInt(target.dataset.itemId);
+  const itemId = target.dataset.itemId;
 
   if (target.classList.contains("qtyDecrease")) {
     updateQuantity(itemId, -1);
@@ -392,10 +572,10 @@ async function updateQuantity(itemId, delta) {
   const item = cartState.items[itemIndex];
   const newQuantity = item.quantity + delta;
 
-  // Update Firebase
-  const success = await api.updateItemQuantity(itemIndex, newQuantity);
+  // Update Firebase or localStorage
+  const success = await updateItemQuantity(itemId, newQuantity);
   if (!success) {
-    console.error("Failed to update quantity in Firebase");
+    console.error("Failed to update quantity");
     return;
   }
 
@@ -457,12 +637,16 @@ function updateTotals() {
 // ============================================
 
 let currentEditItemId = null;
+let currentEditItem = null;
+let editSelectedVariants = {};
+let currentMenuItemCustomizations = [];
 
-function openEditPopup(itemId) {
+async function openEditPopup(itemId) {
   const item = cartState.items.find((i) => i.id === itemId);
   if (!item) return;
 
   currentEditItemId = itemId;
+  currentEditItem = item;
 
   // Populate item info
   const itemInfoContainer = document.getElementById("editPopupItemInfo");
@@ -476,17 +660,259 @@ function openEditPopup(itemId) {
     `;
   }
 
+  // Fetch menu item to get available customizations
+  const variantsSection = document.getElementById("editPopupVariantsSection");
+  if (variantsSection) {
+    variantsSection.innerHTML =
+      '<div class="editPopupLoading">Loading options...</div>';
+  }
+
+  try {
+    // Fetch menu item customizations from Firebase
+    const menuItem = await getMenuItem(item.stall.id, item.menuItemId);
+    currentMenuItemCustomizations = menuItem?.customizations || [];
+
+    // Initialize edit selected variants from current cart item selection
+    // Initialize editSelectedVariants based on customizations and existing selections
+    editSelectedVariants = {};
+    currentMenuItemCustomizations.forEach((variant, groupIndex) => {
+      const isMultiSelect = variant.multiSelect || false;
+
+      if (isMultiSelect) {
+        // Multi-select: find all matching selections from cart item
+        const existingSelections = (item.selectedVariants || [])
+          .filter((v) => v.name === variant.name)
+          .map((v) => {
+            const optIndex = variant.options.indexOf(v.option);
+            return {
+              option: v.option,
+              optionIndex: optIndex >= 0 ? optIndex : 0,
+              priceAdjustment: v.priceAdjustment || 0,
+            };
+          });
+
+        editSelectedVariants[groupIndex] = {
+          name: variant.name,
+          multiSelect: true,
+          selections: existingSelections,
+        };
+      } else {
+        // Single-select: find matching selection or default to first
+        const existing = (item.selectedVariants || []).find(
+          (v) => v.name === variant.name,
+        );
+        if (existing) {
+          const optIndex = variant.options.indexOf(existing.option);
+          editSelectedVariants[groupIndex] = {
+            name: variant.name,
+            multiSelect: false,
+            option: existing.option,
+            optionIndex: optIndex >= 0 ? optIndex : 0,
+            priceAdjustment: existing.priceAdjustment || 0,
+          };
+        } else {
+          // Default to first option
+          editSelectedVariants[groupIndex] = {
+            name: variant.name,
+            multiSelect: false,
+            option: variant.options[0],
+            optionIndex: 0,
+            priceAdjustment: variant.priceAdjustments?.[0] || 0,
+          };
+        }
+      }
+    });
+
+    // Render variants
+    renderEditVariants();
+  } catch (error) {
+    console.error("Error fetching menu item:", error);
+    if (variantsSection) {
+      variantsSection.innerHTML = "";
+    }
+    currentMenuItemCustomizations = [];
+  }
+
   // Restore special request text
   const specialRequestInput = document.getElementById("specialRequestInput");
   if (specialRequestInput) {
     specialRequestInput.value = item.specialRequest || "";
   }
 
+  // Update price display
+  updateEditPopupPrice();
+
   // Show popup
   const overlay = document.getElementById("editPopupOverlay");
   if (overlay) {
     overlay.classList.add("active");
     document.body.style.overflow = "hidden";
+  }
+}
+
+function renderEditVariants() {
+  const variantsSection = document.getElementById("editPopupVariantsSection");
+  if (!variantsSection || currentMenuItemCustomizations.length === 0) {
+    if (variantsSection) variantsSection.innerHTML = "";
+    return;
+  }
+
+  variantsSection.innerHTML = currentMenuItemCustomizations
+    .map((variant, groupIndex) => {
+      const currentSelection = editSelectedVariants[groupIndex];
+      const isMultiSelect = variant.multiSelect || false;
+      const inputType = isMultiSelect ? "checkbox" : "radio";
+
+      return `
+        <div class="editVariantGroup" data-group="${groupIndex}" data-multiselect="${isMultiSelect}">
+          <span class="editVariantGroupLabel">${variant.name}${isMultiSelect ? ' <span class="editVariantMultiHint">(select multiple)</span>' : ""}</span>
+          <div class="editVariantOptions">
+            ${variant.options
+              .map((option, optIndex) => {
+                let isSelected = false;
+                if (isMultiSelect) {
+                  // Check if option is in selections array
+                  isSelected =
+                    currentSelection?.selections?.some(
+                      (s) => s.option === option,
+                    ) || false;
+                } else {
+                  isSelected = currentSelection?.option === option;
+                }
+                const priceAdj = variant.priceAdjustments?.[optIndex] || 0;
+                return `
+                  <label class="editVariantOption ${isSelected ? "selected" : ""}" data-group="${groupIndex}" data-opt="${optIndex}">
+                    <input
+                      type="${inputType}"
+                      name="edit-variant-${groupIndex}"
+                      value="${optIndex}"
+                      ${isSelected ? "checked" : ""}
+                      data-group="${groupIndex}"
+                      data-opt="${optIndex}"
+                      data-price="${priceAdj}"
+                      data-option="${option}"
+                      data-multiselect="${isMultiSelect}"
+                    >
+                    <span class="editVariantOptionName">${option}</span>
+                    ${priceAdj > 0 ? `<span class="editVariantOptionPrice">+${formatPrice(priceAdj)}</span>` : ""}
+                  </label>
+                `;
+              })
+              .join("")}
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  // Bind variant change events
+  bindEditVariantEvents();
+}
+
+function bindEditVariantEvents() {
+  const variantsSection = document.getElementById("editPopupVariantsSection");
+  if (!variantsSection) return;
+
+  // Handle single-select (radio buttons)
+  variantsSection.querySelectorAll('input[type="radio"]').forEach((radio) => {
+    radio.addEventListener("change", (e) => {
+      const groupIndex = parseInt(e.target.dataset.group);
+      const optIndex = parseInt(e.target.dataset.opt);
+      const priceAdj = parseFloat(e.target.dataset.price) || 0;
+      const option = e.target.dataset.option;
+
+      // Update visual selection
+      const group = e.target.closest(".editVariantGroup");
+      group
+        .querySelectorAll(".editVariantOption")
+        .forEach((opt) => opt.classList.remove("selected"));
+      e.target.closest(".editVariantOption").classList.add("selected");
+
+      // Update state
+      const variant = currentMenuItemCustomizations[groupIndex];
+      editSelectedVariants[groupIndex] = {
+        name: variant.name,
+        multiSelect: false,
+        option: option,
+        optionIndex: optIndex,
+        priceAdjustment: priceAdj,
+      };
+
+      // Update price display
+      updateEditPopupPrice();
+    });
+  });
+
+  // Handle multi-select (checkboxes)
+  variantsSection
+    .querySelectorAll('input[type="checkbox"]')
+    .forEach((checkbox) => {
+      checkbox.addEventListener("change", (e) => {
+        const groupIndex = parseInt(e.target.dataset.group);
+        const optIndex = parseInt(e.target.dataset.opt);
+        const priceAdj = parseFloat(e.target.dataset.price) || 0;
+        const option = e.target.dataset.option;
+        const isChecked = e.target.checked;
+
+        // Update visual selection
+        if (isChecked) {
+          e.target.closest(".editVariantOption").classList.add("selected");
+        } else {
+          e.target.closest(".editVariantOption").classList.remove("selected");
+        }
+
+        // Update state
+        const variant = currentMenuItemCustomizations[groupIndex];
+        if (!editSelectedVariants[groupIndex]) {
+          editSelectedVariants[groupIndex] = {
+            name: variant.name,
+            multiSelect: true,
+            selections: [],
+          };
+        }
+
+        if (isChecked) {
+          // Add selection
+          editSelectedVariants[groupIndex].selections.push({
+            option: option,
+            optionIndex: optIndex,
+            priceAdjustment: priceAdj,
+          });
+        } else {
+          // Remove selection
+          editSelectedVariants[groupIndex].selections = editSelectedVariants[
+            groupIndex
+          ].selections.filter((s) => s.optionIndex !== optIndex);
+        }
+
+        // Update price display
+        updateEditPopupPrice();
+      });
+    });
+}
+
+function calculateEditTotalPrice() {
+  if (!currentEditItem) return 0;
+  const basePrice = currentEditItem.basePrice || currentEditItem.price;
+  let total = basePrice;
+  Object.values(editSelectedVariants).forEach((v) => {
+    if (v.multiSelect) {
+      // Sum all selected options for multi-select groups
+      (v.selections || []).forEach((sel) => {
+        total += sel.priceAdjustment || 0;
+      });
+    } else {
+      // Single-select: just add the one price adjustment
+      total += v.priceAdjustment || 0;
+    }
+  });
+  return total;
+}
+
+function updateEditPopupPrice() {
+  const priceElement = document.getElementById("editPopupPrice");
+  if (priceElement) {
+    priceElement.textContent = formatPrice(calculateEditTotalPrice());
   }
 }
 
@@ -511,11 +937,67 @@ async function saveEditPopup() {
     ? specialRequestInput.value.trim()
     : "";
 
+  // Build selected variants array (flatten multi-select into individual entries)
+  const selectedVariantsArray = [];
+  Object.values(editSelectedVariants).forEach((v) => {
+    if (v.multiSelect) {
+      // Multi-select: add each selection as separate entry
+      (v.selections || []).forEach((sel) => {
+        selectedVariantsArray.push({
+          name: v.name,
+          option: sel.option,
+          priceAdjustment: sel.priceAdjustment,
+        });
+      });
+    } else {
+      // Single-select: add the one selection
+      selectedVariantsArray.push({
+        name: v.name,
+        option: v.option,
+        priceAdjustment: v.priceAdjustment,
+      });
+    }
+  });
+
+  // Calculate new total price
+  const newPrice = calculateEditTotalPrice();
+
   // Update item locally
   item.specialRequest = specialRequest;
+  item.selectedVariants = selectedVariantsArray;
+  item.price = newPrice;
 
-  // Note: Special requests are saved with the order, not separately in the cart
-  // The cart item notes will be included when placing the order
+  // Save to Firebase if logged in, otherwise update localStorage
+  if (currentUser) {
+    try {
+      await updateCartItem(currentUser.uid, currentEditItemId, {
+        notes: specialRequest,
+        selectedVariants: selectedVariantsArray,
+        price: newPrice,
+      });
+    } catch (error) {
+      console.error("Error saving cart item:", error);
+    }
+  } else {
+    // Update localStorage for guests
+    const index = parseInt(currentEditItemId.replace("local-", ""));
+    const cart = JSON.parse(localStorage.getItem("hawkrCart") || "[]");
+    if (cart[index]) {
+      cart[index].notes = specialRequest;
+      cart[index].selectedVariants = selectedVariantsArray;
+      cart[index].price = newPrice;
+      // Update variants key for proper matching
+      cart[index].variantsKey = selectedVariantsArray
+        .map((v) => `${v.name}:${v.option}`)
+        .join("|");
+      localStorage.setItem("hawkrCart", JSON.stringify(cart));
+    }
+  }
+
+  // Re-render cart to show updated variants and price
+  renderCartPage(cartState);
+  attachEventListeners();
+  updateTotals();
 
   // Close popup
   closeEditPopup();
@@ -525,23 +1007,848 @@ function handleEdit(itemId) {
   openEditPopup(itemId);
 }
 
-async function handlePlaceOrder() {
-  console.log("Place order:", cartState);
+// ============================================
+// PAYMENT METHOD HANDLERS
+// ============================================
 
-  // Store order details in sessionStorage for the confirmation page
-  sessionStorage.setItem(
-    "hawkrPendingOrder",
-    JSON.stringify({
-      items: cartState.items,
-      collectionDetails: cartState.collectionDetails,
-      paymentMethod: cartState.paymentMethod,
-      subtotal: calculateSubtotal(cartState.items),
-      total: calculateSubtotal(cartState.items),
-    }),
+function handlePaymentMethodSelect(e) {
+  const option = e.currentTarget;
+  const paymentId = option.dataset.paymentId;
+
+  // Find the selected payment method
+  const method = savedPaymentMethods.find((m) => m.id === paymentId);
+  if (!method) return;
+
+  // Update state - select card, deselect wallet
+  selectedPaymentMethod = method;
+  selectedWallet = null;
+
+  // Update UI - remove selected class from all options and wallets
+  document.querySelectorAll(".paymentOption").forEach((opt) => {
+    opt.classList.remove("selected");
+    opt.querySelector('input[type="radio"]').checked = false;
+  });
+
+  document.querySelectorAll(".walletBtn").forEach((btn) => {
+    btn.classList.remove("selected");
+  });
+
+  // Add selected class to clicked option
+  option.classList.add("selected");
+  option.querySelector('input[type="radio"]').checked = true;
+
+  console.log("Selected payment method:", selectedPaymentMethod);
+}
+
+async function handleAddNewCard() {
+  if (!currentUser) {
+    alert("Please log in to add a payment method");
+    return;
+  }
+
+  try {
+    // Load Stripe if not already loaded
+    if (!stripeInstance) {
+      stripeInstance = await loadStripe();
+    }
+
+    // Create SetupIntent for saving card
+    const { clientSecret } = await createSetupIntent();
+    setupIntentClientSecret = clientSecret;
+
+    // Open the modal
+    openCardModal();
+
+    // Create and mount card element
+    if (cardElement) {
+      cardElement.destroy();
+    }
+    cardElement = createCardElement(stripeInstance, "cardElement");
+
+    // Listen for card element changes
+    cardElement.on("change", (event) => {
+      const errorElement = document.getElementById("cardError");
+      if (event.error) {
+        errorElement.textContent = event.error.message;
+      } else {
+        errorElement.textContent = "";
+      }
+    });
+  } catch (error) {
+    console.error("Error setting up card input:", error);
+    alert("Failed to set up card input. Please try again.");
+  }
+}
+
+function openCardModal() {
+  const overlay = document.getElementById("cardModalOverlay");
+  if (overlay) {
+    overlay.classList.add("active");
+    document.body.style.overflow = "hidden";
+  }
+}
+
+function closeCardModal() {
+  const overlay = document.getElementById("cardModalOverlay");
+  if (overlay) {
+    overlay.classList.remove("active");
+    document.body.style.overflow = "";
+  }
+
+  // Clear error
+  const errorElement = document.getElementById("cardError");
+  if (errorElement) {
+    errorElement.textContent = "";
+  }
+}
+
+async function handleSaveCard() {
+  const saveBtn = document.getElementById("cardModalSaveBtn");
+  const errorElement = document.getElementById("cardError");
+
+  if (!stripeInstance || !cardElement || !setupIntentClientSecret) {
+    console.error("Missing required:", {
+      stripeInstance: !!stripeInstance,
+      cardElement: !!cardElement,
+      setupIntentClientSecret: !!setupIntentClientSecret,
+    });
+    errorElement.textContent = "Card setup not ready. Please try again.";
+    return;
+  }
+
+  try {
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Saving...";
+
+    console.log(
+      "Saving card with client secret:",
+      setupIntentClientSecret?.substring(0, 20) + "...",
+    );
+
+    const result = await saveCard(
+      stripeInstance,
+      cardElement,
+      setupIntentClientSecret,
+    );
+
+    console.log("Save card result:", result);
+
+    if (!result.success) {
+      errorElement.textContent = result.error;
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Save Card";
+      return;
+    }
+
+    // Card saved successfully - reload payment methods
+    await loadSavedPaymentMethods();
+
+    // Close modal
+    closeCardModal();
+
+    // Re-render payment section
+    refreshPaymentSection();
+  } catch (error) {
+    console.error("Error saving card:", error);
+    errorElement.textContent = "Failed to save card. Please try again.";
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Save Card";
+  }
+}
+
+async function loadSavedPaymentMethods() {
+  if (!currentUser) {
+    savedPaymentMethods = [];
+    selectedPaymentMethod = null;
+    return;
+  }
+
+  try {
+    const methods = await getPaymentMethods();
+    savedPaymentMethods = methods.map((m, index) => ({
+      ...m,
+      isDefault: index === 0, // First one is default for now
+    }));
+
+    // Select the first method by default
+    if (savedPaymentMethods.length > 0 && !selectedPaymentMethod) {
+      selectedPaymentMethod = savedPaymentMethods[0];
+    }
+  } catch (error) {
+    console.error("Error loading payment methods:", error);
+    savedPaymentMethods = [];
+  }
+}
+
+function refreshPaymentSection() {
+  const paymentSection = document.querySelector(".paymentDetailsSection");
+  if (paymentSection) {
+    paymentSection.outerHTML = renderPaymentDetails();
+    // Re-attach event listeners for payment options
+    attachPaymentEventListeners();
+  }
+}
+
+function attachPaymentEventListeners() {
+  const paymentOptions = document.querySelectorAll(".paymentOption");
+  paymentOptions.forEach((option) => {
+    option.addEventListener("click", handlePaymentMethodSelect);
+  });
+
+  const addNewCardBtn = document.getElementById("addNewCardBtn");
+  if (addNewCardBtn) {
+    addNewCardBtn.addEventListener("click", handleAddNewCard);
+  }
+
+  const walletBtns = document.querySelectorAll(".walletBtn");
+  walletBtns.forEach((btn) => {
+    btn.addEventListener("click", handleWalletSelect);
+  });
+
+  // Initialize Payment Request Button (Apple Pay / Google Pay)
+  initPaymentRequestButton();
+}
+
+async function initPaymentRequestButton() {
+  if (!stripeInstance || !cartState?.items?.length) {
+    return;
+  }
+
+  const total = calculateSubtotal(cartState.items);
+  const container = document.getElementById("paymentRequestButton");
+
+  if (!container) return;
+
+  try {
+    const { paymentRequest, canMakePayment, applePay, googlePay } =
+      await createPaymentRequest(stripeInstance, total, "sgd", "Hawkr Order");
+
+    if (!canMakePayment) {
+      // Hide the container if no wallet payment is available
+      container.style.display = "none";
+      console.log(
+        "Apple Pay / Google Pay not available on this device/browser",
+      );
+      return;
+    }
+
+    console.log("Payment Request available:", { applePay, googlePay });
+
+    // Store the payment request instance
+    paymentRequestInstance = paymentRequest;
+
+    // Mount the button
+    mountPaymentRequestButton(
+      stripeInstance,
+      paymentRequest,
+      "paymentRequestButton",
+    );
+
+    // Handle payment method received from Apple Pay / Google Pay
+    paymentRequest.on("paymentmethod", async (ev) => {
+      try {
+        showPaymentProcessing();
+
+        // Create PaymentIntent on the server
+        const { clientSecret, paymentIntentId } =
+          await createPaymentIntent(total);
+
+        // Confirm the payment with the wallet payment method
+        const { paymentIntent, error } =
+          await stripeInstance.confirmCardPayment(
+            clientSecret,
+            { payment_method: ev.paymentMethod.id },
+            { handleActions: false },
+          );
+
+        if (error) {
+          ev.complete("fail");
+          hidePaymentProcessing();
+          redirectToPaymentFailed(error.message, "wallet");
+          return;
+        }
+
+        if (paymentIntent.status === "requires_action") {
+          const { error: confirmError } =
+            await stripeInstance.confirmCardPayment(clientSecret);
+          if (confirmError) {
+            ev.complete("fail");
+            hidePaymentProcessing();
+            redirectToPaymentFailed(confirmError.message, "wallet");
+            return;
+          }
+        }
+
+        ev.complete("success");
+
+        // Determine wallet type (Apple Pay or Google Pay)
+        const walletBrand = ev.paymentMethod.card?.brand || "wallet";
+        const walletType = ev.walletName || "wallet"; // "applePay" or "googlePay"
+
+        // Create order in Firebase
+        const orderId = await createOrderInFirebase(
+          paymentIntentId,
+          walletType,
+          { type: walletType, brand: walletBrand },
+        );
+
+        // Validate orderId before redirect
+        if (!orderId || typeof orderId !== "string") {
+          throw new Error("Order creation failed - no valid order ID returned");
+        }
+
+        hidePaymentProcessing();
+        window.location.href = `consumerOrderConfirmed.html?orderId=${orderId}`;
+      } catch (err) {
+        console.error("Wallet payment error:", err);
+        ev.complete("fail");
+        hidePaymentProcessing();
+        redirectToPaymentFailed(err.message || "Payment failed", "wallet");
+      }
+    });
+  } catch (error) {
+    console.error("Error setting up Payment Request Button:", error);
+    container.style.display = "none";
+  }
+}
+
+function handleWalletSelect(e) {
+  const wallet = e.currentTarget.dataset.wallet;
+  console.log("Wallet selected:", wallet);
+
+  // Update state - select wallet, deselect card
+  selectedWallet = wallet;
+  selectedPaymentMethod = null;
+
+  // Update UI - remove selected class from all payment options and wallets
+  document.querySelectorAll(".paymentOption").forEach((opt) => {
+    opt.classList.remove("selected");
+    const radio = opt.querySelector('input[type="radio"]');
+    if (radio) radio.checked = false;
+  });
+
+  document.querySelectorAll(".walletBtn").forEach((btn) => {
+    btn.classList.remove("selected");
+  });
+
+  // Add selected class to clicked wallet
+  e.currentTarget.classList.add("selected");
+
+  console.log("Selected wallet:", selectedWallet);
+}
+
+async function handleGrabPayPayment(total) {
+  try {
+    showPaymentProcessing();
+
+    // Create PaymentIntent first
+    const { clientSecret, paymentIntentId } = await createPaymentIntent(total);
+
+    // Store only the paymentIntentId - we'll fetch cart from Firebase on return
+    localStorage.setItem("hawkrGrabPayIntentId", paymentIntentId);
+
+    // Return URL goes back to cart page with payment_intent param
+    const returnUrl = `${window.location.origin}${window.location.pathname}?payment_intent=${paymentIntentId}&redirect_status=succeeded`;
+
+    // Process GrabPay payment (will redirect to GrabPay)
+    const result = await processGrabPayPayment(
+      stripeInstance,
+      clientSecret,
+      returnUrl,
+    );
+
+    if (!result.success) {
+      localStorage.removeItem("hawkrGrabPayIntentId");
+      hidePaymentProcessing();
+      redirectToPaymentFailed(result.error, "grabpay");
+    }
+    // If successful, user will be redirected to GrabPay
+  } catch (error) {
+    console.error("GrabPay payment error:", error);
+    localStorage.removeItem("hawkrGrabPayIntentId");
+    hidePaymentProcessing();
+    redirectToPaymentFailed(error.message || "Payment failed", "grabpay");
+  }
+}
+
+async function handleAliPayPayment(total) {
+  try {
+    showPaymentProcessing();
+
+    // Create PaymentIntent first
+    const { clientSecret, paymentIntentId } = await createPaymentIntent(total);
+
+    // Store only the paymentIntentId - we'll fetch cart from Firebase on return
+    localStorage.setItem("hawkrAliPayIntentId", paymentIntentId);
+
+    // Return URL goes back to cart page with payment_intent param
+    const returnUrl = `${window.location.origin}${window.location.pathname}?payment_intent=${paymentIntentId}&redirect_status=succeeded`;
+
+    // Process AliPay payment (will redirect to AliPay)
+    const result = await processAliPayPayment(
+      stripeInstance,
+      clientSecret,
+      returnUrl,
+    );
+
+    if (!result.success) {
+      localStorage.removeItem("hawkrAliPayIntentId");
+      hidePaymentProcessing();
+      redirectToPaymentFailed(result.error, "alipay");
+    }
+    // If successful, user will be redirected to AliPay
+  } catch (error) {
+    console.error("AliPay payment error:", error);
+    localStorage.removeItem("hawkrAliPayIntentId");
+    hidePaymentProcessing();
+    redirectToPaymentFailed(error.message || "Payment failed", "alipay");
+  }
+}
+
+async function handlePayNowPayment(total) {
+  try {
+    showPaymentProcessing();
+
+    console.log("=== PayNow Payment Flow Started ===");
+    console.log(
+      "currentUser:",
+      currentUser ? currentUser.uid : "NOT LOGGED IN",
+    );
+    console.log("cartState:", cartState);
+    console.log("cartState.items:", cartState?.items);
+    console.log("Creating PaymentIntent for PayNow, amount:", total);
+
+    // Create PaymentIntent
+    const { clientSecret, paymentIntentId } = await createPaymentIntent(total);
+
+    console.log("PaymentIntent created:", {
+      paymentIntentId,
+      clientSecret: clientSecret?.substring(0, 20) + "...",
+    });
+
+    // Process PayNow payment (will show QR code)
+    const result = await processPayNowPayment(stripeInstance, clientSecret);
+
+    console.log("PayNow result:", result);
+
+    hidePaymentProcessing();
+
+    if (!result.success) {
+      redirectToPaymentFailed(result.error, "paynow");
+      return;
+    }
+
+    if (result.qrCode) {
+      // Show PayNow QR code modal
+      showPayNowQRCode(result.qrCode, paymentIntentId, total);
+    } else if (result.status === "succeeded") {
+      // Payment already succeeded
+      await completePayNowOrder(paymentIntentId, total);
+    }
+  } catch (error) {
+    console.error("PayNow payment error:", error);
+    hidePaymentProcessing();
+    redirectToPaymentFailed(error.message || "Payment failed", "paynow");
+  }
+}
+
+// Store cart data for PayNow flow (preserved across polling)
+let pendingPayNowCartData = null;
+
+// Flag to prevent re-initialization during payment processing
+let isPaymentInProgress = false;
+
+// Flag to prevent multiple order completion attempts (race condition fix)
+let isCompletingOrder = false;
+
+function showPayNowQRCode(qrCodeData, paymentIntentId, total) {
+  // Mark payment as in progress to prevent page re-initialization
+  isPaymentInProgress = true;
+
+  // IMPORTANT: Store cart data before showing QR code so it's preserved during polling
+  pendingPayNowCartData = JSON.parse(JSON.stringify(cartState));
+  console.log("Stored cart data for PayNow:", pendingPayNowCartData);
+
+  // Create QR code modal
+  const modal = document.createElement("div");
+  modal.className = "paynowModalOverlay active";
+  modal.id = "paynowModalOverlay";
+  modal.innerHTML = `
+    <div class="paynowModal">
+      <div class="paynowModalHeader">
+        <h2 class="paynowModalTitle">Scan to Pay with PayNow</h2>
+        <button class="paynowModalClose" id="paynowModalClose">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6L18 18" stroke="#341539" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="paynowModalContent">
+        <img src="${qrCodeData.image_url_png}" alt="PayNow QR Code" class="paynowQRCode" />
+        <p class="paynowAmount">Amount: $${total.toFixed(2)}</p>
+        <p class="paynowInstructions">Open your banking app and scan this QR code to complete payment</p>
+        <div class="paynowPolling">
+          <div class="paynowSpinner"></div>
+          <span>Waiting for payment...</span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Close button handler
+  document.getElementById("paynowModalClose").addEventListener("click", () => {
+    modal.remove();
+    stopPayNowPolling();
+    pendingPayNowCartData = null; // Clear stored cart on cancel
+    isPaymentInProgress = false; // Allow page re-initialization
+  });
+
+  // Start polling for payment status
+  startPayNowPolling(paymentIntentId, total);
+}
+
+let paynowPollingInterval = null;
+
+function startPayNowPolling(paymentIntentId, total) {
+  console.log("=== Starting PayNow polling ===");
+  console.log("paymentIntentId:", paymentIntentId);
+  console.log("total:", total);
+  console.log(
+    "currentUser at polling start:",
+    currentUser ? currentUser.uid : "NOT LOGGED IN",
   );
+  console.log("cartState at polling start:", cartState);
 
-  // Navigate to order confirmed page
-  window.location.href = "consumerOrderConfirmed.html";
+  paynowPollingInterval = setInterval(async () => {
+    try {
+      const { getPaymentStatus } =
+        await import("../../firebase/services/stripe.js");
+
+      console.log("Polling payment status for:", paymentIntentId);
+      const result = await getPaymentStatus(paymentIntentId);
+      console.log("Payment status result:", result);
+
+      const status = result?.status;
+      console.log("PayNow polling status:", status);
+
+      if (status === "succeeded") {
+        console.log("=== PayNow payment succeeded! ===");
+        console.log(
+          "currentUser at success:",
+          currentUser ? currentUser.uid : "NOT LOGGED IN",
+        );
+        console.log("cartState at success:", cartState);
+        console.log("pendingPayNowCartData at success:", pendingPayNowCartData);
+
+        // Stop polling immediately to prevent duplicate calls
+        stopPayNowPolling();
+
+        // Remove the QR modal
+        const modal = document.getElementById("paynowModalOverlay");
+        if (modal) modal.remove();
+
+        // Complete the order (await to ensure it completes before anything else)
+        console.log("Calling completePayNowOrder...");
+        await completePayNowOrder(paymentIntentId, total);
+        console.log("completePayNowOrder finished");
+      }
+    } catch (error) {
+      console.error("Error polling PayNow status:", error);
+      console.error("Error details:", error.message, error.stack);
+    }
+  }, 3000); // Poll every 3 seconds
+}
+
+function stopPayNowPolling() {
+  if (paynowPollingInterval) {
+    clearInterval(paynowPollingInterval);
+    paynowPollingInterval = null;
+  }
+}
+
+async function completePayNowOrder(paymentIntentId, total) {
+  console.log("completePayNowOrder called:", { paymentIntentId, total });
+
+  // Prevent multiple simultaneous order completion attempts
+  if (isCompletingOrder) {
+    console.log(
+      "Order completion already in progress, skipping duplicate call",
+    );
+    return;
+  }
+  isCompletingOrder = true;
+
+  try {
+    showPaymentProcessing();
+
+    // Use stored cart data from when QR code was shown (most reliable)
+    if (
+      pendingPayNowCartData &&
+      pendingPayNowCartData.items &&
+      pendingPayNowCartData.items.length > 0
+    ) {
+      console.log("Using stored PayNow cart data:", pendingPayNowCartData);
+      cartState = pendingPayNowCartData;
+    }
+    // Fallback: try current cartState
+    else if (!cartState || !cartState.items || cartState.items.length === 0) {
+      console.log("cartState is empty, fetching from Firebase...");
+      const cartData = await fetchCartData();
+      cartState = cartData;
+      console.log("Fetched cartState from Firebase:", cartState);
+    }
+
+    // Check if cart is still empty after all attempts
+    if (!cartState || !cartState.items || cartState.items.length === 0) {
+      throw new Error(
+        "Cart is empty. Cannot create order. Please add items to cart first.",
+      );
+    }
+
+    console.log("Creating order in Firebase for PayNow...");
+    console.log("Cart items:", cartState.items);
+
+    // Create order in Firebase
+    const orderId = await createOrderInFirebase(paymentIntentId, "paynow", {
+      type: "paynow",
+      brand: "PayNow",
+    });
+
+    console.log("PayNow order created successfully, orderId:", orderId);
+    console.log("orderId type:", typeof orderId);
+
+    // Validate orderId before redirect
+    if (!orderId || typeof orderId !== "string") {
+      throw new Error("Order creation failed - no valid order ID returned");
+    }
+
+    // Clear the stored cart data
+    pendingPayNowCartData = null;
+
+    hidePaymentProcessing();
+
+    // Navigate to order confirmed page with order ID
+    const redirectUrl = `consumerOrderConfirmed.html?orderId=${orderId}`;
+    console.log("Redirecting to:", redirectUrl);
+    window.location.href = redirectUrl;
+  } catch (error) {
+    console.error("Error creating PayNow order:", error);
+    pendingPayNowCartData = null; // Clear on error too
+    isCompletingOrder = false; // Reset flag on error to allow retry
+    hidePaymentProcessing();
+    redirectToPaymentFailed(error.message || "Order creation failed", "paynow");
+  }
+}
+
+function showPaymentProcessing() {
+  isPaymentInProgress = true;
+  const overlay = document.getElementById("paymentProcessingOverlay");
+  if (overlay) {
+    overlay.classList.add("active");
+  }
+}
+
+function hidePaymentProcessing() {
+  isPaymentInProgress = false;
+  const overlay = document.getElementById("paymentProcessingOverlay");
+  if (overlay) {
+    overlay.classList.remove("active");
+  }
+}
+
+async function handlePlaceOrder() {
+  if (!cartState.items || cartState.items.length === 0) {
+    alert("Your cart is empty");
+    return;
+  }
+
+  if (!selectedPaymentMethod && !selectedWallet) {
+    alert("Please select a payment method");
+    return;
+  }
+
+  const total = calculateSubtotal(cartState.items);
+
+  // Handle wallet payments (GrabPay, PayNow, AliPay)
+  if (selectedWallet) {
+    if (selectedWallet === "grabpay") {
+      await handleGrabPayPayment(total);
+    } else if (selectedWallet === "paynow") {
+      await handlePayNowPayment(total);
+    } else if (selectedWallet === "alipay") {
+      await handleAliPayPayment(total);
+    }
+    return;
+  }
+
+  // Handle card payment below
+
+  try {
+    showPaymentProcessing();
+
+    console.log("Processing card payment for total:", total);
+    console.log("Selected payment method:", selectedPaymentMethod);
+
+    // Create PaymentIntent
+    const { clientSecret, paymentIntentId, status } = await createPaymentIntent(
+      total,
+      selectedPaymentMethod.id,
+    );
+
+    console.log("PaymentIntent created:", { paymentIntentId, status });
+
+    // If payment requires confirmation
+    if (status === "requires_confirmation" || status === "requires_action") {
+      const result = await processPayment(
+        stripeInstance,
+        clientSecret,
+        selectedPaymentMethod.id,
+      );
+
+      if (!result.success) {
+        hidePaymentProcessing();
+        redirectToPaymentFailed(result.error || "Payment failed", "card");
+        return;
+      }
+    }
+
+    console.log("Payment successful, creating order in Firebase...");
+
+    // Payment successful - create order in Firebase
+    const orderId = await createOrderInFirebase(
+      paymentIntentId,
+      "card",
+      selectedPaymentMethod,
+    );
+
+    console.log("Order created successfully:", orderId);
+
+    // Validate orderId before redirect
+    if (!orderId || typeof orderId !== "string") {
+      throw new Error("Order creation failed - no valid order ID returned");
+    }
+
+    hidePaymentProcessing();
+
+    // Navigate to order confirmed page with order ID
+    const redirectUrl = `consumerOrderConfirmed.html?orderId=${orderId}`;
+    console.log("Redirecting to:", redirectUrl);
+    window.location.href = redirectUrl;
+  } catch (error) {
+    console.error("Error processing payment:", error);
+    hidePaymentProcessing();
+    redirectToPaymentFailed(error.message || "Payment failed", "card");
+  }
+}
+
+/**
+ * Create order in Firebase after successful payment
+ */
+async function createOrderInFirebase(
+  paymentIntentId,
+  paymentType,
+  paymentMethod,
+) {
+  console.log("createOrderInFirebase called:", {
+    paymentIntentId,
+    paymentType,
+    paymentMethod,
+  });
+  console.log("cartState:", cartState);
+
+  // Validate cart state
+  if (!cartState || !cartState.items || cartState.items.length === 0) {
+    throw new Error("Cart is empty. Cannot create order.");
+  }
+
+  // Group items by stall
+  const itemsByStall = {};
+  cartState.items.forEach((item) => {
+    const stallId = item.stall?.id || item.stallId;
+    if (!itemsByStall[stallId]) {
+      itemsByStall[stallId] = {
+        stallId: stallId,
+        stallName: item.stall?.name || item.stallName || "Unknown Stall",
+        items: [],
+      };
+    }
+    itemsByStall[stallId].items.push(item);
+  });
+
+  console.log("Items grouped by stall:", itemsByStall);
+
+  // Create an order for each stall (in case cart has items from multiple stalls)
+  const orderIds = [];
+  for (const stallId in itemsByStall) {
+    const stallData = itemsByStall[stallId];
+    const stallItems = stallData.items;
+    const stallSubtotal = stallItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0,
+    );
+
+    const orderData = {
+      stallId: stallId,
+      stallName: stallData.stallName,
+      hawkerCentreId: cartState.collectionDetails?.hawkerCentreId || null,
+      items: stallItems.map((item) => ({
+        menuItemId: item.menuItemId || item.id,
+        name: item.name,
+        quantity: item.quantity,
+        unitPrice: item.price,
+        totalPrice: item.price * item.quantity,
+        notes: item.specialRequest || item.notes || "",
+        imageUrl: item.image || item.imageUrl || "",
+        customizations: item.selectedVariants || [],
+      })),
+      subtotal: stallSubtotal,
+      serviceFee: 0,
+      total: stallSubtotal,
+      paymentMethod: paymentType,
+      paymentStatus: "paid",
+      paymentIntentId: paymentIntentId,
+      paymentDetails: {
+        type: paymentType,
+        brand: paymentMethod?.brand || paymentType,
+        lastFour: paymentMethod?.lastFour || "",
+      },
+      collectionDetails:
+        cartState.collectionDetails || defaultCollectionDetails,
+    };
+
+    console.log("Creating order with data:", orderData);
+
+    try {
+      const orderId = await createOrder(orderData);
+      console.log("Order created successfully with ID:", orderId);
+      orderIds.push(orderId);
+    } catch (orderError) {
+      console.error("Error creating order in Firebase:", orderError);
+      throw new Error(`Failed to create order: ${orderError.message}`);
+    }
+  }
+
+  // Verify we got an order ID
+  if (orderIds.length === 0) {
+    throw new Error("No orders were created");
+  }
+
+  // Clear the cart after order creation
+  if (currentUser) {
+    try {
+      await clearCart(currentUser.uid);
+      console.log("Cart cleared successfully");
+    } catch (clearError) {
+      console.error("Error clearing cart (non-fatal):", clearError);
+      // Don't throw here - order was created, cart clear is secondary
+    }
+  }
+
+  // Return the first order ID (or could return all for multi-stall orders)
+  console.log("Returning orderId:", orderIds[0]);
+  return orderIds[0];
 }
 
 // ============================================
@@ -571,11 +1878,304 @@ function handleBackClick() {
 // MAIN INITIALIZATION
 // ============================================
 
+/**
+ * Check if returning from GrabPay redirect and complete the order
+ */
+async function handleGrabPayReturn() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const paymentIntent = urlParams.get("payment_intent");
+  const redirectStatus = urlParams.get("redirect_status");
+
+  console.log("GrabPay return check:", { paymentIntent, redirectStatus });
+
+  if (!paymentIntent) return false;
+
+  // Verify this is a GrabPay return by checking stored intent ID
+  const storedIntentId = localStorage.getItem("hawkrGrabPayIntentId");
+  if (!storedIntentId || storedIntentId !== paymentIntent) {
+    console.log("Payment intent doesn't match stored GrabPay intent");
+    return false;
+  }
+
+  if (redirectStatus === "succeeded") {
+    try {
+      showPaymentProcessing();
+
+      // Fetch cart from Firebase (this is the reliable source)
+      console.log("Fetching cart from Firebase...");
+      const cartData = await fetchCartData();
+      cartState = cartData;
+      console.log("Cart fetched:", cartState);
+
+      if (!cartState.items || cartState.items.length === 0) {
+        throw new Error("Cart is empty. Order may have already been placed.");
+      }
+
+      console.log("Creating order in Firebase for GrabPay...");
+      console.log("Cart items:", cartState.items);
+
+      // Create order in Firebase
+      const orderId = await createOrderInFirebase(paymentIntent, "grabpay", {
+        type: "grabpay",
+        brand: "GrabPay",
+      });
+
+      console.log("GrabPay order created successfully:", orderId);
+
+      // Validate orderId before redirect
+      if (!orderId || typeof orderId !== "string") {
+        throw new Error("Order creation failed - no valid order ID returned");
+      }
+
+      // Clear stored intent ID
+      localStorage.removeItem("hawkrGrabPayIntentId");
+
+      hidePaymentProcessing();
+
+      // Redirect to order confirmed page
+      const redirectUrl = `consumerOrderConfirmed.html?orderId=${orderId}`;
+      console.log("Redirecting to:", redirectUrl);
+      window.location.href = redirectUrl;
+      return true;
+    } catch (error) {
+      console.error("Error completing GrabPay order:", error);
+      hidePaymentProcessing();
+      localStorage.removeItem("hawkrGrabPayIntentId");
+      redirectToPaymentFailed(
+        error.message || "Failed to complete order",
+        "grabpay",
+      );
+      return false;
+    }
+  } else {
+    // Payment failed or was cancelled
+    console.log("GrabPay payment not succeeded, status:", redirectStatus);
+    localStorage.removeItem("hawkrGrabPayIntentId");
+    redirectToPaymentFailed("GrabPay payment was not completed", "grabpay");
+    return false;
+  }
+}
+
+/**
+ * Check if returning from AliPay redirect and complete the order
+ */
+async function handleAliPayReturn() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const paymentIntent = urlParams.get("payment_intent");
+  const redirectStatus = urlParams.get("redirect_status");
+
+  console.log("AliPay return check:", { paymentIntent, redirectStatus });
+
+  if (!paymentIntent) return false;
+
+  // Verify this is an AliPay return by checking stored intent ID
+  const storedIntentId = localStorage.getItem("hawkrAliPayIntentId");
+  if (!storedIntentId || storedIntentId !== paymentIntent) {
+    console.log("Payment intent doesn't match stored AliPay intent");
+    return false;
+  }
+
+  if (redirectStatus === "succeeded") {
+    try {
+      showPaymentProcessing();
+
+      // Fetch cart from Firebase (this is the reliable source)
+      console.log("Fetching cart from Firebase...");
+      const cartData = await fetchCartData();
+      cartState = cartData;
+      console.log("Cart fetched:", cartState);
+
+      if (!cartState.items || cartState.items.length === 0) {
+        throw new Error("Cart is empty. Order may have already been placed.");
+      }
+
+      console.log("Creating order in Firebase for AliPay...");
+      console.log("Cart items:", cartState.items);
+
+      // Create order in Firebase
+      const orderId = await createOrderInFirebase(paymentIntent, "alipay", {
+        type: "alipay",
+        brand: "AliPay",
+      });
+
+      console.log("AliPay order created successfully:", orderId);
+
+      // Validate orderId before redirect
+      if (!orderId || typeof orderId !== "string") {
+        throw new Error("Order creation failed - no valid order ID returned");
+      }
+
+      // Clear stored intent ID
+      localStorage.removeItem("hawkrAliPayIntentId");
+
+      hidePaymentProcessing();
+
+      // Redirect to order confirmed page
+      const redirectUrl = `consumerOrderConfirmed.html?orderId=${orderId}`;
+      console.log("Redirecting to:", redirectUrl);
+      window.location.href = redirectUrl;
+      return true;
+    } catch (error) {
+      console.error("Error completing AliPay order:", error);
+      hidePaymentProcessing();
+      localStorage.removeItem("hawkrAliPayIntentId");
+      redirectToPaymentFailed(
+        error.message || "Failed to complete order",
+        "alipay",
+      );
+      return false;
+    }
+  } else {
+    // Payment failed or was cancelled
+    console.log("AliPay payment not succeeded, status:", redirectStatus);
+    localStorage.removeItem("hawkrAliPayIntentId");
+    redirectToPaymentFailed("AliPay payment was not completed", "alipay");
+    return false;
+  }
+}
+
+/**
+ * Check if returning from PayNow redirect and complete the order
+ */
+async function handlePayNowReturn() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const paymentIntent = urlParams.get("payment_intent");
+  const redirectStatus = urlParams.get("redirect_status");
+
+  // Also check localStorage for pending PayNow payment
+  const storedIntentId = localStorage.getItem("hawkrPendingPayNowIntent");
+
+  console.log("PayNow return check:", {
+    paymentIntent,
+    redirectStatus,
+    storedIntentId,
+  });
+
+  // If no payment_intent in URL but we have a stored one, check its status
+  if (!paymentIntent && storedIntentId) {
+    try {
+      const { getPaymentStatus } =
+        await import("../../firebase/services/stripe.js");
+      const { status } = await getPaymentStatus(storedIntentId);
+
+      console.log("Stored PayNow intent status:", status);
+
+      if (status === "succeeded") {
+        return await completePayNowFromReturn(storedIntentId);
+      } else if (status === "requires_action") {
+        // Payment still pending, clear stored intent and let user try again
+        localStorage.removeItem("hawkrPendingPayNowIntent");
+        return false;
+      }
+    } catch (error) {
+      console.error("Error checking stored PayNow intent:", error);
+      localStorage.removeItem("hawkrPendingPayNowIntent");
+    }
+    return false;
+  }
+
+  if (!paymentIntent) return false;
+
+  // Verify this matches our stored intent
+  if (storedIntentId && storedIntentId !== paymentIntent) {
+    console.log("Payment intent doesn't match stored PayNow intent");
+    return false;
+  }
+
+  if (redirectStatus === "succeeded") {
+    return await completePayNowFromReturn(paymentIntent);
+  } else {
+    // Payment failed or was cancelled
+    console.log("PayNow payment not succeeded, status:", redirectStatus);
+    localStorage.removeItem("hawkrPendingPayNowIntent");
+    redirectToPaymentFailed("PayNow payment was not completed", "paynow");
+    return false;
+  }
+}
+
+async function completePayNowFromReturn(paymentIntentId) {
+  try {
+    showPaymentProcessing();
+
+    // Fetch cart from Firebase
+    console.log("Fetching cart from Firebase for PayNow return...");
+    const cartData = await fetchCartData();
+    cartState = cartData;
+    console.log("Cart fetched:", cartState);
+
+    if (!cartState.items || cartState.items.length === 0) {
+      throw new Error("Cart is empty. Order may have already been placed.");
+    }
+
+    console.log("Creating order in Firebase for PayNow...");
+
+    // Create order in Firebase
+    const orderId = await createOrderInFirebase(paymentIntentId, "paynow", {
+      type: "paynow",
+      brand: "PayNow",
+    });
+
+    console.log("PayNow order created successfully:", orderId);
+
+    // Validate orderId before redirect
+    if (!orderId || typeof orderId !== "string") {
+      throw new Error("Order creation failed - no valid order ID returned");
+    }
+
+    // Clear stored intent ID
+    localStorage.removeItem("hawkrPendingPayNowIntent");
+
+    hidePaymentProcessing();
+
+    // Redirect to order confirmed page
+    const redirectUrl = `consumerOrderConfirmed.html?orderId=${orderId}`;
+    console.log("Redirecting to:", redirectUrl);
+    window.location.href = redirectUrl;
+    return true;
+  } catch (error) {
+    console.error("Error completing PayNow order from return:", error);
+    hidePaymentProcessing();
+    localStorage.removeItem("hawkrPendingPayNowIntent");
+    redirectToPaymentFailed(
+      error.message || "Failed to complete order",
+      "paynow",
+    );
+    return false;
+  }
+}
+
 async function initializeCartPage() {
+  // Skip re-initialization if payment is in progress (e.g., PayNow QR polling)
+  if (isPaymentInProgress) {
+    console.log("Skipping cart re-initialization - payment in progress");
+    return;
+  }
+
   try {
     showLoading();
 
-    const cartData = await api.fetchCartData();
+    // Load Stripe instance early
+    stripeInstance = await loadStripe();
+
+    // Check if returning from payment redirect (must be after auth is set)
+    if (currentUser) {
+      // Check for GrabPay return
+      const handledGrabPay = await handleGrabPayReturn();
+      if (handledGrabPay) return; // Will redirect to order confirmed
+
+      // Check for AliPay return
+      const handledAliPay = await handleAliPayReturn();
+      if (handledAliPay) return; // Will redirect to order confirmed
+
+      // Check for PayNow return (in case Stripe redirected)
+      const handledPayNow = await handlePayNowReturn();
+      if (handledPayNow) return; // Will redirect to order confirmed
+    }
+
+    // Load saved payment methods if user is logged in
+    await loadSavedPaymentMethods();
+
+    const cartData = await fetchCartData();
     renderCartPage(cartData);
   } catch (error) {
     console.error("Failed to initialize cart page:", error);
@@ -590,7 +2190,14 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initialize navbar (auth, user display, logout)
   initConsumerNavbar();
 
-  initializeCartPage();
+  // Initialize mobile menu
+  initMobileMenu();
+
+  // Listen for auth state changes and then initialize cart
+  onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+    await initializeCartPage();
+  });
 
   // Back button handler
   const backButton = document.getElementById("backButton");
@@ -623,12 +2230,44 @@ document.addEventListener("DOMContentLoaded", function () {
   // Close popup on Escape key
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") {
-      const overlay = document.getElementById("editPopupOverlay");
-      if (overlay && overlay.classList.contains("active")) {
+      const editOverlay = document.getElementById("editPopupOverlay");
+      if (editOverlay && editOverlay.classList.contains("active")) {
         closeEditPopup();
+      }
+
+      const cardOverlay = document.getElementById("cardModalOverlay");
+      if (cardOverlay && cardOverlay.classList.contains("active")) {
+        closeCardModal();
       }
     }
   });
+
+  // Card modal event listeners
+  const cardModalClose = document.getElementById("cardModalClose");
+  const cardModalCancelBtn = document.getElementById("cardModalCancelBtn");
+  const cardModalSaveBtn = document.getElementById("cardModalSaveBtn");
+  const cardModalOverlay = document.getElementById("cardModalOverlay");
+
+  if (cardModalClose) {
+    cardModalClose.addEventListener("click", closeCardModal);
+  }
+
+  if (cardModalCancelBtn) {
+    cardModalCancelBtn.addEventListener("click", closeCardModal);
+  }
+
+  if (cardModalSaveBtn) {
+    cardModalSaveBtn.addEventListener("click", handleSaveCard);
+  }
+
+  // Close card modal when clicking overlay
+  if (cardModalOverlay) {
+    cardModalOverlay.addEventListener("click", function (e) {
+      if (e.target === cardModalOverlay) {
+        closeCardModal();
+      }
+    });
+  }
 
   // Change placeholder on focus/blur for special request input
   const specialRequestInput = document.getElementById("specialRequestInput");

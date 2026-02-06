@@ -1,4 +1,20 @@
 {
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "**/functions/**"
+    ],
+    "cleanUrls": true,
+    "rewrites": [
+      {
+        "source": "/",
+        "destination": "/Pages/Consumer Dashboard/consumerDashboard.html"
+      }
+    ]
+  },
   "functions": {
     "source": "functions",
     "runtime": "nodejs20",

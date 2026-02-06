@@ -18,6 +18,7 @@ import {
   orderBy,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { analyzeSentiment } from "./gemini.js";
 
 // ============================================
 // CUSTOMER PROFILE
@@ -375,6 +376,500 @@ export async function getUnreadNotificationCount(customerId) {
     return notifications.length;
   } catch (error) {
     console.error("Error getting unread count:", error);
+    throw error;
+  }
+}
+
+// ============================================
+// CART (Subcollection)
+// ============================================
+
+/**
+ * Get cart items for a customer
+ * @param {string} customerId
+ * @returns {Promise<array>}
+ */
+export async function getCart(customerId) {
+  try {
+    const cartRef = collection(db, "customers", customerId, "cart");
+    const snapshot = await getDocs(cartRef);
+
+    const items = [];
+    snapshot.forEach((doc) => {
+      items.push({ id: doc.id, ...doc.data() });
+    });
+
+    return items;
+  } catch (error) {
+    console.error("Error getting cart:", error);
+    throw error;
+  }
+}
+
+/**
+ * Add item to cart or increment quantity if exists
+ * Items with different variant selections are treated as different products
+ * @param {string} customerId
+ * @param {object} item - { menuItemId, stallId, name, price, basePrice, imageUrl, quantity, selectedVariants }
+ * @returns {Promise<string>} - Cart item ID
+ */
+export async function addToCart(customerId, item) {
+  try {
+    const cartRef = collection(db, "customers", customerId, "cart");
+
+    // Generate variants key for matching (same item with different variants = different cart item)
+    const variantsKey = (item.selectedVariants || [])
+      .map((v) => `${v.name}:${v.option}`)
+      .sort()
+      .join("|");
+
+    // Check if item with same menuItemId, stallId, AND variants already exists
+    const q = query(
+      cartRef,
+      where("menuItemId", "==", item.menuItemId),
+      where("stallId", "==", item.stallId),
+    );
+    const snapshot = await getDocs(q);
+
+    // Find exact match including variants
+    const existingDoc = snapshot.docs.find((doc) => {
+      const data = doc.data();
+      const existingVariantsKey = (data.selectedVariants || [])
+        .map((v) => `${v.name}:${v.option}`)
+        .sort()
+        .join("|");
+      return existingVariantsKey === variantsKey;
+    });
+
+    if (existingDoc) {
+      // Item with same variants exists, increment quantity
+      const existingData = existingDoc.data();
+      await updateDoc(
+        doc(db, "customers", customerId, "cart", existingDoc.id),
+        {
+          quantity: existingData.quantity + (item.quantity || 1),
+          updatedAt: serverTimestamp(),
+        },
+      );
+      return existingDoc.id;
+    }
+
+    // Add new item (different variants or new item entirely)
+    const docRef = await addDoc(cartRef, {
+      menuItemId: item.menuItemId,
+      stallId: item.stallId,
+      stallName: item.stallName || "",
+      name: item.name,
+      basePrice: item.basePrice || item.price,
+      price: item.price,
+      imageUrl: item.imageUrl || "",
+      quantity: item.quantity || 1,
+      selectedVariants: item.selectedVariants || [],
+      variantsKey: variantsKey,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    return docRef.id;
+  } catch (error) {
+    console.error("Error adding to cart:", error);
+    throw error;
+  }
+}
+
+/**
+ * Update cart item quantity
+ * @param {string} customerId
+ * @param {string} cartItemId
+ * @param {number} quantity
+ */
+export async function updateCartItemQuantity(customerId, cartItemId, quantity) {
+  try {
+    if (quantity <= 0) {
+      await removeFromCart(customerId, cartItemId);
+      return;
+    }
+
+    await updateDoc(doc(db, "customers", customerId, "cart", cartItemId), {
+      quantity: quantity,
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error("Error updating cart item:", error);
+    throw error;
+  }
+}
+
+/**
+ * Remove item from cart
+ * @param {string} customerId
+ * @param {string} cartItemId
+ */
+export async function removeFromCart(customerId, cartItemId) {
+  try {
+    await deleteDoc(doc(db, "customers", customerId, "cart", cartItemId));
+  } catch (error) {
+    console.error("Error removing from cart:", error);
+    throw error;
+  }
+}
+
+/**
+ * Clear entire cart
+ * @param {string} customerId
+ */
+export async function clearCart(customerId) {
+  try {
+    const cartItems = await getCart(customerId);
+    const promises = cartItems.map((item) =>
+      deleteDoc(doc(db, "customers", customerId, "cart", item.id)),
+    );
+    await Promise.all(promises);
+  } catch (error) {
+    console.error("Error clearing cart:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get cart item count
+ * @param {string} customerId
+ * @returns {Promise<number>}
+ */
+export async function getCartItemCount(customerId) {
+  try {
+    const cartItems = await getCart(customerId);
+    return cartItems.reduce((total, item) => total + item.quantity, 0);
+  } catch (error) {
+    console.error("Error getting cart count:", error);
+    throw error;
+  }
+}
+
+/**
+ * Update cart item notes (special requests)
+ * @param {string} customerId
+ * @param {string} cartItemId
+ * @param {string} notes
+ */
+export async function updateCartItemNotes(customerId, cartItemId, notes) {
+  try {
+    await updateDoc(doc(db, "customers", customerId, "cart", cartItemId), {
+      notes: notes,
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error("Error updating cart item notes:", error);
+    throw error;
+  }
+}
+
+/**
+ * Update cart item with multiple fields (variants, notes, price)
+ * @param {string} customerId
+ * @param {string} cartItemId
+ * @param {object} updates - Object containing fields to update
+ */
+export async function updateCartItem(customerId, cartItemId, updates) {
+  try {
+    await updateDoc(doc(db, "customers", customerId, "cart", cartItemId), {
+      ...updates,
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error("Error updating cart item:", error);
+    throw error;
+  }
+}
+
+// ============================================
+// FAVOURITES (Subcollection)
+// ============================================
+
+/**
+ * Get all favourites for a customer
+ * @param {string} customerId
+ * @returns {Promise<array>}
+ */
+export async function getFavourites(customerId) {
+  try {
+    const favouritesRef = collection(db, "customers", customerId, "favourites");
+    const q = query(favouritesRef, orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
+
+    const favourites = [];
+    snapshot.forEach((doc) => {
+      favourites.push({ id: doc.id, ...doc.data() });
+    });
+
+    return favourites;
+  } catch (error) {
+    console.error("Error getting favourites:", error);
+    throw error;
+  }
+}
+
+/**
+ * Add item to favourites
+ * @param {string} customerId
+ * @param {object} item - { menuItemId, name, price, imageUrl, rating, stallId, stallName, hawkerCentreId, hawkerCentreName, allergens }
+ * @returns {Promise<string>} - Favourite ID
+ */
+export async function addToFavourites(customerId, item) {
+  try {
+    const favouritesRef = collection(db, "customers", customerId, "favourites");
+
+    // Check if item already exists in favourites
+    const q = query(favouritesRef, where("menuItemId", "==", item.menuItemId));
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+      // Already favourited, return existing ID
+      return snapshot.docs[0].id;
+    }
+
+    // Add new favourite
+    const docRef = await addDoc(favouritesRef, {
+      menuItemId: item.menuItemId,
+      name: item.name,
+      price: item.price,
+      imageUrl: item.imageUrl || "",
+      rating: item.rating || 0,
+      stallId: item.stallId,
+      stallName: item.stallName || "",
+      hawkerCentreId: item.hawkerCentreId || "",
+      hawkerCentreName: item.hawkerCentreName || "",
+      allergens: item.allergens || [],
+      createdAt: serverTimestamp(),
+    });
+
+    return docRef.id;
+  } catch (error) {
+    console.error("Error adding to favourites:", error);
+    throw error;
+  }
+}
+
+/**
+ * Remove item from favourites by favourite document ID
+ * @param {string} customerId
+ * @param {string} favouriteId
+ */
+export async function removeFromFavourites(customerId, favouriteId) {
+  try {
+    await deleteDoc(
+      doc(db, "customers", customerId, "favourites", favouriteId),
+    );
+  } catch (error) {
+    console.error("Error removing from favourites:", error);
+    throw error;
+  }
+}
+
+/**
+ * Remove item from favourites by menu item ID
+ * @param {string} customerId
+ * @param {string} menuItemId
+ */
+export async function removeFromFavouritesByMenuItemId(customerId, menuItemId) {
+  try {
+    const favouritesRef = collection(db, "customers", customerId, "favourites");
+    const q = query(favouritesRef, where("menuItemId", "==", menuItemId));
+    const snapshot = await getDocs(q);
+
+    const deletePromises = snapshot.docs.map((doc) => deleteDoc(doc.ref));
+    await Promise.all(deletePromises);
+  } catch (error) {
+    console.error("Error removing from favourites:", error);
+    throw error;
+  }
+}
+
+/**
+ * Check if an item is in favourites
+ * @param {string} customerId
+ * @param {string} menuItemId
+ * @returns {Promise<boolean>}
+ */
+export async function isFavourite(customerId, menuItemId) {
+  try {
+    const favouritesRef = collection(db, "customers", customerId, "favourites");
+    const q = query(favouritesRef, where("menuItemId", "==", menuItemId));
+    const snapshot = await getDocs(q);
+
+    return !snapshot.empty;
+  } catch (error) {
+    console.error("Error checking favourite:", error);
+    throw error;
+  }
+}
+
+/**
+ * Toggle favourite status
+ * @param {string} customerId
+ * @param {object} item - Menu item data
+ * @returns {Promise<{isFavourite: boolean, favouriteId: string|null}>}
+ */
+export async function toggleFavourite(customerId, item) {
+  try {
+    const favouritesRef = collection(db, "customers", customerId, "favourites");
+    const q = query(favouritesRef, where("menuItemId", "==", item.menuItemId));
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+      // Remove from favourites
+      await deleteDoc(snapshot.docs[0].ref);
+      return { isFavourite: false, favouriteId: null };
+    } else {
+      // Add to favourites
+      const favouriteId = await addToFavourites(customerId, item);
+      return { isFavourite: true, favouriteId };
+    }
+  } catch (error) {
+    console.error("Error toggling favourite:", error);
+    throw error;
+  }
+}
+
+// ============================================
+// FEEDBACK (Subcollection)
+// ============================================
+
+/**
+ * Submit feedback for an order
+ * @param {string} customerId
+ * @param {object} feedbackData - { orderId, stallId, stallName, rating, tags, text, contactMe }
+ * @returns {Promise<string>} - Feedback ID
+ */
+export async function submitFeedback(customerId, feedbackData) {
+  try {
+    const feedbackRef = collection(db, "customers", customerId, "feedback");
+
+    // Analyze sentiment using Gemini API
+    const sentiment = await analyzeSentiment(
+      feedbackData.text,
+      feedbackData.rating,
+    );
+
+    // Check if feedback already exists for this order
+    const q = query(feedbackRef, where("orderId", "==", feedbackData.orderId));
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+      // Update existing feedback
+      const existingDoc = snapshot.docs[0];
+      await updateDoc(
+        doc(db, "customers", customerId, "feedback", existingDoc.id),
+        {
+          rating: feedbackData.rating,
+          tags: feedbackData.tags || [],
+          text: feedbackData.text || "",
+          contactMe: feedbackData.contactMe || false,
+          sentiment: sentiment,
+          updatedAt: serverTimestamp(),
+        },
+      );
+      return existingDoc.id;
+    }
+
+    // Create new feedback
+    const docRef = await addDoc(feedbackRef, {
+      orderId: feedbackData.orderId,
+      stallId: feedbackData.stallId,
+      stallName: feedbackData.stallName,
+      venueName: feedbackData.venueName || "",
+      rating: feedbackData.rating,
+      tags: feedbackData.tags || [],
+      text: feedbackData.text || "",
+      contactMe: feedbackData.contactMe || false,
+      sentiment: sentiment,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    // Also save to a top-level feedback collection for vendor access
+    await addDoc(collection(db, "feedback"), {
+      customerId: customerId,
+      customerName: feedbackData.customerName || "Anonymous",
+      orderId: feedbackData.orderId,
+      stallId: feedbackData.stallId,
+      stallName: feedbackData.stallName,
+      venueName: feedbackData.venueName || "",
+      rating: feedbackData.rating,
+      tags: feedbackData.tags || [],
+      text: feedbackData.text || "",
+      contactMe: feedbackData.contactMe || false,
+      sentiment: sentiment,
+      createdAt: serverTimestamp(),
+    });
+
+    return docRef.id;
+  } catch (error) {
+    console.error("Error submitting feedback:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get all feedback submitted by a customer
+ * @param {string} customerId
+ * @returns {Promise<array>}
+ */
+export async function getCustomerFeedback(customerId) {
+  try {
+    const feedbackRef = collection(db, "customers", customerId, "feedback");
+    const q = query(feedbackRef, orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
+
+    const feedback = [];
+    snapshot.forEach((doc) => {
+      feedback.push({ id: doc.id, ...doc.data() });
+    });
+
+    return feedback;
+  } catch (error) {
+    console.error("Error getting customer feedback:", error);
+    throw error;
+  }
+}
+
+/**
+ * Check if feedback exists for an order
+ * @param {string} customerId
+ * @param {string} orderId
+ * @returns {Promise<boolean>}
+ */
+export async function hasFeedbackForOrder(customerId, orderId) {
+  try {
+    const feedbackRef = collection(db, "customers", customerId, "feedback");
+    const q = query(feedbackRef, where("orderId", "==", orderId));
+    const snapshot = await getDocs(q);
+
+    return !snapshot.empty;
+  } catch (error) {
+    console.error("Error checking feedback:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get feedback for a specific order
+ * @param {string} customerId
+ * @param {string} orderId
+ * @returns {Promise<object|null>}
+ */
+export async function getFeedbackForOrder(customerId, orderId) {
+  try {
+    const feedbackRef = collection(db, "customers", customerId, "feedback");
+    const q = query(feedbackRef, where("orderId", "==", orderId));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) return null;
+
+    const doc = snapshot.docs[0];
+    return { id: doc.id, ...doc.data() };
+  } catch (error) {
+    console.error("Error getting feedback for order:", error);
     throw error;
   }
 }

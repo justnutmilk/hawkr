@@ -375,6 +375,67 @@
             </div>
         </div>
 
+        <!-- Variant Selection Popup -->
+        <div class="variantPopupOverlay" id="variantPopupOverlay">
+            <div class="variantPopup">
+                <div class="variantPopupHeader">
+                    <h2 class="variantPopupTitle">Select Options</h2>
+                    <button
+                        class="variantPopupClose"
+                        id="variantPopupClose"
+                        type="button"
+                    >
+                        <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 14 14"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M1 1L13 13M1 13L13 1"
+                                stroke="#341539"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                    </button>
+                </div>
+                <div class="variantPopupItemInfo" id="variantPopupItemInfo">
+                    <!-- Populated by JS -->
+                </div>
+                <div class="variantPopupContent">
+                    <div
+                        class="variantPopupVariantsSection"
+                        id="variantPopupVariantsSection"
+                    >
+                        <!-- Variants populated by JS -->
+                    </div>
+                    <div class="specialRequestSection">
+                        <label class="specialRequestLabel"
+                            >Special Requests</label
+                        >
+                        <textarea
+                            class="specialRequestInput"
+                            id="variantSpecialRequestInput"
+                            placeholder="Add a special request..."
+                            rows="3"
+                        ></textarea>
+                    </div>
+                </div>
+                <div class="variantPopupFooter">
+                    <button
+                        class="variantPopupAddBtn"
+                        id="variantPopupAddBtn"
+                        type="button"
+                    >
+                        Add to Order - <span id="variantPopupPrice">$0.00</span>
+                        <span class="kbdGroup"><kbd>enter</kbd></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Edit Popup -->
         <div class="editPopupOverlay" id="editPopupOverlay">
             <div class="editPopup">

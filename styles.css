@@ -1,11 +1,13 @@
 @font-face {
     font-family: "Source Serif";
-    src: url("fonts/SourceSerif4-Italic-VariableFont_opsz\,wght.ttf") format("truetype");
+    src: url("fonts/SourceSerif4-Italic-VariableFont_opsz\,wght.ttf")
+        format("truetype");
 }
 
 @font-face {
     font-family: "Source Serif";
-    src: url("fonts/SourceSerif4-VariableFont_opsz\,wght.ttf") format("truetype");
+    src: url("fonts/SourceSerif4-VariableFont_opsz\,wght.ttf")
+        format("truetype");
 }
 
 @font-face {
@@ -18,13 +20,12 @@
     src: url("fonts/Aptos.ttf") format("truetype");
 }
 
-html, body
-{
-overflow-x: hidden;
+html,
+body {
+    overflow-x: hidden;
 }
 
-nav
-{
+nav {
     display: flex;
     padding: 35px 0;
     justify-content: space-between;
@@ -40,25 +41,22 @@ nav
     font-style: normal;
     font-weight: 500;
     line-height: normal;
-    
 }
 
-.withinNav
-{
+.withinNav {
     display: flex;
     justify-content: center;
     align-items: flex-centre;
     gap: 0.4rem;
 }
 
-.contactSupportButton
-{
+.contactSupportButton {
     text-decoration: none;
     color: #341539;
 
     border-radius: 2rem;
     border: 1px solid #341539;
-    
+
     padding: 10px 15px;
     justify-content: center;
     align-items: center;
@@ -69,27 +67,29 @@ nav
 
     font-weight: 400;
 
-    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
-.contactSupportButton:hover
-{
-    background-color: #913B9F;
-    color: #FFFAFA;
+.contactSupportButton:hover {
+    background-color: #913b9f;
+    color: #fffafa;
     border: none;
 
     transform: translateY(-2px) scale(1.04);
-    box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
 }
 
-.logInButton
-{
+.logInButton {
     text-decoration: none;
-    color: #FFFAFA;
+    color: #fffafa;
     background: #341539;
 
     border-radius: 20px;
-    
+
     padding: 10px 15px;
     justify-content: center;
     align-items: center;
@@ -100,26 +100,27 @@ nav
 
     font-weight: 400;
 
-    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
-.logInButton:hover
-{
-    background-color: #913B9F;
-    color: #FFFAFA;
+.logInButton:hover {
+    background-color: #913b9f;
+    color: #fffafa;
 
     transform: translateY(-2px) scale(1.04);
-    box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
 }
 
-.navActions
-{
+.navActions {
     display: flex;
     gap: 2rem;
 }
 
-.heroText
-{
+.heroText {
     color: #341539;
     font-family: Aptos;
     font-size: 3rem;
@@ -131,10 +132,9 @@ nav
     text-box-edge: cap alphabetic;
 }
 
-h1
-{
+h1 {
     color: #341539;
-    font-feature-settings: 'ss03' on;
+    font-feature-settings: "ss03" on;
     font-family: "Geist Mono";
     font-size: 3rem;
     font-style: normal;
@@ -145,12 +145,9 @@ h1
     text-box-edge: cap alphabetic;
 
     white-space: pre-line;
-
-
 }
 
-.heroContainer
-{
+.heroContainer {
     display: flex;
     flex-direction: column;
 
@@ -162,24 +159,21 @@ h1
     margin-right: 8%;
 }
 
-.anotherHeroContainer
-{
+.anotherHeroContainer {
     display: flex;
     flex-direction: column;
     gap: 2rem;
 }
 
-.typeWriter
-{
+.typeWriter {
     height: 96px;
     margin: 0px;
 }
 
-.heroMicrocopy
-{
+.heroMicrocopy {
     text-box-trim: trim-both;
     text-box-edge: cap alphabetic;
-    
+
     color: #595959;
     text-align: justify;
 
@@ -194,20 +188,26 @@ h1
     margin: 0px;
 }
 
-span {
-  border-right: .05em solid;
-  animation: caret 1s steps(1) infinite;
+/* Typewriter caret effect - only for landing page hero */
+.typeWriter span {
+    border-right: 0.05em solid;
+    animation: caret 1s steps(1) infinite;
 }
 
 @keyframes caret {
-  50% {
-    border-color: transparent;
-  }
+    50% {
+        border-color: transparent;
+    }
+}
+
+/* Reset typewriter caret - only affects typewriter context */
+.typeWriter span:not(:last-child) {
+    border-right: none;
+    animation: none;
 }
 
 /* One pillInput definition only */
-.pillInput
-{
+.pillInput {
     display: flex;
     padding: 5px 5px 5px 15px;
     justify-content: center;
@@ -215,9 +215,9 @@ span {
     gap: 35px;
 
     width: 23%;
-    
+
     border-radius: 999px;
-    background: #F0F0F0;
+    background: #f0f0f0;
 }
 
 /* Input */
@@ -234,12 +234,12 @@ span {
     font-weight: 400;
     line-height: normal;
 
-    min-width: 0;  
+    min-width: 0;
 }
 
 /* Placeholder */
 .pillInput input::placeholder {
-    color:#341539;
+    color: #341539;
     font-family: "Geist Mono", monospace;
     font-weight: 400;
 }
@@ -255,9 +255,8 @@ span {
 
     padding: 10px 14px;
     border-radius: 999px;
-    background: #913B9F;
-    color: #FFFAFA;
-
+    background: #913b9f;
+    color: #fffafa;
 
     text-box-trim: trim-both;
     text-box-edge: cap alphabetic;
@@ -269,8 +268,7 @@ span {
 }
 
 /* helper text */
-.ctaMicrocopy
-{
+.ctaMicrocopy {
     color: #595959;
     text-box-trim: trim-both;
     text-box-edge: cap alphabetic;
@@ -283,16 +281,16 @@ span {
 }
 
 .liquid-glass-element {
-  background: rgba(255, 255, 255, 0.1); /* Transparent background */
-  border: 1px solid rgba(255, 255, 255, 0.3); /* Subtle border */
-  border-radius: 16px; /* Rounded corners */
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* Drop shadow for depth */
-  backdrop-filter: blur(10px); /* The key blur effect */
-  /* -webkit-backdrop-filter: blur(10px); */ /* For Safari compatibility */
+    background: rgba(255, 255, 255, 0.1); /* Transparent background */
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Subtle border */
+    border-radius: 16px; /* Rounded corners */
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* Drop shadow for depth */
+    backdrop-filter: blur(10px); /* The key blur effect */
+    /* -webkit-backdrop-filter: blur(10px); */ /* For Safari compatibility */
 }
 
-.paymentsHelper{
-    text-align:center;
+.paymentsHelper {
+    text-align: center;
     margin: 1rem;
 
     color: #595959;
@@ -306,37 +304,39 @@ span {
     margin-top: 1rem;
 }
 
-.paymentsTitle{
-  text-align:center;
-  margin-bottom: 4rem;
+.paymentsTitle {
+    text-align: center;
+    margin-bottom: 4rem;
 }
 
-.logoTicker{
-  overflow:hidden;
-  width: 100%;
-  padding: 12px 0;
-  position: relative;
+.logoTicker {
+    overflow: hidden;
+    width: 100%;
+    padding: 12px 0;
+    position: relative;
 
-  margin-bottom: 3rem;
+    margin-bottom: 3rem;
 }
 
-.logoTrack{
-  display: flex;
-  align-items: center;
-  gap: 64px;
-  width: max-content;
-  animation: marquee-left 100s linear infinite;
+.logoTrack {
+    display: flex;
+    align-items: center;
+    gap: 64px;
+    width: max-content;
+    animation: marquee-left 100s linear infinite;
 
-  user-select: none;
-  -webkit-user-select: none;
-  -ms-user-select: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
 }
 
-.logoTrack img{
+.logoTrack img {
     height: 33px;
     width: auto;
     display: block;
-    transition: transform 160ms ease, opacity 160ms ease;
+    transition:
+        transform 160ms ease,
+        opacity 160ms ease;
     transform-origin: center;
 
     user-select: none;
@@ -344,39 +344,652 @@ span {
     -ms-user-select: none;
 
     -webkit-user-drag: none; /* Chrome/Safari */
-    pointer-events: auto; 
+    pointer-events: auto;
 }
 
-.logoTrack img:hover
-{
+.logoTrack img:hover {
     transform: scale(1.18);
     opacity: 1;
 }
 
 /* direction control */
-.logoTicker[data-direction="right"] .logoTrack{
-  animation-name: marquee-right;
+.logoTicker[data-direction="right"] .logoTrack {
+    animation-name: marquee-right;
 }
 
 /* move by half because we duplicated the set once */
-@keyframes marquee-left{
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+@keyframes marquee-left {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-50%);
+    }
 }
 
-@keyframes marquee-right{
-  from { transform: translateX(-50%); }
-  to   { transform: translateX(0); }
+@keyframes marquee-right {
+    from {
+        transform: translateX(-50%);
+    }
+    to {
+        transform: translateX(0);
+    }
 }
 
 /* accessibility: stop motion for people who prefer it */
-@media (prefers-reduced-motion: reduce){
-  .logoTrack{
-    animation: none;
-  }
+@media (prefers-reduced-motion: reduce) {
+    .logoTrack {
+        animation: none;
+    }
 }
 
-.logoTicker{
-  -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
-  mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+.logoTicker {
+    -webkit-mask-image: linear-gradient(
+        to right,
+        transparent,
+        black 12%,
+        black 88%,
+        transparent
+    );
+    mask-image: linear-gradient(
+        to right,
+        transparent,
+        black 12%,
+        black 88%,
+        transparent
+    );
+}
+
+/* ============================================
+   LIQUID GLASS TOGGLE - UNIFIED COMPONENT
+   Used across all hawkr & hawkrOS interfaces
+   ============================================ */
+
+.liquidGlassToggle {
+    position: relative;
+    display: inline-flex;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    caret-color: transparent;
+}
+
+/* Ensure no caret/animation on toggle elements */
+.liquidGlassToggle span,
+.liquidGlassToggle .toggleTrack,
+.liquidGlassToggle .toggleThumb {
+    border-right: none !important;
+    animation: none !important;
+    caret-color: transparent;
+}
+
+.liquidGlassToggle input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* Track - the pill-shaped background */
+.liquidGlassToggle .toggleTrack {
+    position: relative;
+    width: 72px;
+    height: 32px;
+    border-radius: 9999px;
+    background: #c8c8c8;
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.12),
+        inset 0 1px 2px rgba(0, 0, 0, 0.08);
+    transition: background 0.3s ease;
+    overflow: visible;
+}
+
+.liquidGlassToggle .toggleTrack::before,
+.liquidGlassToggle .toggleTrack::after {
+    display: none;
+}
+
+/* Thumb - stadium shape (landscape), takes up half the track */
+.liquidGlassToggle .toggleThumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 40px;
+    height: 26px;
+    border-radius: 9999px;
+    background: #ffffff;
+    border: 2px solid transparent;
+    box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.15),
+        0 1px 2px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+    transition:
+        left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        top 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+        width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+        height 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+        background 0.25s ease,
+        border 0.25s ease,
+        box-shadow 0.25s ease,
+        backdrop-filter 0.25s ease,
+        -webkit-backdrop-filter 0.25s ease;
+    z-index: 3;
+    cursor: grab;
+}
+
+.liquidGlassToggle .toggleThumb:active {
+    cursor: grabbing;
+}
+
+/* Dragging state - glass stadium pill, LANDSCAPE (wider than tall) */
+/* Glass overflows left/right sides horizontally */
+/* Inherits transitions from base .toggleThumb for smooth morphing */
+.liquidGlassToggle.dragging .toggleThumb {
+    top: -4px;
+    width: 64px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(0.5px);
+    -webkit-backdrop-filter: blur(0.5px);
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.05),
+        inset 0 1px 2px rgba(255, 255, 255, 0.3),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.02);
+}
+
+/* Checked State - Green track, solid white thumb inside */
+.liquidGlassToggle input:checked + .toggleTrack {
+    background: #34c759;
+}
+
+.liquidGlassToggle input:checked + .toggleTrack .toggleThumb {
+    left: 29px; /* 72px - 40px - 3px */
+}
+
+/* Track transition to green when thumb passes halfway (during drag) */
+.liquidGlassToggle .toggleTrack.green {
+    background: #34c759;
+}
+
+/* Hover States */
+.liquidGlassToggle:hover .toggleTrack {
+    box-shadow:
+        0 3px 12px rgba(0, 0, 0, 0.15),
+        inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.liquidGlassToggle:hover input:checked + .toggleTrack {
+    box-shadow:
+        0 3px 12px rgba(52, 199, 89, 0.3),
+        inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* Focus State */
+.liquidGlassToggle input:focus-visible + .toggleTrack {
+    outline: 2px solid #34c759;
+    outline-offset: 2px;
+}
+
+/* Disabled State */
+.liquidGlassToggle.disabled,
+.liquidGlassToggle input:disabled + .toggleTrack {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.liquidGlassToggle input:disabled + .toggleTrack .toggleThumb {
+    cursor: not-allowed;
+}
+
+/* Size Variants */
+/* Small toggle */
+.liquidGlassToggle.small .toggleTrack {
+    width: 56px;
+    height: 26px;
+}
+
+.liquidGlassToggle.small .toggleThumb {
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+}
+
+.liquidGlassToggle.small input:checked + .toggleTrack .toggleThumb {
+    left: 33px;
+}
+
+.liquidGlassToggle.small.dragging .toggleThumb {
+    top: -6px;
+    width: 44px;
+    height: 38px;
+}
+
+/* Large toggle */
+.liquidGlassToggle.large .toggleTrack {
+    width: 88px;
+    height: 40px;
+}
+
+.liquidGlassToggle.large .toggleThumb {
+    top: 5px;
+    left: 5px;
+    width: 30px;
+    height: 30px;
+}
+
+.liquidGlassToggle.large input:checked + .toggleTrack .toggleThumb {
+    left: 53px;
+}
+
+.liquidGlassToggle.large.dragging .toggleThumb {
+    top: -10px;
+    width: 68px;
+    height: 60px;
+}
+
+/* Mini toggle - stadium pill shape for inline use in forms */
+/* Track: 44x24, Thumb: 24x18, Glass: 40x30 */
+.liquidGlassToggle.mini .toggleTrack {
+    width: 44px;
+    height: 24px;
+    border-radius: 12px;
+}
+
+.liquidGlassToggle.mini .toggleThumb {
+    top: 3px;
+    left: 3px;
+    width: 24px;
+    height: 18px;
+    border-radius: 9999px;
+}
+
+.liquidGlassToggle.mini input:checked + .toggleTrack .toggleThumb {
+    left: 17px; /* 44 - 24 - 3 */
+}
+
+.liquidGlassToggle.mini.dragging .toggleThumb {
+    top: -3px;
+    width: 40px;
+    height: 30px;
+    border-radius: 9999px;
+}
+
+/* ============================================
+   CART BADGE STYLES
+   ============================================ */
+
+.cartLinkWrapper {
+    position: relative;
+    display: inline-flex;
+}
+
+.cartBadge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #913b9f;
+    color: #fff;
+    font-family: Aptos, system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    border: 2px solid #fff;
+    box-sizing: content-box;
+}
+
+/* ============================================
+   MOBILE HAMBURGER MENU
+   ============================================ */
+
+/* Hamburger Button - Hidden on desktop */
+.hamburgerButton {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #ece6f0;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.hamburgerButton:hover {
+    background: #e0d9e5;
+}
+
+.hamburgerButton:active {
+    transform: scale(0.95);
+}
+
+.hamburgerIcon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.hamburgerIcon span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: #341539;
+    border-radius: 2px;
+    transition:
+        transform 0.3s ease,
+        opacity 0.3s ease;
+}
+
+/* Hamburger to X animation */
+.hamburgerButton.active .hamburgerIcon span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.hamburgerButton.active .hamburgerIcon span:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburgerButton.active .hamburgerIcon span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
+/* Mobile Menu Overlay */
+.mobileMenuOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+        opacity 0.3s ease,
+        visibility 0.3s ease;
+    z-index: 9998;
+}
+
+.mobileMenuOverlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Mobile Menu Panel */
+.mobileMenu,
+.mobileMenuPanel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 280px;
+    max-width: 85vw;
+    height: 100vh;
+    background: #fff;
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.mobileMenu.active,
+.mobileMenuPanel.active {
+    transform: translateX(0);
+}
+
+/* Mobile Menu Header */
+.mobileMenuHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.mobileMenuTitle {
+    color: #341539;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.mobileMenuClose {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #f0f0f0;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.mobileMenuClose:hover {
+    background: #e5e5e5;
+}
+
+.mobileMenuClose svg {
+    width: 18px;
+    height: 18px;
+    color: #341539;
+}
+
+/* Mobile Menu Content */
+.mobileMenuContent {
+    flex: 1;
+    padding: 16px 0;
+}
+
+/* Mobile Menu Items */
+.mobileMenuItem {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 24px;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    background: none;
+    border: none;
+    width: 100%;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.mobileMenuItem:hover {
+    background: #f5f5f5;
+}
+
+.mobileMenuItem svg {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.mobileMenuItemBadge {
+    margin-left: auto;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: #913b9f;
+    color: #fff;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Mobile Menu Divider */
+.mobileMenuDivider {
+    height: 1px;
+    background: #f0f0f0;
+    margin: 8px 24px;
+}
+
+/* Mobile Menu User Section */
+.mobileMenuUser {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    background: #f5f5f5;
+    margin: 0 16px 16px;
+    border-radius: 12px;
+}
+
+.mobileMenuUserIcon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e5e5e5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobileMenuUserIcon svg {
+    width: 24px;
+    height: 24px;
+    color: #341539;
+}
+
+/* User info container (alternate structure) */
+.mobileMenuUserInfo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mobileMenuUserInfo > svg {
+    flex-shrink: 0;
+}
+
+.mobileMenuUserDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.mobileMenuUserName {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.mobileMenuUserEmail {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+}
+
+/* Mobile Menu Nav */
+.mobileMenuNav {
+    flex: 1;
+    padding: 16px 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Mobile Menu Badge */
+.mobileMenuBadge {
+    margin-left: auto;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: #913b9f;
+    color: #fff;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Mobile Menu Footer */
+.mobileMenuFooter {
+    padding: 16px 24px;
+    border-top: 1px solid #f0f0f0;
+    margin-top: auto;
+}
+
+.mobileMenuLogout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px 20px;
+    border-radius: 12px;
+    background: #fff0f2;
+    border: 1px solid #ffdde1;
+    color: #eb001b;
+    font-family: Aptos, sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.mobileMenuLogout:hover {
+    background: #ffe0e3;
+    border-color: #ffbfc4;
+}
+
+.mobileMenuLogout svg,
+.mobileMenuLogout img {
+    width: 18px;
+    height: 18px;
+}
+
+/* Mobile menu item icons */
+.mobileMenuItem img {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+/* Responsive: Show hamburger on mobile, hide topActionButtons */
+@media (max-width: 768px) {
+    .hamburgerButton {
+        display: flex;
+    }
+
+    .topActionButtons {
+        display: none !important;
+    }
+}
+
+/* Prevent body scroll when menu is open */
+body.mobileMenuOpen {
+    overflow: hidden;
 }

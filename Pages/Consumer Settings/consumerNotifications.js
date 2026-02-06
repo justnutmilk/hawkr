@@ -3,77 +3,31 @@
 // ============================================
 
 import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
+import { initMobileMenu } from "../../assets/js/mobileMenu.js";
+import { auth } from "../../firebase/config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getNotifications,
+  markAsRead,
+  subscribeToNotifications,
+  formatTimeAgo,
+} from "../../firebase/services/notifications.js";
 
-// ============================================
-// MOCK NOTIFICATION DATA
-// ============================================
-
-const mockNotifications = [
-  {
-    id: "notif-001",
-    title: "Order Complete",
-    body: "Your order #888 from Chinese Foods Private Limited - Maxwell Food Centre is ready for collection. Please collect within 15 minutes to avoid 10% food wastage fee.",
-    timestamp: new Date(),
-    type: "order",
-    orderId: "c2b-j29Sksix93Q-FOOD",
-  },
-  {
-    id: "notif-002",
-    title: "App Revamp",
-    body: "Hawkr's web app is set to update on 23 Jan 2026, 02:00 - 04:30. Some services may be affected.",
-    timestamp: new Date(2026, 0, 11),
-    type: "announcement",
-    link: null,
-  },
-  {
-    id: "notif-003",
-    title: "Order Confirmed",
-    body: "Your order #456 from Tian Tian Hainanese - Maxwell Food Centre has been confirmed. Estimated pickup time: 12:30 PM.",
-    timestamp: new Date(2026, 0, 10, 14, 30),
-    type: "order",
-    orderId: "c2b-p74Ghi5jK7L-FOOD",
-  },
-  {
-    id: "notif-004",
-    title: "Refund Processed",
-    body: "Your refund of $6.70 for order #789 has been processed. The amount will be credited to your GrabPay account within 3-5 business days.",
-    timestamp: new Date(2026, 0, 10, 10, 15),
-    type: "refund",
-    orderId: "b2c-j29Vb4HDj8Q-REFUND",
-  },
-  {
-    id: "notif-005",
-    title: "New Hawker Centre Added",
-    body: "Explore the newly added Old Airport Road Food Centre with over 50 hawker stalls now available on Hawkr!",
-    timestamp: new Date(2026, 0, 9),
-    type: "announcement",
-    link: null,
-  },
-  {
-    id: "notif-006",
-    title: "Order Complete",
-    body: "Your order #321 from Hill Street Tai Hwa - Crawford Lane is ready for collection. Please collect within 15 minutes to avoid 10% food wastage fee.",
-    timestamp: new Date(2026, 0, 8, 12, 45),
-    type: "order",
-    orderId: "c2b-q65Mno6pQ8R-FOOD",
-  },
-  {
-    id: "notif-007",
-    title: "Weekly Digest",
-    body: "You've ordered from 5 different hawker stalls this week! Check out your transaction history to see your spending summary.",
-    timestamp: new Date(2026, 0, 7),
-    type: "digest",
-    link: "404.html",
-  },
-];
+// State
+let notifications = [];
+let unsubscribeNotifications = null;
 
 // ============================================
 // UTILITY FUNCTIONS
 // ============================================
 
 function formatNotificationTime(timestamp) {
+  if (!timestamp) return "";
+
+  // Handle Firestore timestamp
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
   const now = new Date();
-  const diff = now - timestamp;
+  const diff = now - date;
 
   // Less than 1 minute
   if (diff < 60 * 1000) {
@@ -93,11 +47,20 @@ function formatNotificationTime(timestamp) {
   }
 
   // Otherwise show date
-  const day = timestamp.getDate();
-  const month = timestamp.toLocaleString("en-US", { month: "short" });
-  const year = timestamp.getFullYear();
+  const day = date.getDate();
+  const month = date.toLocaleString("en-US", { month: "short" });
+  const year = date.getFullYear();
 
   return `${day} ${month} ${year}`;
+}
+
+function getNotificationType(notification) {
+  // Map notification types from Firebase
+  const type = notification.type;
+  if (type === "order_status") return "order";
+  if (type === "feedback_resolved") return "feedback";
+  if (type === "refund_processed") return "refund";
+  return type || "announcement";
 }
 
 // ============================================
@@ -105,37 +68,53 @@ function formatNotificationTime(timestamp) {
 // ============================================
 
 function renderNotificationCard(notification) {
-  const hasSeeMore =
-    notification.type === "order" ||
-    notification.type === "refund" ||
-    notification.link;
+  const type = getNotificationType(notification);
+  const orderId = notification.orderId;
+  const isUnread = !notification.isRead;
 
   let seeMoreHTML = "";
-  if (hasSeeMore) {
-    if (notification.type === "order" || notification.type === "refund") {
-      seeMoreHTML = `<a class="seeMore" href="consumerTransactionDetail.html?id=${encodeURIComponent(notification.orderId)}" data-transaction="true">see more ></a>`;
-    } else if (notification.link) {
-      seeMoreHTML = `<a class="seeMore" href="${notification.link}">see more ></a>`;
-    }
+
+  // Determine link based on notification type
+  if (type === "order" && orderId) {
+    seeMoreHTML = `<a class="seeMore" href="consumerTransactionDetail.html?id=${encodeURIComponent(orderId)}" data-transaction="true">see more ></a>`;
+  } else if (type === "refund" && orderId) {
+    seeMoreHTML = `<a class="seeMore" href="consumerTransactionDetail.html?id=${encodeURIComponent(orderId)}" data-transaction="true">see more ></a>`;
+  } else if (type === "feedback" && notification.feedbackId) {
+    // Link to feedback or just show the resolution details inline
+    seeMoreHTML = notification.refundAmount
+      ? `<span class="refundBadge">Refund: $${notification.refundAmount.toFixed(2)}</span>`
+      : "";
   }
 
+  const unreadClass = isUnread ? "notificationCard--unread" : "";
+
   return `
-    <div class="notificationCard" data-notification-id="${notification.id}">
+    <div class="notificationCard ${unreadClass}" data-notification-id="${notification.id}">
       <div class="notificationHeader">
         <span class="notificationTitle">${notification.title}</span>
-        <span class="notificationTime">${formatNotificationTime(notification.timestamp)}</span>
+        <span class="notificationTime">${formatNotificationTime(notification.createdAt)}</span>
       </div>
-      <p class="notificationBody">${notification.body}</p>
+      <p class="notificationBody">${notification.message}</p>
       ${seeMoreHTML}
     </div>
   `;
 }
 
-function renderNotifications(notifications) {
+function renderNotifications(notificationsList) {
   const container = document.getElementById("notificationsContent");
   if (!container) return;
 
-  const notificationsHTML = notifications
+  if (notificationsList.length === 0) {
+    container.innerHTML = `
+      <span class="pageTitle">Notifications</span>
+      <div class="emptyState">
+        <p>No notifications yet</p>
+      </div>
+    `;
+    return;
+  }
+
+  const notificationsHTML = notificationsList
     .map((notif) => renderNotificationCard(notif))
     .join("");
 
@@ -146,8 +125,9 @@ function renderNotifications(notifications) {
     </div>
   `;
 
-  // Attach click handlers for transaction links
+  // Attach click handlers for transaction links and mark as read
   attachTransactionLinkListeners();
+  attachNotificationClickListeners();
 }
 
 function attachTransactionLinkListeners() {
@@ -165,6 +145,26 @@ function attachTransactionLinkListeners() {
   });
 }
 
+function attachNotificationClickListeners() {
+  const notificationCards = document.querySelectorAll(".notificationCard");
+  notificationCards.forEach((card) => {
+    card.addEventListener("click", async function () {
+      const notificationId = card.dataset.notificationId;
+      if (
+        notificationId &&
+        card.classList.contains("notificationCard--unread")
+      ) {
+        try {
+          await markAsRead(notificationId);
+          card.classList.remove("notificationCard--unread");
+        } catch (error) {
+          console.error("Error marking notification as read:", error);
+        }
+      }
+    });
+  });
+}
+
 // ============================================
 // LOADING STATE
 // ============================================
@@ -172,7 +172,22 @@ function attachTransactionLinkListeners() {
 function showLoading() {
   const container = document.getElementById("notificationsContent");
   if (container) {
-    container.innerHTML = `<div class="loadingSpinner"></div>`;
+    container.innerHTML = `
+      <span class="pageTitle">Notifications</span>
+      <div class="loadingSpinner"></div>
+    `;
+  }
+}
+
+function showError(message) {
+  const container = document.getElementById("notificationsContent");
+  if (container) {
+    container.innerHTML = `
+      <span class="pageTitle">Notifications</span>
+      <div class="emptyState">
+        <p>${message}</p>
+      </div>
+    `;
   }
 }
 
@@ -180,13 +195,30 @@ function showLoading() {
 // MAIN INITIALIZATION
 // ============================================
 
-async function initializeNotificationsPage() {
+async function initializeNotificationsPage(user) {
   showLoading();
 
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 300));
+  if (!user) {
+    showError("Please log in to view notifications");
+    return;
+  }
 
-  renderNotifications(mockNotifications);
+  try {
+    // Get initial notifications
+    notifications = await getNotifications(50);
+    renderNotifications(notifications);
+
+    // Subscribe to real-time updates
+    unsubscribeNotifications = subscribeToNotifications(
+      (updatedNotifications) => {
+        notifications = updatedNotifications;
+        renderNotifications(notifications);
+      },
+    );
+  } catch (error) {
+    console.error("Error loading notifications:", error);
+    showError("Failed to load notifications");
+  }
 }
 
 // ============================================
@@ -208,8 +240,12 @@ function handleBackClick() {
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize navbar (auth, user display, logout)
   initConsumerNavbar();
+  initMobileMenu();
 
-  initializeNotificationsPage();
+  // Listen for auth state changes
+  onAuthStateChanged(auth, async (user) => {
+    await initializeNotificationsPage(user);
+  });
 
   // Back button handler
   const backButton = document.getElementById("backButton");
@@ -237,4 +273,11 @@ document.addEventListener("DOMContentLoaded", function () {
       searchInput.select();
     }
   });
+});
+
+// Cleanup on page unload
+window.addEventListener("beforeunload", () => {
+  if (unsubscribeNotifications) {
+    unsubscribeNotifications();
+  }
 });

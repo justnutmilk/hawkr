@@ -297,6 +297,44 @@ body {
     justify-content: space-between;
 }
 
+/* Empty Products State */
+.emptyProductsState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    text-align: center;
+}
+
+.emptyProductsImage {
+    width: 100%;
+    max-width: 280px;
+    height: auto;
+    margin-bottom: 24px;
+    opacity: 0.9;
+}
+
+.emptyProductsText {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
+    max-width: 300px;
+}
+
+/* Empty Reviews State */
+.emptyReviewsText {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.5;
+    padding: 24px 0;
+    text-align: center;
+}
+
 /* Product Card */
 .productCard {
     display: flex;
@@ -431,7 +469,6 @@ body {
     max-width: 1920px;
     padding-left: 15%;
     padding-right: 15%;
-    margin-top: 112px;
 }
 
 .ratingsSectionHeader {
@@ -678,19 +715,44 @@ body {
 }
 
 /* Responsive Adjustments */
+@media (max-width: 1024px) {
+    .topBar {
+        padding: 32px 5% 0 5%;
+    }
+
+    .shopHeaderSection,
+    .productsSection,
+    .ratingsSection,
+    .hygieneSection {
+        padding-left: 5%;
+        padding-right: 5%;
+    }
+
+    .productCardsGrid {
+        grid-template-columns: repeat(3, 200px);
+        gap: 32px;
+    }
+
+    .storeStars {
+        margin-left: 40px;
+    }
+}
+
 @media (max-width: 768px) {
     .topBar {
         padding: 24px 5% 0 5%;
     }
 
     .shopHeaderSection,
-    .productsSection {
+    .productsSection,
+    .ratingsSection,
+    .hygieneSection {
         padding-left: 5%;
         padding-right: 5%;
     }
 
     .productCardsGrid {
-        grid-template-columns: repeat(auto-fit, minmax(160px, 200px));
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
         justify-content: center;
         gap: 24px;
     }
@@ -721,6 +783,126 @@ body {
     .backButton {
         width: 48px;
         height: 48px;
+    }
+
+    .ratingsSection {
+        margin-top: 32px;
+    }
+
+    .ratingsOverview {
+        flex-wrap: wrap;
+    }
+
+    .storeRatingNumber {
+        font-size: 56px;
+    }
+
+    .storeStars {
+        margin-left: 24px;
+    }
+
+    .hygieneGrade {
+        font-size: 72px;
+    }
+
+    .ratingsSectionHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .topBar {
+        padding: 16px 4% 0 4%;
+    }
+
+    .shopHeaderSection,
+    .productsSection,
+    .ratingsSection,
+    .hygieneSection {
+        padding-left: 4%;
+        padding-right: 4%;
+    }
+
+    .shopContent {
+        gap: 24px;
+    }
+
+    .backButton {
+        width: 40px;
+        height: 40px;
+    }
+
+    .backArrowIcon {
+        width: 12px;
+        height: 20px;
+    }
+
+    .topActionButtons {
+        gap: 1em;
+    }
+
+    .shopName {
+        font-size: 24px;
+    }
+
+    .nowBrowsingLabel {
+        font-size: 14px;
+    }
+
+    .productCardsGrid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .productCard,
+    .productCardImage,
+    .productCardInfo {
+        max-width: none;
+    }
+
+    .productName {
+        font-size: 18px;
+    }
+
+    .productPrice,
+    .productRating {
+        font-size: 14px;
+    }
+
+    .cuisineTag {
+        padding: 4px 12px;
+        font-size: 14px;
+    }
+
+    .storeRatingNumber {
+        font-size: 48px;
+    }
+
+    .storeStars {
+        margin-left: 16px;
+    }
+
+    .ratingCount {
+        font-size: 16px;
+    }
+
+    .reviewCard {
+        padding: 16px 20px;
+    }
+
+    .reviewTitle {
+        font-size: 20px;
+    }
+
+    .hygieneGrade {
+        font-size: 56px;
+    }
+
+    .leaveFeedbackBtn {
+        padding: 8px 20px;
+        font-size: 16px;
     }
 }
 

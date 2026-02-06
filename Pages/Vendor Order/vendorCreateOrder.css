@@ -180,19 +180,58 @@ body {
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    border: 1px solid #e0e0e0;
-    background: #fff;
+    background: #ece6f0;
+    border: 1px solid transparent;
+    box-shadow: none;
     text-decoration: none;
     color: #341539;
     cursor: pointer;
-    transition: background 0.2s ease;
     position: absolute;
     left: 48px;
     flex-shrink: 0;
+    transition:
+        transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background 0.3s ease,
+        box-shadow 0.3s ease,
+        border-color 0.3s ease,
+        backdrop-filter 0.3s ease;
 }
 
 .backButton:hover {
-    background: #f4f1f6;
+    background: rgba(236, 230, 240, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow:
+        0 4px 16px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    transform: scale(1.08);
+}
+
+.backButton:active {
+    animation: liquidBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes liquidBounce {
+    0% {
+        transform: scale(1);
+    }
+    20% {
+        transform: scale(0.85) rotate(-3deg);
+    }
+    40% {
+        transform: scale(1.12) rotate(2deg);
+    }
+    60% {
+        transform: scale(0.95) rotate(-1deg);
+    }
+    80% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 .backButton svg {
@@ -351,6 +390,7 @@ body {
 .posMenuItemInfo {
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
     gap: 2px;
 }
 
@@ -373,6 +413,22 @@ body {
     font-weight: 400;
 }
 
+.posMenuItemHasVariants {
+    display: inline-flex;
+    padding: 4px 8px;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+    border: 1px solid #ac92ba;
+    background: #f4f1f6;
+    color: #913b9f;
+    font-family: Aptos;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1;
+    white-space: nowrap;
+}
+
 /* ============================================
    APPLE-STYLE STEPPER
    ============================================ */
@@ -380,65 +436,94 @@ body {
 .posStepper {
     display: flex;
     align-items: center;
-    justify-content: center;
-    height: 36px;
-    border-radius: 999px;
-    background: #f0f0f0;
-    overflow: hidden;
+    background: #f4f4f5;
+    border-radius: 100px;
+    transition:
+        transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+        box-shadow 0.3s ease,
+        background 0.3s ease;
+}
+
+.posStepper:hover {
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.9) 0%,
+        rgba(245, 245, 247, 0.95) 100%
+    );
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transform: scale(1.02);
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.posStepper:active {
+    transform: scale(0.98);
 }
 
 .posStepperBtn {
+    width: 56px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex: 1;
-    height: 100%;
-    border: none;
-    background: transparent;
-    color: #341539;
     font-size: 20px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s ease;
-    line-height: 1;
+    color: #341539;
+    transition:
+        transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+        opacity 0.2s ease;
+    border-radius: 100px;
     user-select: none;
-    padding: 0 16px;
 }
 
 .posStepperBtn:hover {
-    background: #e4e1e8;
+    transform: scale(1.1);
 }
 
 .posStepperBtn:active {
-    background: #d8d5dc;
+    transform: scale(0.85);
+    opacity: 0.7;
 }
 
 .posStepperDivider {
     width: 1px;
     height: 18px;
-    background: #c0c0c0;
+    background: rgba(0, 0, 0, 0.1);
     flex-shrink: 0;
 }
 
 .posStepperRow {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
 }
 
 .posStepperQty {
+    width: 40px;
+    height: 40px;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-family: "Geist Mono", "Courier New", Courier, monospace;
     font-size: 16px;
     font-weight: 600;
     color: #808080;
-    min-width: 20px;
-    text-align: center;
     user-select: none;
-    transition: color 0.2s ease;
+    transition:
+        color 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .posStepperQty.active {
     color: #913b9f;
+    border-color: #913b9f;
 }
 
 /* ============================================
@@ -648,7 +733,130 @@ body {
     flex-shrink: 0;
 }
 
+/* Receipt entry with variants layout */
+.receiptEntryActions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.receiptStepper {
+    display: flex;
+    align-items: center;
+    background: #f4f4f5;
+    border-radius: 100px;
+    transition:
+        transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+        box-shadow 0.3s ease,
+        background 0.3s ease;
+}
+
+.receiptStepper:hover {
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.9) 0%,
+        rgba(245, 245, 247, 0.95) 100%
+    );
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transform: scale(1.02);
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.receiptStepper:active {
+    transform: scale(0.98);
+}
+
+.receiptStepperBtn {
+    width: 36px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: #341539;
+    transition:
+        transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+        opacity 0.2s ease;
+    border-radius: 100px;
+    user-select: none;
+}
+
+.receiptStepperBtn:hover {
+    transform: scale(1.1);
+}
+
+.receiptStepperBtn:active {
+    transform: scale(0.85);
+    opacity: 0.7;
+}
+
+.receiptStepperQty {
+    min-width: 24px;
+    text-align: center;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: #913b9f;
+    user-select: none;
+}
+
+.receiptDeleteBtn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: #fee2e2;
+    border-radius: 8px;
+    color: #dc2626;
+    cursor: pointer;
+    transition:
+        background 0.15s ease,
+        transform 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.receiptDeleteBtn:hover {
+    background: #fecaca;
+    transform: scale(1.05);
+}
+
+.receiptDeleteBtn:active {
+    transform: scale(0.95);
+}
+
 /* Receipt entry note (special request) */
+.receiptEntryVariant {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.receiptEntryVariantName {
+    color: #666;
+    font-family: Aptos;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+}
+
+.receiptEntryVariantPrice {
+    color: #341539;
+    font-family: Aptos;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    text-align: right;
+}
+
 .receiptEntryNote {
     color: #913b9f;
     font-family: "Geist Mono", "Courier New", Courier, monospace;
@@ -815,33 +1023,38 @@ body {
 
 .toast {
     position: fixed;
-    top: 110px;
-    right: 48px;
-    width: 360px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) translateY(-100px);
+    width: 400px;
     max-width: calc(100vw - 40px);
-    background: #fff;
-    border: 2px solid #913b9f;
+    background: rgba(200, 150, 210, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: none;
     border-radius: 24px;
     padding: 24px;
-    box-shadow: 0 8px 32px rgba(52, 21, 57, 0.15);
+    box-shadow:
+        0 8px 32px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
     opacity: 0;
     visibility: hidden;
-    transform: translateY(-10px);
     transition:
-        opacity 0.3s ease,
-        transform 0.3s ease,
+        opacity 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+        transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
         visibility 0.3s ease;
-    z-index: 9999;
+    z-index: 10001;
 }
 
 .toast.show {
     opacity: 1;
     visibility: visible;
-    transform: translateY(0);
+    transform: translate(-50%, -50%) translateY(0);
 }
 
 .toast.error {
-    border-color: #c0392b;
+    background: rgba(220, 100, 100, 0.15);
 }
 
 .toastMessage {
@@ -855,6 +1068,322 @@ body {
 
 .toast.error .toastMessage {
     color: #c0392b;
+}
+
+/* ============================================
+   VARIANT SELECTION POPUP
+   ============================================ */
+
+.variantPopupOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+        opacity 0.3s ease,
+        visibility 0.3s ease;
+}
+
+.variantPopupOverlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.variantPopup {
+    background: #fff;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 640px;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: scale(0.9) translateY(20px);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
+}
+
+.variantPopupOverlay.active .variantPopup {
+    transform: scale(1) translateY(0);
+}
+
+.variantPopupHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 24px 16px 24px;
+    border-bottom: 0.5px solid #e0e0e0;
+}
+
+.variantPopupTitle {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.variantPopupClose {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: #f4f4f5;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.variantPopupClose:hover {
+    background: #e8e8e9;
+    transform: scale(1.05);
+}
+
+.variantPopupClose:active {
+    transform: scale(0.95);
+}
+
+.variantPopupItemInfo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 24px;
+    background: #faf8fb;
+}
+
+.variantPopupItemImage {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    object-fit: cover;
+}
+
+.variantPopupItemDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.variantPopupItemName {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.variantPopupItemPrice {
+    color: #808080;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+}
+
+.variantPopupContent {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.variantPopupVariantsSection {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.variantGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.variantGroupHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.variantGroupName {
+    color: #341539;
+    font-family: Aptos;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.variantGroupRequired {
+    color: #913b9f;
+    font-family: Aptos;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.variantGroupOptional {
+    color: #666;
+    font-family: Aptos;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.variantGroupMultiple {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #913b9f;
+    font-family: Aptos;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.multiSelectIcon {
+    width: 14px;
+    height: 14px;
+}
+
+.variantGroupLabel {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.variantMultiHint {
+    color: #808080;
+    font-weight: 400;
+    font-size: 12px;
+}
+
+.variantGroupOptions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.variantOption {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 16px 12px;
+    border-radius: 12px;
+    border: 1.5px solid #e0e0e0;
+    background: #fff;
+    cursor: pointer;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        transform 0.2s ease;
+    text-align: center;
+}
+
+.variantOption:hover {
+    border-color: #913b9f;
+    transform: scale(1.02);
+}
+
+.variantOption.selected {
+    border-color: #913b9f;
+    background: #f9f5fa;
+}
+
+.variantOption input[type="radio"],
+.variantOption input[type="checkbox"] {
+    display: none;
+}
+
+.variantOptionCheckmark {
+    display: none;
+}
+
+.variantOptionName {
+    color: #341539;
+    font-family: Aptos;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.variantOption.selected .variantOptionName {
+    font-weight: 600;
+    color: #913b9f;
+}
+
+.variantOptionPrice {
+    color: #808080;
+    font-family: Aptos;
+    font-size: 13px;
+    font-weight: 400;
+}
+
+.variantOption.selected .variantOptionPrice {
+    color: #913b9f;
+}
+
+.variantPopupFooter {
+    padding: 16px 24px 24px 24px;
+}
+
+.variantPopupAddBtn {
+    width: 100%;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 48px;
+    background: #913b9f;
+    color: #fff;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.variantPopupAddBtn:hover {
+    background: #7a3287;
+    transform: scale(1.02);
+}
+
+.variantPopupAddBtn:active {
+    transform: scale(0.98);
+}
+
+.variantPopupAddBtn .kbdGroup {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.variantPopupAddBtn kbd {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: #fff;
+}
+
+.specialRequestLabel {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    display: block;
 }
 
 /* ============================================
@@ -1033,4 +1562,86 @@ body {
 
 .editPopupSaveBtn:active {
     transform: scale(0.98);
+}
+
+/* ============================================
+   SETTINGS DROPDOWN - Glassy Purple Style
+   ============================================ */
+
+.settingsDropdownWrapper {
+    position: relative;
+}
+
+.settingsButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.settingsDropdown {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    min-width: 180px;
+    padding: 16px;
+    border-radius: 24px;
+    background: rgba(200, 150, 210, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: none;
+    box-shadow:
+        0 8px 32px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease,
+        visibility 0.3s ease;
+}
+
+.settingsDropdownWrapper:hover .settingsDropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.settingsDropdownItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-family: Aptos, sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    text-decoration: none;
+    color: #341539;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    transition: background 0.15s ease;
+}
+
+.settingsDropdownItem:hover {
+    background: #ece6f0;
+}
+
+.settingsDropdownLogout {
+    color: #eb001b;
+}
+
+.settingsDropdownLogout svg {
+    stroke: #eb001b;
 }

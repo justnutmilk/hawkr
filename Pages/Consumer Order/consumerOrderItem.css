@@ -171,19 +171,21 @@ body {
 .cartBadge {
     display: none;
     position: absolute;
-    top: -8px;
-    right: -8px;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 6px;
+    top: -6px;
+    right: -6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0;
     background: #913b9f;
     color: #fff;
     font-family: Aptos, sans-serif;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
-    border-radius: 10px;
+    border-radius: 50%;
     align-items: center;
     justify-content: center;
+    border: 2px solid #fff;
+    box-sizing: content-box;
 }
 
 /* Cart Popup */
@@ -516,6 +518,22 @@ body {
 
 .favouriteBtn:hover {
     transform: scale(1.1);
+}
+
+.favouriteBtn.pulse {
+    animation: pulse 0.3s ease;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.3);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 .heartIconWrapper {
@@ -910,4 +928,103 @@ body {
     height: 18px;
     filter: brightness(0) saturate(100%) invert(14%) sepia(89%) saturate(5765%)
         hue-rotate(350deg) brightness(92%) contrast(107%);
+}
+
+/* ============================================
+   VARIANTS SECTION
+   ============================================ */
+
+.variantsSection {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    margin: 8px 0;
+}
+
+.variantGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.variantGroupLabel {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.variantMultiHint {
+    color: #808080;
+    font-weight: 400;
+    font-size: 12px;
+}
+
+.variantOptions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.variantOption {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 48px;
+    border: 1px solid #d0d0d0;
+    background: #fff;
+    cursor: pointer;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+.variantOption:hover {
+    border-color: #913b9f;
+}
+
+.variantOption.selected {
+    border-color: #913b9f;
+    background: #f9f5fa;
+}
+
+.variantOption input[type="radio"],
+.variantOption input[type="checkbox"] {
+    display: none;
+}
+
+.variantOptionName {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.variantOption.selected .variantOptionName {
+    font-weight: 600;
+}
+
+.variantOptionPrice {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.variantOption.selected .variantOptionPrice {
+    color: #913b9f;
+}
+
+/* Cart popup variants */
+.cartPopupItemVariants {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: normal;
 }

@@ -35,6 +35,12 @@ function initializeLoginPage() {
   const emailError = document.getElementById("emailError");
   const passwordError = document.getElementById("passwordError");
   const generalError = document.getElementById("generalError");
+  const invalidCredentialsNotif = document.getElementById(
+    "invalidCredentialsNotif",
+  );
+  const invalidCredentialsClose = document.getElementById(
+    "invalidCredentialsClose",
+  );
 
   // Verify critical DOM elements exist
   if (!loginForm || !emailInput || !passwordInput || !loginBtn) {
@@ -42,10 +48,12 @@ function initializeLoginPage() {
     return;
   }
 
-  // Check if user is already logged in
+  // Track if user just logged in (vs already being logged in)
+  let userJustLoggedIn = false;
+
+  // Only redirect after a successful login action, not on page load
   onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      // Check if user has completed onboarding
+    if (user && userJustLoggedIn) {
       await handleUserRedirect(user);
     }
   });
@@ -55,20 +63,12 @@ function initializeLoginPage() {
    */
   async function handleUserRedirect(user) {
     try {
-      // Check if user profile exists
+      // Check if user profile exists in each collection
       const customerDoc = await getDoc(doc(db, "customers", user.uid));
       const vendorDoc = await getDoc(doc(db, "vendors", user.uid));
+      const operatorDoc = await getDoc(doc(db, "operators", user.uid));
 
-      if (customerDoc.exists()) {
-        const data = customerDoc.data();
-        if (!data.onboardingComplete) {
-          // Redirect to customer onboarding
-          window.location.href = "onboarding-consumer.html";
-          return;
-        }
-        // Redirect to consumer dashboard
-        window.location.href = "../Consumer Dashboard/consumerDashboard.html";
-      } else if (vendorDoc.exists()) {
+      if (vendorDoc.exists()) {
         const data = vendorDoc.data();
         if (!data.onboardingComplete) {
           // Redirect to vendor onboarding
@@ -77,14 +77,26 @@ function initializeLoginPage() {
         }
         // Redirect to vendor dashboard
         window.location.href = "../Vendor Dashboard/vendorDashboard.html";
+      } else if (operatorDoc.exists()) {
+        // Redirect to operator dashboard
+        window.location.href = "../Operator Dashboard/operatorDashboard.html";
+      } else if (customerDoc.exists()) {
+        const data = customerDoc.data();
+        if (!data.onboardingComplete) {
+          // Redirect to customer onboarding
+          window.location.href = "onboarding-consumer.html";
+          return;
+        }
+        // Redirect to consumer dashboard
+        window.location.href = "../Consumer Dashboard/consumerDashboard.html";
       } else {
         // New user via Google - needs role selection
         window.location.href = "select-role.html";
       }
     } catch (error) {
       console.error("Error checking user profile:", error);
-      // Default to consumer dashboard
-      window.location.href = "../Consumer Dashboard/consumerDashboard.html";
+      // Default to role selection instead of assuming consumer
+      window.location.href = "select-role.html";
     }
   }
 
@@ -106,8 +118,37 @@ function initializeLoginPage() {
     emailError.classList.remove("visible");
     passwordError.classList.remove("visible");
     generalError.classList.remove("visible");
+    if (invalidCredentialsNotif) {
+      invalidCredentialsNotif.classList.remove("visible");
+    }
     emailInput.classList.remove("error");
     passwordInput.classList.remove("error");
+  }
+
+  /**
+   * Show invalid credentials notification (slide-in)
+   */
+  function showInvalidCredentialsError() {
+    if (invalidCredentialsNotif) {
+      invalidCredentialsNotif.classList.add("visible");
+    }
+  }
+
+  /**
+   * Hide invalid credentials notification
+   */
+  function hideInvalidCredentialsError() {
+    if (invalidCredentialsNotif) {
+      invalidCredentialsNotif.classList.remove("visible");
+    }
+  }
+
+  // Close button for invalid credentials notification
+  if (invalidCredentialsClose) {
+    invalidCredentialsClose.addEventListener(
+      "click",
+      hideInvalidCredentialsError,
+    );
   }
 
   /**
@@ -207,6 +248,9 @@ function initializeLoginPage() {
         : browserSessionPersistence;
       await setPersistence(auth, persistence);
 
+      // Mark that user is actively logging in
+      userJustLoggedIn = true;
+
       // Sign in with email and password
       const userCredential = await signInWithEmailAndPassword(
         auth,
@@ -216,10 +260,21 @@ function initializeLoginPage() {
 
       console.log("Login successful:", userCredential.user.email);
 
-      // Redirect handled by onAuthStateChanged
+      // Redirect after successful login
+      await handleUserRedirect(userCredential.user);
     } catch (error) {
       console.error("Login error:", error);
-      showError(generalError, null, getErrorMessage(error.code));
+      // Show squirrel error for invalid credentials
+      const invalidCredentialCodes = [
+        "auth/invalid-credential",
+        "auth/user-not-found",
+        "auth/wrong-password",
+      ];
+      if (invalidCredentialCodes.includes(error.code)) {
+        showInvalidCredentialsError();
+      } else {
+        showError(generalError, null, getErrorMessage(error.code));
+      }
       setLoading(false);
     }
   });
@@ -238,10 +293,14 @@ function initializeLoginPage() {
           prompt: "select_account",
         });
 
+        // Mark that user is actively logging in
+        userJustLoggedIn = true;
+
         const result = await signInWithPopup(auth, provider);
         console.log("Google sign in successful:", result.user.email);
 
-        // Redirect handled by onAuthStateChanged
+        // Redirect after successful login
+        await handleUserRedirect(result.user);
       } catch (error) {
         console.error("Google sign in error:", error);
         console.error("Error code:", error.code);
@@ -287,4 +346,160 @@ function initializeLoginPage() {
       passwordInput.classList.remove("error");
     }
   });
+  // Initialize liquid glass top bar
+  initLiquidGlassTopBar();
 } // End of initializeLoginPage function
+
+// ============================================
+// LIQUID GLASS TOP BAR - DRAGGABLE & BOUNCY
+// ============================================
+
+function initLiquidGlassTopBar() {
+  const topBar = document.getElementById("authGlassTopBar");
+  if (!topBar) return;
+
+  let isDragging = false;
+  let startY = 0;
+  let startX = 0;
+  let currentY = 0;
+  let currentX = 0;
+  let velocityY = 0;
+  let velocityX = 0;
+  let lastY = 0;
+  let lastX = 0;
+  let lastTime = 0;
+  let animationFrame = null;
+
+  const maxDragY = 100;
+  const maxDragX = 150;
+  const springStrength = 0.15;
+  const damping = 0.7;
+
+  const updateTransform = () => {
+    topBar.style.transform = `translateX(calc(-50% + ${currentX}px)) translateY(${currentY}px) scale(${1 + Math.abs(currentY) * 0.0005})`;
+  };
+
+  const startDrag = (e) => {
+    if (e.target.closest("button") || e.target.closest("a")) return;
+
+    isDragging = true;
+    topBar.classList.add("dragging");
+
+    const clientY = e.type.includes("mouse") ? e.clientY : e.touches[0].clientY;
+    const clientX = e.type.includes("mouse") ? e.clientX : e.touches[0].clientX;
+
+    startY = clientY - currentY;
+    startX = clientX - currentX;
+    lastY = clientY;
+    lastX = clientX;
+    lastTime = Date.now();
+    velocityY = 0;
+    velocityX = 0;
+
+    if (animationFrame) {
+      cancelAnimationFrame(animationFrame);
+      animationFrame = null;
+    }
+  };
+
+  const doDrag = (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+
+    const clientY = e.type.includes("mouse") ? e.clientY : e.touches[0].clientY;
+    const clientX = e.type.includes("mouse") ? e.clientX : e.touches[0].clientX;
+
+    const now = Date.now();
+    const dt = Math.max(now - lastTime, 1);
+
+    velocityY = ((clientY - lastY) / dt) * 10;
+    velocityX = ((clientX - lastX) / dt) * 10;
+
+    lastY = clientY;
+    lastX = clientX;
+    lastTime = now;
+
+    let newY = clientY - startY;
+    let newX = clientX - startX;
+
+    if (Math.abs(newY) > maxDragY) {
+      const overflow = Math.abs(newY) - maxDragY;
+      const resistance = 1 / (1 + overflow * 0.02);
+      newY = Math.sign(newY) * (maxDragY + overflow * resistance);
+    }
+
+    if (Math.abs(newX) > maxDragX) {
+      const overflow = Math.abs(newX) - maxDragX;
+      const resistance = 1 / (1 + overflow * 0.02);
+      newX = Math.sign(newX) * (maxDragX + overflow * resistance);
+    }
+
+    currentY = newY;
+    currentX = newX;
+    updateTransform();
+  };
+
+  const endDrag = () => {
+    if (!isDragging) return;
+    isDragging = false;
+    topBar.classList.remove("dragging");
+    topBar.classList.add("bouncing");
+
+    const animate = () => {
+      const forceY = -currentY * springStrength;
+      const forceX = -currentX * springStrength;
+
+      velocityY += forceY;
+      velocityX += forceX;
+
+      velocityY *= damping;
+      velocityX *= damping;
+
+      currentY += velocityY;
+      currentX += velocityX;
+
+      updateTransform();
+
+      if (
+        Math.abs(currentY) < 0.5 &&
+        Math.abs(velocityY) < 0.1 &&
+        Math.abs(currentX) < 0.5 &&
+        Math.abs(velocityX) < 0.1
+      ) {
+        currentY = 0;
+        currentX = 0;
+        updateTransform();
+        topBar.classList.remove("bouncing");
+        return;
+      }
+
+      animationFrame = requestAnimationFrame(animate);
+    };
+
+    animate();
+  };
+
+  topBar.addEventListener("mousedown", startDrag);
+  document.addEventListener("mousemove", doDrag);
+  document.addEventListener("mouseup", endDrag);
+
+  topBar.addEventListener("touchstart", startDrag, { passive: false });
+  document.addEventListener("touchmove", doDrag, { passive: false });
+  document.addEventListener("touchend", endDrag);
+
+  // Subtle hover bounce effect
+  topBar.addEventListener("mouseenter", () => {
+    if (!isDragging && currentY === 0 && currentX === 0) {
+      currentY = -3;
+      updateTransform();
+      setTimeout(() => {
+        if (!isDragging) {
+          topBar.classList.add("bouncing");
+          currentY = 0;
+          updateTransform();
+          setTimeout(() => topBar.classList.remove("bouncing"), 500);
+        }
+      }, 100);
+    }
+  });
+}
