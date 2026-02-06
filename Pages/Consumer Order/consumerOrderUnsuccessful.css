@@ -1,0 +1,510 @@
+@font-face {
+    font-family: "Aptos";
+    src: url("../../fonts/Aptos.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Source Serif";
+    src: url("../../fonts/SourceSerif4-Italic-VariableFont_opsz\,wght.ttf")
+        format("truetype");
+}
+
+@font-face {
+    font-family: "Source Serif";
+    src: url("../../fonts/SourceSerif4-VariableFont_opsz\,wght.ttf")
+        format("truetype");
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    font-family:
+        Aptos,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    background-color: #fff;
+    min-height: 100vh;
+    gap: 48px;
+    overflow-x: hidden;
+}
+
+/* Top Bar Styles */
+.topBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1920px;
+    margin: 0 auto;
+    padding: 48px 15% 0 15%;
+}
+
+.topBarLeft {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+}
+
+.homeButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #ece6f0;
+    border: 1px solid transparent;
+    box-shadow: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition:
+        transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background 0.3s ease,
+        box-shadow 0.3s ease;
+}
+
+.homeButton:hover {
+    background: rgba(236, 230, 240, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow:
+        0 4px 16px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    transform: scale(1.08);
+}
+
+.homeIcon {
+    width: 24px;
+    height: 24px;
+}
+
+/* Back Button */
+.backButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #ece6f0;
+    border: 1px solid transparent;
+    box-shadow: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition:
+        transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background 0.3s ease,
+        box-shadow 0.3s ease;
+}
+
+.backButton:hover {
+    background: rgba(236, 230, 240, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow:
+        0 4px 16px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    transform: scale(1.08);
+}
+
+.backArrowIcon {
+    width: 15px;
+    height: 24px;
+    aspect-ratio: 5 / 8;
+}
+
+.topActionButtons {
+    display: flex;
+    align-items: center;
+    gap: 3em;
+}
+
+.searchModule {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 500px;
+    height: 56px;
+    padding: 0px 18px 0px 22px;
+    border-radius: 28px;
+    background: #f4f1f6;
+}
+
+.searchInput {
+    flex: 1 1 auto;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #49454f;
+    font-family: Aptos;
+    font-size: 20px;
+    font-weight: 400;
+    padding: 0px;
+    margin: 0px;
+}
+
+.searchInput::placeholder {
+    color: #49454f;
+    opacity: 1;
+}
+
+.searchIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    pointer-events: none;
+}
+
+/* Unsuccessful Content */
+.unsuccessfulContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    padding: 0 15% 48px 15%;
+    width: 100%;
+    max-width: 1920px;
+    margin: 0 auto;
+    flex: 1;
+    text-align: center;
+}
+
+.unsuccessfulImage {
+    width: 280px;
+    height: auto;
+}
+
+.unsuccessfulTextGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 500px;
+}
+
+.unsuccessfulTitle {
+    color: #341539;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.unsuccessfulDescription {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+.errorMessage {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    background: #fff0f2;
+    border: 1px solid #ffdde1;
+    color: #eb001b;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.errorIcon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.unsuccessfulActions {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    max-width: 320px;
+}
+
+.tryAgainButton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 32px;
+    border-radius: 28px;
+    background: #913b9f;
+    color: #fff;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.tryAgainButton:hover {
+    background: #7a3287;
+    transform: scale(1.02);
+}
+
+.tryAgainIcon {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tryAgainButton:active .tryAgainIcon {
+    transform: rotate(-360deg);
+}
+
+.tryAgainButton:active {
+    transform: scale(0.98);
+}
+
+.backToHomeButton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 32px;
+    border-radius: 28px;
+    background: transparent;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    border: 2px solid #e0e0e0;
+    cursor: pointer;
+    text-decoration: none;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+.backToHomeButton:hover {
+    border-color: #c9a0d0;
+    background: #faf8fb;
+}
+
+/* Loading Spinner */
+.loadingSpinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f4f1f6;
+    border-top-color: #913b9f;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Profile Dropdown */
+.profileDropdownWrapper {
+    position: relative;
+}
+
+.profileButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profileDropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(52, 21, 57, 0.15);
+    padding: 16px;
+    min-width: 200px;
+    z-index: 100;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.profileDropdown.active {
+    display: flex;
+}
+
+.profileDropdownName {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    border-bottom: 1px solid #f4f1f6;
+    padding-bottom: 16px;
+    margin-bottom: 8px;
+}
+
+.profileDropdownItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 12px;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.2s ease;
+}
+
+.profileDropdownItem:hover {
+    background: #f4f1f6;
+}
+
+.profileDropdownLogout {
+    color: #eb001b;
+}
+
+.profileDropdownItemIcon,
+.profileDropdownLogoutIcon {
+    width: 20px;
+    height: 20px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .topBar {
+        padding: 32px 5% 0 5%;
+    }
+
+    .unsuccessfulContent {
+        padding: 0 5% 48px 5%;
+    }
+
+    .unsuccessfulImage {
+        width: 240px;
+    }
+}
+
+@media (max-width: 768px) {
+    .topBar {
+        padding: 24px 5% 0 5%;
+    }
+
+    .unsuccessfulContent {
+        padding: 0 5% 48px 5%;
+        gap: 24px;
+    }
+
+    .unsuccessfulImage {
+        width: 200px;
+    }
+
+    .unsuccessfulTitle {
+        font-size: 24px;
+    }
+
+    .topActionButtons {
+        gap: 1.5em;
+    }
+
+    .backButton {
+        width: 48px;
+        height: 48px;
+    }
+
+    .searchModule {
+        max-width: none;
+        flex: 1;
+        height: 48px;
+    }
+}
+
+@media (max-width: 480px) {
+    .topBar {
+        padding: 16px 4% 0 4%;
+    }
+
+    .unsuccessfulContent {
+        padding: 0 4% 32px 4%;
+        gap: 20px;
+    }
+
+    .backButton {
+        width: 40px;
+        height: 40px;
+    }
+
+    .backArrowIcon {
+        width: 12px;
+        height: 20px;
+    }
+
+    .topActionButtons {
+        gap: 1em;
+    }
+
+    .unsuccessfulImage {
+        width: 160px;
+    }
+
+    .unsuccessfulTitle {
+        font-size: 22px;
+    }
+
+    .unsuccessfulDescription {
+        font-size: 14px;
+    }
+
+    .unsuccessfulActions {
+        max-width: none;
+        width: 100%;
+    }
+
+    .tryAgainButton,
+    .backToHomeButton {
+        padding: 14px 24px;
+        font-size: 15px;
+    }
+
+    .errorMessage {
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+
+    .searchInput {
+        font-size: 16px;
+    }
+}

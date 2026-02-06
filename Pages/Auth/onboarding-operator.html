@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Hawkr | Set Up Your Operator Account</title>
+        <link rel="stylesheet" href="../../styles.css" />
+        <link rel="stylesheet" href="auth.css" />
+        <link rel="stylesheet" href="onboarding.css" />
+    </head>
+    <body class="onboardingPage">
+        <!-- Liquid Glass Floating Top Bar -->
+        <header class="glassTopBar" id="glassTopBar">
+            <div class="glassTopBarInner">
+                <button class="topBarBack" id="backButton">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
+                <span class="topBarTitle">Set up your operator account</span>
+                <div class="topBarSpacer"></div>
+            </div>
+            <!-- Glass highlight overlay -->
+            <div class="glassHighlight"></div>
+        </header>
+
+        <div class="onboardingLayout">
+            <!-- Sidebar Navigation -->
+            <aside class="onboardingSidebar">
+                <nav class="sidebarNav" id="sidebarNav">
+                    <!-- Section 1: Company Information -->
+                    <div class="navSection active" data-section="company">
+                        <div class="navSectionHeader">
+                            <div class="navSectionIcon"></div>
+                            <div class="navSectionTitle">Company information</div>
+                        </div>
+                        <div class="navSectionItems">
+                            <div
+                                class="navItem active"
+                                data-step="company-details"
+                            >
+                                <div class="navItemIndicator"></div>
+                                <div class="navItemLabel">Company details</div>
+                            </div>
+                            <div class="navItem" data-step="contact-info">
+                                <div class="navItemIndicator"></div>
+                                <div class="navItemLabel">Contact information</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Managed Locations -->
+                    <div class="navSection" data-section="locations">
+                        <div class="navSectionHeader">
+                            <div class="navSectionIcon"></div>
+                            <div class="navSectionTitle">
+                                Managed locations
+                            </div>
+                        </div>
+                        <div class="navSectionItems">
+                            <div class="navItem" data-step="hawker-centres">
+                                <div class="navItemIndicator"></div>
+                                <div class="navItemLabel">Hawker centres</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Notifications -->
+                    <div class="navSection" data-section="notifications">
+                        <div class="navSectionHeader">
+                            <div class="navSectionIcon"></div>
+                            <div class="navSectionTitle">Notifications</div>
+                        </div>
+                        <div class="navSectionItems">
+                            <div
+                                class="navItem"
+                                data-step="notification-settings"
+                            >
+                                <div class="navItemIndicator"></div>
+                                <div class="navItemLabel">
+                                    Notification settings
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Review -->
+                    <div class="navSection" data-section="review">
+                        <div
+                            class="navSectionHeader clickable"
+                            data-step="review"
+                        >
+                            <div class="navSectionIcon"></div>
+                            <div class="navSectionTitle">Review and submit</div>
+                        </div>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="onboardingMain">
+                <div class="onboardingContent">
+                    <!-- Step: Company Details -->
+                    <div class="stepContent active" id="step-company-details">
+                        <h1 class="stepTitle">Tell us about your company</h1>
+                        <p class="stepDescription">
+                            This information helps us verify your operator status and connect you with your managed hawker centres.
+                        </p>
+
+                        <div class="formSection">
+                            <div class="formField">
+                                <label class="formLabel" for="companyName"
+                                    >Company name</label
+                                >
+                                <p class="formHint">
+                                    Enter your ACRA-registered business name.
+                                </p>
+                                <input
+                                    type="text"
+                                    id="companyName"
+                                    class="formInput"
+                                    placeholder="e.g., ABC Hawker Management Pte Ltd"
+                                />
+                            </div>
+
+                            <div class="formField">
+                                <label class="formLabel" for="uen"
+                                    >UEN (Unique Entity Number)</label
+                                >
+                                <p class="formHint">
+                                    Your ACRA-registered business number.
+                                </p>
+                                <input
+                                    type="text"
+                                    id="uen"
+                                    class="formInput"
+                                    placeholder="e.g., 202401234K"
+                                />
+                            </div>
+
+                            <div class="formField">
+                                <label class="formLabel" for="operatorName"
+                                    >Display name</label
+                                >
+                                <p class="formHint">
+                                    The name that will be shown to vendors and customers.
+                                </p>
+                                <input
+                                    type="text"
+                                    id="operatorName"
+                                    class="formInput"
+                                    placeholder="e.g., ABC Hawker Management"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="stepFooter">
+                            <div></div>
+                            <button class="primaryBtn" data-next="contact-info">
+                                Continue
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline
+                                        points="12 5 19 12 12 19"
+                                    ></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step: Contact Information -->
+                    <div class="stepContent" id="step-contact-info">
+                        <h1 class="stepTitle">Contact information</h1>
+                        <p class="stepDescription">
+                            Provide contact details for your business representative.
+                        </p>
+
+                        <div class="formSection">
+                            <div class="formField">
+                                <label class="formLabel" for="contactPerson"
+                                    >Contact person</label
+                                >
+                                <p class="formHint">
+                                    Your business representative must be listed on your ACRA Bizfile.
+                                </p>
+                                <input
+                                    type="text"
+                                    id="contactPerson"
+                                    class="formInput"
+                                    placeholder="e.g., Tan Ah Huat"
+                                />
+                            </div>
+
+                            <div class="formField">
+                                <label class="formLabel" for="contactNumber"
+                                    >Contact number</label
+                                >
+                                <div class="phoneFieldRow">
+                                    <div class="phonePrefix">
+                                        <img
+                                            src="../../assets/icons/singapore.svg"
+                                            alt="SG"
+                                            class="phoneFlag"
+                                            onerror="this.style.display = 'none'"
+                                        />
+                                        <span>+65</span>
+                                    </div>
+                                    <input
+                                        type="tel"
+                                        id="contactNumber"
+                                        class="formInput"
+                                        placeholder="9123 4567"
+                                        maxlength="9"
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="formField">
+                                <label class="formLabel" for="contactEmail"
+                                    >Email address</label
+                                >
+                                <p class="formHint">
+                                    We'll use this for important notifications and updates.
+                                </p>
+                                <input
+                                    type="email"
+                                    id="contactEmail"
+                                    class="formInput"
+                                    placeholder="e.g., contact@company.com"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="stepFooter">
+                            <div></div>
+                            <button class="primaryBtn" data-next="hawker-centres">
+                                Continue
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline
+                                        points="12 5 19 12 12 19"
+                                    ></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step: Hawker Centres -->
+                    <div class="stepContent" id="step-hawker-centres">
+                        <h1 class="stepTitle">Managed hawker centres</h1>
+                        <p class="stepDescription">
+                            Add the hawker centres that your company manages. You can add more later.
+                        </p>
+
+                        <div class="formSection">
+                            <div class="formField">
+                                <label class="formLabel">Hawker centres</label>
+                                <p class="formHint">
+                                    Search and add hawker centres you manage.
+                                </p>
+                                <div class="locationInputWrapper">
+                                    <input
+                                        type="text"
+                                        id="locationInput"
+                                        class="formInput"
+                                        placeholder="Search for a hawker centre..."
+                                    />
+                                    <button class="addLocationBtn" id="addLocationBtn" type="button">
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="16"
+                                            height="16"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        >
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                        Add
+                                    </button>
+                                </div>
+                                <div class="locationsList" id="locationsList">
+                                    <!-- Locations added here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stepFooter">
+                            <div></div>
+                            <button class="primaryBtn" data-next="notification-settings">
+                                Continue
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline
+                                        points="12 5 19 12 12 19"
+                                    ></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step: Notification Settings -->
+                    <div class="stepContent" id="step-notification-settings">
+                        <h1 class="stepTitle">Stay connected</h1>
+                        <p class="stepDescription">
+                            Choose how you'd like to receive notifications and updates.
+                        </p>
+
+                        <div class="formSection">
+                            <div class="notificationOption">
+                                <div class="notificationOptionInfo">
+                                    <div class="notificationOptionIcon browser">
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="24"
+                                            height="24"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        >
+                                            <path
+                                                d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"
+                                            ></path>
+                                            <path
+                                                d="M13.73 21a2 2 0 0 1-3.46 0"
+                                            ></path>
+                                        </svg>
+                                    </div>
+                                    <div class="notificationOptionText">
+                                        <span class="notificationOptionTitle"
+                                            >Browser notifications</span
+                                        >
+                                        <span class="notificationOptionDesc"
+                                            >Receive alerts while you're on Hawkr.</span
+                                        >
+                                    </div>
+                                </div>
+                                <label class="liquidGlassToggle">
+                                    <input
+                                        type="checkbox"
+                                        id="browserNotifications"
+                                    />
+                                    <span class="toggleTrack">
+                                        <span class="toggleThumb"></span>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <div class="notificationOption telegram">
+                                <div class="notificationOptionInfo">
+                                    <div
+                                        class="notificationOptionIcon telegram"
+                                    >
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="24"
+                                            height="24"
+                                            fill="currentColor"
+                                        >
+                                            <path
+                                                d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"
+                                            />
+                                        </svg>
+                                    </div>
+                                    <div class="notificationOptionText">
+                                        <span class="notificationOptionTitle"
+                                            >Telegram notifications</span
+                                        >
+                                        <span class="notificationOptionDesc"
+                                            >Get instant updates on Telegram, even when you're away.</span
+                                        >
+                                    </div>
+                                </div>
+                                <button class="connectBtn" id="connectTelegram">
+                                    Connect
+                                </button>
+                            </div>
+                            <div
+                                class="telegramConnectedState"
+                                id="telegramConnectedState"
+                                style="display: none"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <polyline
+                                        points="20 6 9 17 4 12"
+                                    ></polyline>
+                                </svg>
+                                <span>Telegram connected</span>
+                            </div>
+                        </div>
+
+                        <div class="stepFooter">
+                            <div></div>
+                            <button class="primaryBtn" data-next="review">
+                                Continue
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline
+                                        points="12 5 19 12 12 19"
+                                    ></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step: Review -->
+                    <div class="stepContent" id="step-review">
+                        <h1 class="stepTitle">Review your information</h1>
+                        <p class="stepDescription">
+                            Please review your details before submitting. You can edit any section by clicking the edit button.
+                        </p>
+
+                        <div class="reviewSection">
+                            <div class="reviewSectionHeader">
+                                <h2 class="reviewSectionTitle">Company information</h2>
+                                <button class="editBtn" data-edit="company-details">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="14"
+                                        height="14"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path
+                                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                                        ></path>
+                                        <path
+                                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                                        ></path>
+                                    </svg>
+                                    Edit
+                                </button>
+                            </div>
+                            <div class="reviewGrid">
+                                <div class="reviewItem">
+                                    <span class="reviewLabel">Company name</span>
+                                    <span class="reviewValue" id="reviewCompanyName">-</span>
+                                </div>
+                                <div class="reviewItem">
+                                    <span class="reviewLabel">UEN</span>
+                                    <span class="reviewValue" id="reviewUen">-</span>
+                                </div>
+                                <div class="reviewItem">
+                                    <span class="reviewLabel">Display name</span>
+                                    <span class="reviewValue" id="reviewOperatorName">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="reviewSection">
+                            <div class="reviewSectionHeader">
+                                <h2 class="reviewSectionTitle">Contact information</h2>
+                                <button class="editBtn" data-edit="contact-info">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="14"
+                                        height="14"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path
+                                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                                        ></path>
+                                        <path
+                                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                                        ></path>
+                                    </svg>
+                                    Edit
+                                </button>
+                            </div>
+                            <div class="reviewGrid">
+                                <div class="reviewItem">
+                                    <span class="reviewLabel">Contact person</span>
+                                    <span class="reviewValue" id="reviewContact">-</span>
+                                </div>
+                                <div class="reviewItem">
+                                    <span class="reviewLabel">Contact number</span>
+                                    <span class="reviewValue" id="reviewPhone">-</span>
+                                </div>
+                                <div class="reviewItem">
+                                    <span class="reviewLabel">Email</span>
+                                    <span class="reviewValue" id="reviewEmail">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="reviewSection">
+                            <div class="reviewSectionHeader">
+                                <h2 class="reviewSectionTitle">Managed locations</h2>
+                                <button class="editBtn" data-edit="hawker-centres">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="14"
+                                        height="14"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path
+                                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                                        ></path>
+                                        <path
+                                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                                        ></path>
+                                    </svg>
+                                    Edit
+                                </button>
+                            </div>
+                            <div class="reviewGrid">
+                                <div class="reviewItem reviewItemWide">
+                                    <span class="reviewLabel">Hawker centres</span>
+                                    <span class="reviewValue" id="reviewLocations">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="termsSection">
+                            <label class="termsCheckbox">
+                                <input type="checkbox" id="confirmTerms" />
+                                <span class="checkmark"></span>
+                                <span class="termsText">
+                                    I confirm that the information provided is accurate and I agree to the
+                                    <a href="#">Terms of Service</a> and
+                                    <a href="#">Privacy Policy</a>.
+                                </span>
+                            </label>
+                        </div>
+
+                        <div class="stepFooter">
+                            <div></div>
+                            <button
+                                class="primaryBtn submitBtn"
+                                id="submitOnboarding"
+                                disabled
+                            >
+                                Complete setup
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <script type="module" src="onboarding-operator.js"></script>
+    </body>
+</html>

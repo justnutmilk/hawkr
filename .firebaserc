@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "hawkr": "hawkr-0",
+    "default": "hawkr-0"
+  },
+  "targets": {},
+  "etags": {}
+}
