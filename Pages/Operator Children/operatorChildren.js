@@ -34,6 +34,7 @@ import {
 } from "../../firebase/services/hawkerCentres.js";
 import { getStallsByHawkerCentre } from "../../firebase/services/foodStalls.js";
 import { showToast } from "../../assets/js/toast.js";
+window.showToast = showToast;
 
 // ============================================
 // STATE
@@ -363,7 +364,7 @@ function renderArchivedCard(stall) {
   const reason = stall.ownerId ? "Inactive" : "Unlinked";
 
   return `
-    <div class="childCard archivedCard">
+    <div class="childCard archivedCard" onclick="showToast('This shop is no longer a child. You will not be able to access its data anymore.', 'error')">
       <img class="childCardImage" src="${image}" alt="${stallName}" onerror="this.src='../../images/squirrelCard.svg'" />
       <span class="childCardName">${stallName}</span>
       <div class="childCardTags">
