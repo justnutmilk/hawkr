@@ -168,8 +168,8 @@ function listenToVendorStatus(uid) {
 
       const vendorData = snapshot.data();
 
-      if (vendorData.hawkerCentreId) {
-        // Start listening to the stall for operator-initiated unlinks
+      if (vendorData.tenancyLinkedAt) {
+        // Actively linked to an operator — start listening to the stall for operator-initiated unlinks
         if (vendorData.stallId) {
           startStallListener(uid, vendorData.stallId);
         }
@@ -211,17 +211,17 @@ function startStallListener(uid, stallId) {
 
       const operatorRemoved = !snapshot.exists() || !snapshot.data().operatorId;
       if (operatorRemoved) {
-        // Operator removed operatorId — vendor self-cleans their doc
+        // Operator removed operatorId — vendor self-cleans tenancy fields (keep hawkerCentreId — that's the stall location)
         stopStallListener();
         try {
           await updateDoc(doc(db, "vendors", uid), {
-            hawkerCentreId: deleteField(),
             tenancyLinkedAt: deleteField(),
-            storeLocation: deleteField(),
           });
         } catch (err) {
           console.warn("Could not self-clean vendor doc:", err);
         }
+        // Refresh the page to show unlinked state
+        window.location.reload();
       }
     },
     (error) => {
@@ -655,7 +655,7 @@ async function handleDisconnect() {
       return;
     }
 
-    // 1. Remove operator-related fields from the food stall (keep ownerId — vendor still owns it)
+    // 1. Remove operator-related fields from the food stall (keep ownerId, hawkerCentreId — stall location stays)
     const stallsQuery = query(
       collection(db, "foodStalls"),
       where("ownerId", "==", user.uid),
@@ -665,7 +665,6 @@ async function handleDisconnect() {
       await updateDoc(doc(db, "foodStalls", stallDoc.id), {
         operatorId: deleteField(),
         operatorName: deleteField(),
-        hawkerCentreId: deleteField(),
         unitNumber: deleteField(),
       });
     }
@@ -680,11 +679,9 @@ async function handleDisconnect() {
       await deleteDoc(doc(db, "onboardingCodes", codeDoc.id));
     }
 
-    // 3. Remove hawkerCentreId, tenancyLinkedAt, and storeLocation from vendor doc (keep stallId — vendor still owns the stall)
+    // 3. Remove tenancy fields from vendor doc (keep stallId, hawkerCentreId, storeLocation — those are the stall's location)
     await updateDoc(doc(db, "vendors", user.uid), {
-      hawkerCentreId: deleteField(),
       tenancyLinkedAt: deleteField(),
-      storeLocation: deleteField(),
     });
 
     // Show the empty state again
