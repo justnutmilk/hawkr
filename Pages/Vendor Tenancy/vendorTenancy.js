@@ -271,14 +271,20 @@ function showAddressMismatchConfirm(vendorCentre, operatorCentre) {
       <p class="confirmMessage">Your stall location doesn't match this operator's hawker centre. Would you like to update your address?</p>
       <div class="mismatchLocations">
         <div class="mismatchLocation">
-          <span class="mismatchLocationLabel">Your location</span>
           <div class="mismatchMapContainer" id="mismatchMapVendor"></div>
+          <span class="mismatchLocationLabel">Your location</span>
           <span class="mismatchLocationName">${vendorCentre.name || "Unknown"}</span>
           <span class="mismatchLocationAddress">${vendorCentre.address || ""}</span>
         </div>
+        <div class="mismatchArrow">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </div>
         <div class="mismatchLocation">
-          <span class="mismatchLocationLabel">Operator's location</span>
           <div class="mismatchMapContainer" id="mismatchMapOperator"></div>
+          <span class="mismatchLocationLabel">Operator's location</span>
           <span class="mismatchLocationName">${operatorCentre.name || "Unknown"}</span>
           <span class="mismatchLocationAddress">${operatorCentre.address || ""}</span>
         </div>
