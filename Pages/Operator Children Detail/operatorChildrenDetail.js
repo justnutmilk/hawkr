@@ -1058,18 +1058,20 @@ async function handleUnlinkChild() {
   try {
     const ownerId = currentStallData.ownerId;
 
-    // 1. Remove ownerId from the food stall
+    // 1. Remove operator-related fields from the food stall (keep ownerId — vendor still owns it)
     await updateDoc(doc(db, "foodStalls", currentStallId), {
-      ownerId: deleteField(),
+      operatorId: deleteField(),
+      operatorName: deleteField(),
+      hawkerCentreId: deleteField(),
+      unitNumber: deleteField(),
     });
 
-    // 2. If vendor exists, remove their hawkerCentreId, tenancyLinkedAt, stallId, storeLocation
+    // 2. If vendor exists, remove their hawkerCentreId, tenancyLinkedAt, storeLocation (keep stallId — vendor still owns the stall)
     if (ownerId) {
       try {
         await updateDoc(doc(db, "vendors", ownerId), {
           hawkerCentreId: deleteField(),
           tenancyLinkedAt: deleteField(),
-          stallId: deleteField(),
           storeLocation: deleteField(),
         });
       } catch (err) {
