@@ -590,9 +590,13 @@ function listenToStalls(centreId) {
     stallsQuery,
     (snapshot) => {
       const allStalls = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-      stalls = allStalls.filter((s) => s.ownerId && s.isActive !== false);
+      // Current children: linked to this operator (has matching operatorId)
+      stalls = allStalls.filter(
+        (s) => s.operatorId === currentOperatorId && s.isActive !== false,
+      );
+      // Archived: unlinked stalls or inactive stalls at this location
       archivedStalls = allStalls.filter(
-        (s) => !s.ownerId || s.isActive === false,
+        (s) => s.operatorId !== currentOperatorId || s.isActive === false,
       );
       dataLoaded = true;
 
