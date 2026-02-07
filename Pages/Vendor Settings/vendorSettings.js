@@ -138,7 +138,7 @@ function renderHoursTable(hours) {
           (day, dayIdx) => `
           <div class="hoursRow">
             <div class="hoursDay">${day.day}</div>
-            <label class="liquidGlassToggle small hoursToggle" data-day="${dayIdx}">
+            <label class="liquidGlassToggle hoursToggle" data-day="${dayIdx}">
               <input type="checkbox" ${day.active ? "checked" : ""} disabled />
               <span class="toggleTrack">
                 <span class="toggleThumb ${day.active ? "glass" : ""}"></span>
@@ -1026,7 +1026,7 @@ function renderEditHours() {
       (day, dayIdx) => `
         <div class="hoursRow">
           <div class="hoursDay">${day.day}</div>
-          <label class="liquidGlassToggle small hoursToggle" data-day="${dayIdx}">
+          <label class="liquidGlassToggle hoursToggle" data-day="${dayIdx}">
             <input type="checkbox" ${day.active ? "checked" : ""} />
             <span class="toggleTrack">
               <span class="toggleThumb ${day.active ? "glass" : ""}"></span>
