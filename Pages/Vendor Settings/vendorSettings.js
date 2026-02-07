@@ -177,32 +177,32 @@ function renderDocumentItem(label, url, fieldKey, accept, microcopy) {
     const isImage = accept.startsWith("image");
     return `
       <div class="documentItem" data-field="${fieldKey}">
-        <div class="documentItemLeft">
+        <div class="documentItemTop">
           <span class="documentLabel">${label}</span>
-          <div class="documentPreviewBox">
-            ${isImage ? `<img class="documentPreviewImg" src="${url}" alt="${label}" />` : `<iframe class="documentPreviewPdf" src="${url}"></iframe>`}
+          <div class="documentItemActions">
+            <label class="documentReplaceBtn">
+              Replace
+              <input type="file" accept="${accept}" data-field="${fieldKey}" class="documentFileInput" hidden />
+            </label>
+            <button class="documentDeleteBtn" data-field="${fieldKey}">Remove</button>
           </div>
         </div>
-        <div class="documentItemActions">
-          <label class="documentReplaceBtn">
-            Replace
-            <input type="file" accept="${accept}" data-field="${fieldKey}" class="documentFileInput" hidden />
-          </label>
-          <button class="documentDeleteBtn" data-field="${fieldKey}">Remove</button>
+        <div class="documentPreviewBox">
+          ${isImage ? `<img class="documentPreviewImg" src="${url}" alt="${label}" />` : `<iframe class="documentPreviewPdf" src="${url}"></iframe>`}
         </div>
       </div>
     `;
   }
   return `
     <div class="documentItem" data-field="${fieldKey}">
-      <div class="documentItemLeft">
+      <div class="documentItemTop">
         <span class="documentLabel">${label}</span>
-        <span class="documentMicrocopy">${microcopy}</span>
+        <label class="documentUploadBtn">
+          Upload
+          <input type="file" accept="${accept}" data-field="${fieldKey}" class="documentFileInput" hidden />
+        </label>
       </div>
-      <label class="documentUploadBtn">
-        Upload
-        <input type="file" accept="${accept}" data-field="${fieldKey}" class="documentFileInput" hidden />
-      </label>
+      <span class="documentMicrocopy">${microcopy}</span>
     </div>
   `;
 }
@@ -308,7 +308,6 @@ function renderSettingsPage(vendor, stall) {
     <span class="pageTitle">Settings</span>
     <div class="sectionsContainer">
       ${renderBusinessDetails(vendor)}
-      ${renderStallDetails(stall)}
       ${renderDocumentsSection(vendor)}
       ${renderNotificationsSection(vendor)}
       ${renderDangerZone()}
