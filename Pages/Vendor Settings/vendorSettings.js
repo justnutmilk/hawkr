@@ -308,6 +308,7 @@ function renderSettingsPage(vendor, stall) {
     <span class="pageTitle">Settings</span>
     <div class="sectionsContainer">
       ${renderBusinessDetails(vendor)}
+      ${renderStallDetails(stall)}
       ${renderDocumentsSection(vendor)}
       ${renderNotificationsSection(vendor)}
       ${renderDangerZone()}
@@ -859,7 +860,7 @@ async function initializeSettingsPage() {
     try {
       const stallsQuery = query(
         collection(db, "foodStalls"),
-        where("vendorId", "==", currentUserId),
+        where("ownerId", "==", currentUserId),
       );
       const stallsSnapshot = await getDocs(stallsQuery);
       if (!stallsSnapshot.empty) {
