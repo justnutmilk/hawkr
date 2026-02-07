@@ -186,22 +186,21 @@ function buildTopItemsBySales(orders) {
 
 async function loadCompletedOrders(stallId) {
   try {
-    const q = query(
-      collection(db, "orders"),
-      where("stallId", "==", stallId),
-      where("status", "in", ["ready", "completed"]),
-    );
+    const q = query(collection(db, "orders"), where("stallId", "==", stallId));
     const snapshot = await getDocs(q);
 
-    completedOrders = snapshot.docs.map((d) => {
-      const data = d.data();
-      return {
-        id: d.id,
-        total: data.total || 0,
-        items: data.items || [],
-        createdAt: data.createdAt?.toDate?.() || new Date(data.createdAt),
-      };
-    });
+    completedOrders = snapshot.docs
+      .map((d) => {
+        const data = d.data();
+        return {
+          id: d.id,
+          total: data.total || 0,
+          status: data.status || "",
+          items: data.items || [],
+          createdAt: data.createdAt?.toDate?.() || new Date(data.createdAt),
+        };
+      })
+      .filter((o) => o.status === "ready" || o.status === "completed");
 
     chartData = aggregateChartData(completedOrders);
     topItemsBySales = buildTopItemsBySales(completedOrders);
