@@ -856,23 +856,40 @@ async function initializeSettingsPage() {
       console.error("Error loading vendor data:", error);
     }
 
-    // Load stall data
+    // Load stall data — prefer direct fetch by stallId from vendor doc
     try {
-      const stallsQuery = query(
-        collection(db, "foodStalls"),
-        where("ownerId", "==", currentUserId),
-      );
-      const stallsSnapshot = await getDocs(stallsQuery);
-      if (!stallsSnapshot.empty) {
-        const stallDoc = stallsSnapshot.docs[0];
-        const data = stallDoc.data();
-        stallData = {
-          id: stallDoc.id,
-          location: data.location || data.hawkerCentre || "",
-          unitNumber: data.unitNumber || "",
-          cuisines: data.cuisines || [],
-          operatingHours: data.operatingHours || [],
-        };
+      if (vendorData.stallId) {
+        const stallDoc = await getDoc(
+          doc(db, "foodStalls", vendorData.stallId),
+        );
+        if (stallDoc.exists()) {
+          const data = stallDoc.data();
+          stallData = {
+            id: stallDoc.id,
+            location: data.location || data.hawkerCentre || "",
+            unitNumber: data.unitNumber || "",
+            cuisines: data.cuisines || [],
+            operatingHours: data.operatingHours || [],
+          };
+        }
+      } else {
+        // Fallback: query by ownerId
+        const stallsQuery = query(
+          collection(db, "foodStalls"),
+          where("ownerId", "==", currentUserId),
+        );
+        const stallsSnapshot = await getDocs(stallsQuery);
+        if (!stallsSnapshot.empty) {
+          const stallDoc = stallsSnapshot.docs[0];
+          const data = stallDoc.data();
+          stallData = {
+            id: stallDoc.id,
+            location: data.location || data.hawkerCentre || "",
+            unitNumber: data.unitNumber || "",
+            cuisines: data.cuisines || [],
+            operatingHours: data.operatingHours || [],
+          };
+        }
       }
     } catch (error) {
       console.error("Error loading stall data:", error);
