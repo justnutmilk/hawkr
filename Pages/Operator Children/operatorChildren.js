@@ -49,6 +49,7 @@ let codeRefreshInterval = null;
 let codeSnapshotUnsubscribe = null;
 let stallsUnsubscribe = null;
 let linkedVendorData = null;
+let dataLoaded = false;
 let autofillAnimationRunning = false;
 let autofillTimeouts = [];
 
@@ -379,16 +380,35 @@ function renderArchivedCard(stall) {
 // PAGE RENDERING
 // ============================================
 
+function renderSkeletonCard() {
+  return `
+    <div class="childCard skeletonCard">
+      <div class="childCardImage skeletonLine"></div>
+      <div class="skeletonLine skeletonName"></div>
+      <div class="childCardTags">
+        <div class="skeletonLine skeletonTag"></div>
+        <div class="skeletonLine skeletonTag"></div>
+      </div>
+      <div class="skeletonLine skeletonMeta"></div>
+    </div>
+  `;
+}
+
 function renderCurrentContent() {
-  const stallCards =
-    stalls.length > 0
-      ? stalls.map(renderChildCard).join("")
-      : `<div class="emptyState">
+  let stallCards;
+  if (!dataLoaded) {
+    stallCards =
+      renderSkeletonCard() + renderSkeletonCard() + renderSkeletonCard();
+  } else if (stalls.length > 0) {
+    stallCards = stalls.map(renderChildCard).join("");
+  } else {
+    stallCards = `<div class="emptyState">
           <img src="../../images/noChildren.svg" alt="No children" class="emptyStateImage" onerror="this.style.display='none'" />
           <p class="emptyStateText">No children yet</p>
           <p class="emptyStateSubtext">Onboard your first vendor to get started.</p>
           <button class="emptyStateCta" id="emptyOnboardBtn">Onboard child</button>
         </div>`;
+  }
 
   return `
     <div class="pageHeader">
@@ -406,12 +426,17 @@ function renderCurrentContent() {
 }
 
 function renderArchivedContent() {
-  const stallCards =
-    archivedStalls.length > 0
-      ? archivedStalls.map(renderArchivedCard).join("")
-      : `<div class="emptyState">
+  let stallCards;
+  if (!dataLoaded) {
+    stallCards =
+      renderSkeletonCard() + renderSkeletonCard() + renderSkeletonCard();
+  } else if (archivedStalls.length > 0) {
+    stallCards = archivedStalls.map(renderArchivedCard).join("");
+  } else {
+    stallCards = `<div class="emptyState">
           <p class="emptyStateText">No archived stalls.</p>
         </div>`;
+  }
 
   return `
     <div class="pageHeader">
@@ -521,6 +546,7 @@ async function loadOperatorData(userId) {
       console.warn("No hawker centres found for operator:", userId);
       stalls = [];
       archivedStalls = [];
+      dataLoaded = true;
       renderPage("current");
       return;
     }
@@ -540,6 +566,7 @@ async function loadOperatorData(userId) {
     console.error("Error loading operator data:", error);
     stalls = [];
     archivedStalls = [];
+    dataLoaded = true;
     renderPage("current");
   }
 }
@@ -567,6 +594,7 @@ function listenToStalls(centreId) {
       archivedStalls = allStalls.filter(
         (s) => !s.ownerId || s.isActive === false,
       );
+      dataLoaded = true;
 
       // Get current active tab
       const activeRadio = document.querySelector(

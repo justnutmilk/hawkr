@@ -1382,3 +1382,43 @@ body {
 .emptyStateCta:hover {
     background: #7a3286;
 }
+
+/* ============================================
+   SKELETON LOADING STATE
+   ============================================ */
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.skeletonCard {
+    pointer-events: none;
+}
+
+.skeletonLine {
+    border-radius: 8px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+.skeletonName {
+    height: 20px;
+    width: 60%;
+}
+
+.skeletonTag {
+    height: 32px;
+    width: 72px;
+    border-radius: 48px;
+}
+
+.skeletonMeta {
+    height: 16px;
+    width: 40%;
+}
