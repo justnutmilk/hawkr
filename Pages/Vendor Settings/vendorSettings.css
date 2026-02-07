@@ -1306,6 +1306,372 @@ body {
 }
 
 /* ============================================
+   EDIT STALL POPUP (wide variant with map, cuisines, hours)
+   ============================================ */
+
+.editPopup.editPopupWide {
+    max-width: 600px;
+}
+
+/* Map Container */
+.editStallMapContainer {
+    width: 100%;
+    height: 250px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f0f0f0;
+}
+
+/* Google Places autocomplete inside popup */
+.editFormGroup gmp-place-autocomplete {
+    width: 100%;
+}
+
+.editFormGroup gmp-place-autocomplete input {
+    width: 100%;
+    height: 44px;
+    padding: 0 16px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 16px;
+    font-family: Aptos, sans-serif;
+    font-size: 15px;
+    color: #341539;
+    transition: border-color 0.2s ease;
+}
+
+.editFormGroup gmp-place-autocomplete input:focus {
+    outline: none;
+    border-color: #913b9f;
+}
+
+/* Selected Location Display */
+.editSelectedLocation {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #f8f7fa;
+    border-radius: 10px;
+    margin-top: 8px;
+}
+
+.editSelectedLocationInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.editSelectedLocationName {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.editSelectedLocationAddress {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.editSelectedLocationClear {
+    background: none;
+    border: none;
+    color: #808080;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: color 0.2s ease;
+}
+
+.editSelectedLocationClear:hover {
+    color: #d32f2f;
+}
+
+/* Cuisine Tags in Edit Popup */
+.editPopupWide .cuisineContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 12px;
+    min-height: 52px;
+    background: #fff;
+    cursor: text;
+    transition: border-color 0.2s ease;
+}
+
+.editPopupWide .cuisineContainer:focus-within {
+    border-color: #913b9f;
+}
+
+.editPopupWide .cuisineInput {
+    flex: 1;
+    min-width: 120px;
+    border: none;
+    outline: none;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    background: transparent;
+}
+
+.editPopupWide .cuisineTag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    position: relative;
+}
+
+.editPopupWide .cuisineTagInner {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 16px;
+    padding-right: 28px;
+    border-radius: 48px;
+    background: #f2f2ff;
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: normal;
+    white-space: nowrap;
+}
+
+.editPopupWide .cuisineTagInner.halal {
+    background: #eaf5e9;
+}
+
+.editPopupWide .cuisineTagInner.kosher {
+    background: #eeeade;
+}
+
+.editPopupWide .cuisineTagIcon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
+
+.editPopupWide .cuisineTagRemove {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #808080;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    transition: color 0.2s ease;
+}
+
+.editPopupWide .cuisineTagRemove:hover {
+    color: #d32f2f;
+}
+
+/* Cuisine Suggestions */
+.editPopupWide .cuisineSuggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 14px;
+    background: #f8f7fa;
+    border-radius: 12px;
+    border: 1px solid #e8e5eb;
+}
+
+.editPopupWide .cuisineSuggestionsLabel {
+    width: 100%;
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    margin-bottom: 4px;
+}
+
+.editPopupWide .cuisineSuggestion {
+    display: inline-flex;
+    cursor: grab;
+    transition:
+        transform 0.15s ease,
+        opacity 0.15s ease;
+    user-select: none;
+}
+
+.editPopupWide .cuisineSuggestion:hover {
+    transform: scale(1.05);
+}
+
+.editPopupWide .cuisineSuggestion:active {
+    cursor: grabbing;
+}
+
+.editPopupWide .cuisineSuggestion .cuisineTagInner {
+    padding-right: 16px;
+}
+
+.editPopupWide .cuisineSuggestion.added {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+/* Drop zone active state */
+.editPopupWide .cuisineContainer.snap-drop-active {
+    border-color: #913b9f;
+    background: rgba(145, 59, 159, 0.05);
+}
+
+/* Operating Hours Table */
+.editPopupWide .hoursTable {
+    width: 100%;
+}
+
+.editPopupWide .hoursRow {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0;
+    min-height: 48px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.editPopupWide .hoursRow:last-child {
+    border-bottom: none;
+}
+
+.editPopupWide .hoursDay {
+    width: 40px;
+    color: #341539;
+    font-size: 13px;
+    font-weight: 500;
+    user-select: none;
+    pointer-events: none;
+    padding-top: 8px;
+    flex-shrink: 0;
+}
+
+.editPopupWide .hoursToggle {
+    flex-shrink: 0;
+    padding-top: 4px;
+}
+
+.editPopupWide .hoursSlots {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 36px;
+    justify-content: center;
+}
+
+.editPopupWide .hoursSlot {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.editPopupWide .hoursTime {
+    width: 110px;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    color: #341539;
+}
+
+.editPopupWide .hoursTime:focus {
+    outline: none;
+    border-color: #913b9f;
+}
+
+.editPopupWide .hoursTo {
+    color: #808080;
+    font-size: 13px;
+    user-select: none;
+    pointer-events: none;
+}
+
+.editPopupWide .hoursClosed {
+    color: #808080;
+    font-size: 13px;
+    font-style: italic;
+    user-select: none;
+    pointer-events: none;
+}
+
+.editPopupWide .hoursAddSlot {
+    background: none;
+    border: none;
+    color: #913b9f;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 0;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.editPopupWide .hoursAddSlot:hover {
+    text-decoration: underline;
+}
+
+.editPopupWide .hoursRemoveSlot {
+    background: none;
+    border: none;
+    color: #808080;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    transition: color 0.2s ease;
+}
+
+.editPopupWide .hoursRemoveSlot:hover {
+    color: #d32f2f;
+}
+
+/* ============================================
    RESPONSIVE
    ============================================ */
 

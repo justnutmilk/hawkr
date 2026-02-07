@@ -23,12 +23,21 @@ import {
   deleteObject,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 import { showToast } from "../../assets/js/toast.js";
+import { findOrCreateHawkerCentre } from "../../firebase/services/hawkerCentres.js";
+import Snap from "../../drag and drop/snap.esm.js";
 
 // ============================================
 // STATE
 // ============================================
 
 let currentUserId = null;
+
+// Edit stall popup state
+let editStallLocation = null;
+let editStallCuisines = [];
+let editStallHours = [];
+let editStallMapInstance = null;
+let editStallMapMarker = null;
 
 let vendorData = {
   storeName: "",
@@ -534,6 +543,10 @@ async function saveEditBusiness() {
 // ============================================
 
 function renderEditStallPopup(stall) {
+  const locationName =
+    vendorData.centreName || stall?.location || vendorData.storeLocation || "";
+  const locationAddress = vendorData.centreAddress || "";
+
   return `
     <div class="editPopupHeader">
       <h2 class="editPopupTitle">Edit Stall Details</h2>
@@ -543,14 +556,43 @@ function renderEditStallPopup(stall) {
         </svg>
       </button>
     </div>
-    <div class="editPopupContent">
+    <div class="editPopupContent" id="editStallContent">
       <div class="editFormGroup">
         <span class="editFormLabel">Location</span>
-        <input type="text" class="editFormInput" id="editStallLocation" value="${stall?.location || vendorData.storeLocation || ""}" />
+        <div class="editStallMapContainer" id="editStallMap"></div>
+        <input type="text" class="editFormInput" id="editStallLocationInput" placeholder="Search for a location..." />
+        <div class="editSelectedLocation" id="editSelectedLocation" style="display:${locationName ? "flex" : "none"}">
+          <div class="editSelectedLocationInfo">
+            <span class="editSelectedLocationName" id="editSelectedLocationName">${locationName}</span>
+            <span class="editSelectedLocationAddress" id="editSelectedLocationAddress">${locationAddress}</span>
+          </div>
+          <button class="editSelectedLocationClear" id="editClearLocation" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
       </div>
       <div class="editFormGroup">
         <span class="editFormLabel">Unit Number</span>
         <input type="text" class="editFormInput" id="editStallUnit" value="${stall?.unitNumber || vendorData.unitNumber || ""}" placeholder="e.g. #01-23" />
+      </div>
+      <div class="editFormGroup">
+        <span class="editFormLabel">Cuisines</span>
+        <div class="cuisineContainer" id="editCuisineContainer" data-droppable>
+          <input type="text" class="cuisineInput" id="editCuisineInput" placeholder="Add cuisine..." />
+        </div>
+        <div class="cuisineSuggestions" id="editCuisineSuggestions">
+          <span class="cuisineSuggestionsLabel">Drag or click to add:</span>
+          <span class="cuisineSuggestion" data-draggable data-cuisine="Halal"><span class="cuisineTagInner halal"><img class="cuisineTagIcon" src="../../assets/icons/halal.png" alt="Halal" /> Halal</span></span>
+          <span class="cuisineSuggestion" data-draggable data-cuisine="Kosher"><span class="cuisineTagInner kosher"><img class="cuisineTagIcon" src="../../assets/icons/kosher.svg" alt="Kosher" /> Kosher</span></span>
+          <span class="cuisineSuggestion" data-draggable data-cuisine="Chinese"><span class="cuisineTagInner">Chinese</span></span>
+          <span class="cuisineSuggestion" data-draggable data-cuisine="Malay"><span class="cuisineTagInner">Malay</span></span>
+          <span class="cuisineSuggestion" data-draggable data-cuisine="Peranakan"><span class="cuisineTagInner">Peranakan</span></span>
+          <span class="cuisineSuggestion" data-draggable data-cuisine="Indian"><span class="cuisineTagInner">Indian</span></span>
+        </div>
+      </div>
+      <div class="editFormGroup">
+        <span class="editFormLabel">Operating Hours</span>
+        <div class="hoursTable" id="editHoursContainer"></div>
       </div>
     </div>
     <div class="editPopupFooter">
@@ -559,11 +601,39 @@ function renderEditStallPopup(stall) {
   `;
 }
 
+const defaultHours = [
+  { day: "Mon", active: true, slots: [{ from: "09:00", to: "21:00" }] },
+  { day: "Tue", active: true, slots: [{ from: "09:00", to: "21:00" }] },
+  { day: "Wed", active: true, slots: [{ from: "09:00", to: "21:00" }] },
+  { day: "Thu", active: true, slots: [{ from: "09:00", to: "21:00" }] },
+  { day: "Fri", active: true, slots: [{ from: "09:00", to: "21:00" }] },
+  { day: "Sat", active: true, slots: [{ from: "09:00", to: "21:00" }] },
+  { day: "Sun", active: false, slots: [] },
+];
+
 function openEditStall() {
   const popup = document.getElementById("editStallPopup");
   const overlay = document.getElementById("editStallOverlay");
   if (!popup || !overlay) return;
 
+  // Reset edit state
+  editStallLocation = vendorData.centreLat
+    ? {
+        name: vendorData.centreName || "",
+        address: vendorData.centreAddress || "",
+        lat: vendorData.centreLat,
+        lng: vendorData.centreLng,
+      }
+    : null;
+  editStallCuisines = stallData?.cuisines ? [...stallData.cuisines] : [];
+  editStallHours =
+    stallData?.operatingHours && stallData.operatingHours.length > 0
+      ? JSON.parse(JSON.stringify(stallData.operatingHours))
+      : JSON.parse(JSON.stringify(defaultHours));
+  editStallMapInstance = null;
+  editStallMapMarker = null;
+
+  popup.classList.add("editPopupWide");
   popup.innerHTML = renderEditStallPopup(stallData);
   overlay.classList.add("active");
   document.body.style.overflow = "hidden";
@@ -571,13 +641,386 @@ function openEditStall() {
   document
     .getElementById("editStallClose")
     .addEventListener("click", closeEditStall);
-
   document
     .getElementById("editStallSave")
     .addEventListener("click", saveEditStall);
-
   overlay.addEventListener("click", function (e) {
     if (e.target === overlay) closeEditStall();
+  });
+
+  // Initialize all sub-systems
+  initEditStallMap();
+  initEditCuisines();
+  renderEditHours();
+}
+
+// --- MAP ---
+
+async function initEditStallMap() {
+  const mapEl = document.getElementById("editStallMap");
+  const locationInput = document.getElementById("editStallLocationInput");
+  if (!mapEl) return;
+
+  try {
+    const { Map } = await google.maps.importLibrary("maps");
+    const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+    const { PlaceAutocompleteElement } =
+      await google.maps.importLibrary("places");
+    const { Geocoder } = await google.maps.importLibrary("geocoding");
+
+    const startPos = editStallLocation
+      ? { lat: editStallLocation.lat, lng: editStallLocation.lng }
+      : { lat: 1.3521, lng: 103.8198 };
+    const startZoom = editStallLocation ? 17 : 12;
+
+    editStallMapInstance = new Map(mapEl, {
+      center: startPos,
+      zoom: startZoom,
+      mapId: "hawkr-edit-stall",
+      disableDefaultUI: true,
+      zoomControl: true,
+      clickableIcons: false,
+    });
+
+    // Place autocomplete
+    const placeAutocomplete = new PlaceAutocompleteElement({
+      includedRegionCodes: ["sg"],
+      locationBias: { lat: 1.3521, lng: 103.8198 },
+    });
+    if (locationInput) {
+      locationInput.parentNode.replaceChild(placeAutocomplete, locationInput);
+    }
+
+    placeAutocomplete.addEventListener(
+      "gmp-select",
+      async ({ placePrediction }) => {
+        const place = placePrediction.toPlace();
+        await place.fetchFields({
+          fields: [
+            "displayName",
+            "formattedAddress",
+            "location",
+            "addressComponents",
+            "id",
+          ],
+        });
+        const pos = {
+          lat: place.location.lat(),
+          lng: place.location.lng(),
+        };
+        editStallMapInstance.setCenter(pos);
+        editStallMapInstance.setZoom(17);
+        placeEditStallMarker(pos, AdvancedMarkerElement);
+
+        const pc = extractPostalCode(place.addressComponents);
+        editStallLocation = {
+          name: place.displayName || "",
+          address: place.formattedAddress || "",
+          lat: pos.lat,
+          lng: pos.lng,
+          postalCode: pc,
+          placeId: place.id || "",
+        };
+        showEditSelectedLocation();
+      },
+    );
+
+    // Click map to drop pin
+    editStallMapInstance.addListener("click", (e) => {
+      const pos = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+      placeEditStallMarker(pos, AdvancedMarkerElement);
+      editStallReverseGeocode(pos, Geocoder);
+    });
+
+    // Restore marker if location exists
+    if (editStallLocation) {
+      placeEditStallMarker(startPos, AdvancedMarkerElement);
+    }
+
+    // Clear button
+    document
+      .getElementById("editClearLocation")
+      ?.addEventListener("click", () => {
+        editStallLocation = null;
+        if (editStallMapMarker) {
+          editStallMapMarker.map = null;
+          editStallMapMarker = null;
+        }
+        editStallMapInstance.setCenter({ lat: 1.3521, lng: 103.8198 });
+        editStallMapInstance.setZoom(12);
+        const sel = document.getElementById("editSelectedLocation");
+        if (sel) sel.style.display = "none";
+      });
+  } catch (err) {
+    console.warn("Could not init edit stall map:", err);
+  }
+}
+
+function placeEditStallMarker(pos, AdvancedMarkerElement) {
+  if (editStallMapMarker) {
+    editStallMapMarker.position = pos;
+  } else {
+    editStallMapMarker = new AdvancedMarkerElement({
+      position: pos,
+      map: editStallMapInstance,
+      gmpDraggable: true,
+    });
+    editStallMapMarker.addListener("dragend", () => {
+      const newPos = {
+        lat: editStallMapMarker.position.lat,
+        lng: editStallMapMarker.position.lng,
+      };
+      editStallReverseGeocode(newPos);
+    });
+  }
+}
+
+function editStallReverseGeocode(pos, GeocoderClass) {
+  const geocoder = GeocoderClass
+    ? new GeocoderClass()
+    : new google.maps.Geocoder();
+  geocoder.geocode({ location: pos }, (results, status) => {
+    if (status === "OK" && results[0]) {
+      const result = results[0];
+      const pc = extractPostalCode(result.address_components);
+      editStallLocation = {
+        name: result.formatted_address.split(",")[0] || "",
+        address: result.formatted_address || "",
+        lat: pos.lat,
+        lng: pos.lng,
+        postalCode: pc,
+        placeId: result.place_id || "",
+      };
+      showEditSelectedLocation();
+    }
+  });
+}
+
+function extractPostalCode(components) {
+  if (!components) return "";
+  for (const c of components) {
+    const types = c.types || [];
+    if (types.includes("postal_code")) return c.longText || c.long_name || "";
+  }
+  return "";
+}
+
+function showEditSelectedLocation() {
+  const sel = document.getElementById("editSelectedLocation");
+  const nameEl = document.getElementById("editSelectedLocationName");
+  const addrEl = document.getElementById("editSelectedLocationAddress");
+  if (!sel || !editStallLocation) return;
+  sel.style.display = "flex";
+  if (nameEl) nameEl.textContent = editStallLocation.name;
+  if (addrEl) addrEl.textContent = editStallLocation.address;
+}
+
+// --- CUISINES ---
+
+function editCuisineTagInner(tag) {
+  const icons = {
+    Halal: "../../assets/icons/halal.png",
+    Kosher: "../../assets/icons/kosher.svg",
+  };
+  const icon = icons[tag];
+  if (icon) {
+    return `<span class="cuisineTagInner ${tag.toLowerCase()}"><img class="cuisineTagIcon" src="${icon}" alt="${tag}" /> ${tag}</span>`;
+  }
+  return `<span class="cuisineTagInner">${tag}</span>`;
+}
+
+function addEditCuisineTag(cuisine) {
+  const container = document.getElementById("editCuisineContainer");
+  const input = document.getElementById("editCuisineInput");
+  if (!container || !input) return;
+
+  const cap = cuisine.charAt(0).toUpperCase() + cuisine.slice(1).toLowerCase();
+  if (editStallCuisines.includes(cap)) return;
+
+  editStallCuisines.push(cap);
+
+  const tag = document.createElement("span");
+  tag.className = "cuisineTag";
+  tag.dataset.cuisine = cap;
+  tag.innerHTML = `${editCuisineTagInner(cap)}<button class="cuisineTagRemove" type="button">&times;</button>`;
+
+  tag.querySelector(".cuisineTagRemove").addEventListener("click", () => {
+    editStallCuisines = editStallCuisines.filter((c) => c !== cap);
+    tag.remove();
+    updateEditSuggestionStates();
+  });
+
+  container.insertBefore(tag, input);
+  updateEditSuggestionStates();
+}
+
+function updateEditSuggestionStates() {
+  const suggestions = document.querySelectorAll(
+    "#editCuisineSuggestions .cuisineSuggestion",
+  );
+  suggestions.forEach((s) => {
+    if (editStallCuisines.includes(s.dataset.cuisine)) {
+      s.classList.add("added");
+    } else {
+      s.classList.remove("added");
+    }
+  });
+}
+
+function initEditCuisines() {
+  const container = document.getElementById("editCuisineContainer");
+  const input = document.getElementById("editCuisineInput");
+  const suggestionsEl = document.getElementById("editCuisineSuggestions");
+  const content = document.getElementById("editStallContent");
+  if (!container || !input) return;
+
+  // Load existing cuisine tags
+  for (const c of editStallCuisines) {
+    const tag = document.createElement("span");
+    tag.className = "cuisineTag";
+    tag.dataset.cuisine = c;
+    tag.innerHTML = `${editCuisineTagInner(c)}<button class="cuisineTagRemove" type="button">&times;</button>`;
+    tag.querySelector(".cuisineTagRemove").addEventListener("click", () => {
+      editStallCuisines = editStallCuisines.filter((x) => x !== c);
+      tag.remove();
+      updateEditSuggestionStates();
+    });
+    container.insertBefore(tag, input);
+  }
+  updateEditSuggestionStates();
+
+  // Keyboard input
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const val = input.value.trim();
+      if (val) {
+        addEditCuisineTag(val);
+        input.value = "";
+      }
+    } else if (e.key === "Backspace" && !input.value) {
+      const tags = container.querySelectorAll(".cuisineTag");
+      if (tags.length) {
+        const lastTag = tags[tags.length - 1];
+        const cuisine = lastTag.dataset.cuisine;
+        editStallCuisines = editStallCuisines.filter((c) => c !== cuisine);
+        lastTag.remove();
+        updateEditSuggestionStates();
+      }
+    }
+  });
+
+  // Click to add suggestions
+  if (suggestionsEl) {
+    suggestionsEl.addEventListener("click", (e) => {
+      const suggestion = e.target.closest(".cuisineSuggestion");
+      if (suggestion && !suggestion.classList.contains("added")) {
+        addEditCuisineTag(suggestion.dataset.cuisine);
+      }
+    });
+  }
+
+  // Drag and drop
+  if (content) {
+    try {
+      new Snap(content, {
+        draggableSelector:
+          "#editCuisineSuggestions [data-draggable]:not(.added)",
+        dropZoneSelector: "#editCuisineContainer[data-droppable]",
+        distance: 3,
+        onDropZoneEnter: ({ dropZone }) =>
+          dropZone.classList.add("snap-drop-active"),
+        onDropZoneLeave: ({ dropZone }) =>
+          dropZone.classList.remove("snap-drop-active"),
+        onDrop: ({ element, dropZone }) => {
+          dropZone.classList.remove("snap-drop-active");
+          const cuisine = element.dataset.cuisine;
+          if (cuisine) addEditCuisineTag(cuisine);
+        },
+      });
+    } catch (err) {
+      console.warn("Could not init cuisine drag-drop:", err);
+    }
+  }
+}
+
+// --- OPERATING HOURS ---
+
+function renderEditHours() {
+  const container = document.getElementById("editHoursContainer");
+  if (!container) return;
+
+  container.innerHTML = editStallHours
+    .map(
+      (day, dayIdx) => `
+        <div class="hoursRow">
+          <div class="hoursDay">${day.day}</div>
+          <label class="liquidGlassToggle hoursToggle" data-day="${dayIdx}">
+            <input type="checkbox" ${day.active ? "checked" : ""} />
+            <span class="toggleTrack">
+              <span class="toggleThumb ${day.active ? "glass" : ""}"></span>
+            </span>
+          </label>
+          <div class="hoursSlots" data-day="${dayIdx}">
+            ${
+              day.active && day.slots.length
+                ? day.slots
+                    .map(
+                      (slot, slotIdx) => `
+                  <div class="hoursSlot">
+                    <input type="time" class="hoursTime" value="${slot.from}" data-day="${dayIdx}" data-slot="${slotIdx}" data-field="from" />
+                    <span class="hoursTo">to</span>
+                    <input type="time" class="hoursTime" value="${slot.to}" data-day="${dayIdx}" data-slot="${slotIdx}" data-field="to" />
+                    ${slotIdx > 0 ? `<button class="hoursRemoveSlot" data-day="${dayIdx}" data-slot="${slotIdx}" type="button">&times;</button>` : ""}
+                  </div>`,
+                    )
+                    .join("")
+                : `<span class="hoursClosed">Closed</span>`
+            }
+          </div>
+          ${day.active ? `<button class="hoursAddSlot" data-day="${dayIdx}" type="button">+ Add</button>` : ""}
+        </div>`,
+    )
+    .join("");
+
+  // Toggles
+  container.querySelectorAll(".hoursToggle").forEach((toggleLabel) => {
+    const dayIdx = parseInt(toggleLabel.dataset.day);
+    initLiquidGlassToggle(toggleLabel, (isChecked) => {
+      editStallHours[dayIdx].active = isChecked;
+      if (isChecked && editStallHours[dayIdx].slots.length === 0) {
+        editStallHours[dayIdx].slots.push({ from: "09:00", to: "21:00" });
+      }
+      renderEditHours();
+    });
+  });
+
+  // Time inputs
+  container.querySelectorAll(".hoursTime").forEach((input) => {
+    input.addEventListener("change", (e) => {
+      const { day, slot, field } = e.target.dataset;
+      editStallHours[parseInt(day)].slots[parseInt(slot)][field] =
+        e.target.value;
+    });
+  });
+
+  // Add slot
+  container.querySelectorAll(".hoursAddSlot").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const dayIdx = parseInt(btn.dataset.day);
+      editStallHours[dayIdx].slots.push({ from: "", to: "" });
+      renderEditHours();
+    });
+  });
+
+  // Remove slot
+  container.querySelectorAll(".hoursRemoveSlot").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const dayIdx = parseInt(btn.dataset.day);
+      const slotIdx = parseInt(btn.dataset.slot);
+      editStallHours[dayIdx].slots.splice(slotIdx, 1);
+      renderEditHours();
+    });
   });
 }
 
@@ -590,8 +1033,8 @@ function closeEditStall() {
 }
 
 async function saveEditStall() {
-  const location = document.getElementById("editStallLocation").value.trim();
-  const unitNumber = document.getElementById("editStallUnit").value.trim();
+  const unitNumber =
+    document.getElementById("editStallUnit")?.value.trim() || "";
 
   const saveBtn = document.getElementById("editStallSave");
   if (saveBtn) {
@@ -600,37 +1043,62 @@ async function saveEditStall() {
   }
 
   try {
-    // Update vendor doc
-    const vendorUpdates = {};
-    if (location) vendorUpdates.storeLocation = location;
-    if (unitNumber) vendorUpdates.unitNumber = unitNumber;
+    const vendorUpdates = { unitNumber };
+    const stallUpdates = {
+      unitNumber,
+      cuisineNames: editStallCuisines,
+      isHalal: editStallCuisines.includes("Halal"),
+      operatingHours: editStallHours,
+    };
 
-    if (currentUserId && Object.keys(vendorUpdates).length > 0) {
+    // Handle location
+    if (editStallLocation) {
+      const locationName = editStallLocation.name;
+      vendorUpdates.storeLocation = locationName;
+      stallUpdates.location = locationName;
+
+      // Find or create hawker centre for this location
+      const hawkerCentre = await findOrCreateHawkerCentre(locationName, {
+        address: editStallLocation.address,
+        postalCode: editStallLocation.postalCode || "",
+        location: {
+          latitude: editStallLocation.lat,
+          longitude: editStallLocation.lng,
+        },
+      });
+
+      if (hawkerCentre) {
+        vendorUpdates.hawkerCentreId = hawkerCentre.id;
+        stallUpdates.hawkerCentreId = hawkerCentre.id;
+        vendorData.hawkerCentreId = hawkerCentre.id;
+        vendorData.centreName = hawkerCentre.name || locationName;
+        vendorData.centreAddress = editStallLocation.address;
+        vendorData.centreLat = editStallLocation.lat;
+        vendorData.centreLng = editStallLocation.lng;
+      }
+    }
+
+    if (currentUserId) {
       await updateDoc(doc(db, "vendors", currentUserId), vendorUpdates);
     }
 
-    // Update stall doc if we have one
     if (stallData && stallData.id) {
-      const stallUpdates = {};
-      if (location) stallUpdates.location = location;
-      if (unitNumber) stallUpdates.unitNumber = unitNumber;
-
-      if (Object.keys(stallUpdates).length > 0) {
-        await updateDoc(doc(db, "foodStalls", stallData.id), stallUpdates);
-      }
-
-      if (location) stallData.location = location;
-      if (unitNumber) stallData.unitNumber = unitNumber;
+      await updateDoc(doc(db, "foodStalls", stallData.id), stallUpdates);
+      stallData.unitNumber = unitNumber;
+      stallData.cuisines = [...editStallCuisines];
+      stallData.operatingHours = JSON.parse(JSON.stringify(editStallHours));
+      if (editStallLocation) stallData.location = editStallLocation.name;
     }
 
-    if (location) vendorData.storeLocation = location;
-    if (unitNumber) vendorData.unitNumber = unitNumber;
+    vendorData.unitNumber = unitNumber;
+    if (editStallLocation) vendorData.storeLocation = editStallLocation.name;
 
     closeEditStall();
     renderSettingsPage(vendorData, stallData);
+    showToast("Stall details saved.", "success");
   } catch (error) {
     console.error("Error saving stall details:", error);
-    alert("Failed to save changes. Please try again.");
+    showToast("Failed to save changes. Please try again.", "error");
     if (saveBtn) {
       saveBtn.disabled = false;
       saveBtn.textContent = "Save changes";
