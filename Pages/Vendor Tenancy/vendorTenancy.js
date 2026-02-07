@@ -424,7 +424,27 @@ async function handleLinkCode() {
       return;
     }
 
-    // Code is valid - update it with vendor info
+    // Validate that vendor's hawker centre matches operator's hawker centre
+    const vendorDoc = await getDoc(doc(db, "vendors", user.uid));
+    const vendorHawkerCentreId = vendorDoc.data()?.hawkerCentreId;
+    const operatorHawkerCentreId = codeData.hawkerCentreId;
+
+    if (!vendorHawkerCentreId) {
+      setStatus("Please complete your stall setup before linking.", "error");
+      activeLinkButton.disabled = false;
+      return;
+    }
+
+    if (vendorHawkerCentreId !== operatorHawkerCentreId) {
+      setStatus(
+        "Your stall location doesn't match this operator's hawker centre. Please check your address.",
+        "error",
+      );
+      activeLinkButton.disabled = false;
+      return;
+    }
+
+    // Code is valid and address matches - update it with vendor info
     await updateDoc(doc(db, "onboardingCodes", fullCode), {
       status: "linked",
       vendorId: user.uid,
