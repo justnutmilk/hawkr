@@ -946,41 +946,63 @@ body {
    ============================================ */
 
 .mismatchDialog {
-    max-width: 420px;
-    width: 90vw;
-    max-height: 85vh;
+    max-width: 520px;
+    width: 92vw;
+    max-height: 90vh;
     overflow-y: auto;
-    padding: 24px;
-    gap: 12px;
+    padding: 32px;
+    gap: 16px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+}
+
+.mismatchDialog .confirmTitle {
+    font-size: 18px;
+}
+
+.mismatchDialog .confirmMessage {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #595959;
+}
+
+.mismatchDialog .confirmActions {
+    margin-top: 8px;
 }
 
 .mismatchLocations {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
     width: 100%;
-    margin-top: 8px;
+    margin-top: 12px;
 }
 
 .mismatchLocation {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
+    padding: 16px;
+    border-radius: 12px;
+    background: rgba(52, 21, 57, 0.03);
+    border: 1px solid rgba(52, 21, 57, 0.06);
 }
 
 .mismatchLocationLabel {
-    color: #808080;
-    font-family: Aptos, sans-serif;
-    font-size: 12px;
-    font-weight: 600;
+    color: #913b9f;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 11px;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
 }
 
 .mismatchMapContainer {
     width: 100%;
-    height: 160px;
-    border-radius: 12px;
+    height: 180px;
+    border-radius: 10px;
     overflow: hidden;
     background: #f0f0f0;
 }
@@ -988,10 +1010,10 @@ body {
 .mismatchLocationName {
     color: #341539;
     font-family: "Geist Mono", "Courier New", Courier, monospace;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
     line-height: 1.4;
-    margin-top: 4px;
+    margin-top: 6px;
 }
 
 .mismatchLocationAddress {
