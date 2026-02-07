@@ -991,7 +991,7 @@ async function loadLinkedVendor(vendorId, code) {
       unitNumber: v.unitNumber || "",
       cuisines: v.cuisines || v.cuisineNames || [],
       operatingHours: v.operatingHours || null,
-      coverPhoto: v.coverPhoto || v.imageUrl || null,
+      coverPhoto: v.coverPhoto || v.storePhotoUrl || v.imageUrl || null,
       hygieneCert: v.hygieneCert || null,
       halalCert: v.halalCert || null,
       bizRegNo: v.bizRegNo || v.uen || "",
