@@ -769,13 +769,17 @@ function renderCodeState() {
 
 const filePreviewUrls = {};
 
+function isUrl(val) {
+  return (
+    typeof val === "string" &&
+    (val.startsWith("http://") || val.startsWith("https://"))
+  );
+}
+
 function renderCertField(certValue, fieldKey) {
   if (certValue) {
     const previewUrl =
-      filePreviewUrls[fieldKey] ||
-      (typeof certValue === "string" && certValue.startsWith("http")
-        ? certValue
-        : null);
+      filePreviewUrls[fieldKey] || (isUrl(certValue) ? certValue : null);
     const displayName =
       fieldKey === "hygieneCert"
         ? "Hygiene certificate"
@@ -787,7 +791,7 @@ function renderCertField(certValue, fieldKey) {
         ${previewUrl ? `<iframe class="onboardPdfPreview" src="${previewUrl}"></iframe>` : `<div class="onboardPdfPlaceholder"><span class="onboardPdfPlaceholderText">PDF</span></div>`}
         <button class="onboardFileDelete" data-field="${fieldKey}"><img src="../../assets/icons/delete.svg" alt="Delete" class="onboardFileDeleteIcon" /></button>
       </div>
-      <span class="onboardFileBadge">${tickIcon} ${typeof certValue === "string" && certValue.startsWith("http") ? displayName : certValue}</span>
+      <span class="onboardFileBadge">${tickIcon} ${isUrl(certValue) ? displayName : certValue}</span>
     </div>`;
   }
   return `
@@ -803,16 +807,13 @@ function renderCertField(certValue, fieldKey) {
 function renderPhotoField(photoValue) {
   if (photoValue) {
     const previewUrl =
-      filePreviewUrls["coverPhoto"] ||
-      (typeof photoValue === "string" && photoValue.startsWith("http")
-        ? photoValue
-        : null);
+      filePreviewUrls["coverPhoto"] || (isUrl(photoValue) ? photoValue : null);
     return `<div class="onboardFilePreview">
       <div class="onboardFilePreviewBox">
         ${previewUrl ? `<img class="onboardImagePreview" src="${previewUrl}" alt="Cover photo" />` : `<div class="onboardPdfPlaceholder"><span class="onboardPdfPlaceholderText">IMG</span></div>`}
         <button class="onboardFileDelete" data-field="coverPhoto"><img src="../../assets/icons/delete.svg" alt="Delete" class="onboardFileDeleteIcon" /></button>
       </div>
-      <span class="onboardFileBadge">${tickIcon} ${typeof photoValue === "string" && photoValue.startsWith("http") ? "Cover photo" : photoValue}</span>
+      <span class="onboardFileBadge">${tickIcon} ${isUrl(photoValue) ? "Cover photo" : photoValue}</span>
     </div>`;
   }
   return `
