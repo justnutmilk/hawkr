@@ -38,19 +38,6 @@
     max-width: 400px;
     pointer-events: auto;
     animation: toastSlideIn 0.35s ease forwards;
-    border-left: 3px solid #913b9f;
-}
-
-.toast.error {
-    border-left-color: #eb001b;
-}
-
-.toast.success {
-    border-left-color: #34c759;
-}
-
-.toast.info {
-    border-left-color: #913b9f;
 }
 
 .toastIcon {
