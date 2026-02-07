@@ -240,16 +240,18 @@ function stopStallListener() {
 }
 
 /**
- * Show address mismatch confirmation with two Google Maps.
+ * Show address mismatch confirmation inside the link panel.
+ * Replaces the panel body/footer with maps and confirm/cancel buttons.
  * Returns Promise<boolean> — true if vendor wants to update address.
  */
 function showAddressMismatchConfirm(vendorCentre, operatorCentre) {
   return new Promise((resolve) => {
-    const overlay = document.createElement("div");
-    overlay.className = "confirmOverlay";
+    const body = document.getElementById("linkBody");
+    const footer = document.getElementById("linkFooter");
+    const title = document.querySelector(".linkTitle");
+    if (!body || !footer) return resolve(false);
 
-    const dialog = document.createElement("div");
-    dialog.className = "confirmDialog mismatchDialog";
+    if (title) title.textContent = "Address Mismatch";
 
     const vLat =
       vendorCentre.location?.latitude || vendorCentre.location?._lat || 1.3521;
@@ -266,40 +268,34 @@ function showAddressMismatchConfirm(vendorCentre, operatorCentre) {
       operatorCentre.location?._long ||
       103.8198;
 
-    dialog.innerHTML = `
-      <p class="confirmTitle">Address mismatch</p>
-      <p class="confirmMessage">Your stall location doesn't match this operator's hawker centre. Would you like to update your address?</p>
-      <div class="mismatchLocations">
-        <div class="mismatchLocation">
-          <div class="mismatchMapContainer" id="mismatchMapVendor"></div>
-          <span class="mismatchLocationLabel">Your location</span>
-          <span class="mismatchLocationName">${vendorCentre.name || "Unknown"}</span>
-          <span class="mismatchLocationAddress">${vendorCentre.address || ""}</span>
-        </div>
-        <div class="mismatchArrow">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-            <polyline points="12 5 19 12 12 19"></polyline>
-          </svg>
-        </div>
-        <div class="mismatchLocation">
-          <div class="mismatchMapContainer" id="mismatchMapOperator"></div>
-          <span class="mismatchLocationLabel">Operator's location</span>
-          <span class="mismatchLocationName">${operatorCentre.name || "Unknown"}</span>
-          <span class="mismatchLocationAddress">${operatorCentre.address || ""}</span>
-        </div>
+    body.innerHTML = `
+      <p class="mismatchDescription">Your stall location doesn't match this operator's hawker centre. Would you like to update your address?</p>
+      <div class="mismatchLocation">
+        <span class="mismatchLocationLabel">Your location</span>
+        <div class="mismatchMapContainer" id="mismatchMapVendor"></div>
+        <span class="mismatchLocationName">${vendorCentre.name || "Unknown"}</span>
+        <span class="mismatchLocationAddress">${vendorCentre.address || ""}</span>
       </div>
-      <div class="confirmActions">
-        <button class="confirmBtn confirmBtnCancel" id="mismatchCancel">Cancel</button>
-        <button class="confirmBtn confirmBtnConfirm" id="mismatchConfirm">Update & Link</button>
+      <div class="mismatchArrow">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <polyline points="19 12 12 19 5 12"></polyline>
+        </svg>
+      </div>
+      <div class="mismatchLocation">
+        <span class="mismatchLocationLabel">Operator's location</span>
+        <div class="mismatchMapContainer" id="mismatchMapOperator"></div>
+        <span class="mismatchLocationName">${operatorCentre.name || "Unknown"}</span>
+        <span class="mismatchLocationAddress">${operatorCentre.address || ""}</span>
       </div>
     `;
 
-    overlay.appendChild(dialog);
-    document.body.appendChild(overlay);
-    requestAnimationFrame(() => overlay.classList.add("active"));
+    footer.innerHTML = `
+      <button class="linkCancelBtn" id="mismatchCancel">Cancel <kbd class="linkCancelKbd">Esc</kbd></button>
+      <button class="linkButton" id="mismatchConfirm">Update & Link</button>
+    `;
 
-    // Initialize maps after DOM insertion
+    // Initialize maps
     (async () => {
       try {
         const { Map } = await google.maps.importLibrary("maps");
@@ -317,10 +313,7 @@ function showAddressMismatchConfirm(vendorCentre, operatorCentre) {
 
         const vendorMap = new Map(
           document.getElementById("mismatchMapVendor"),
-          {
-            ...mapOptions,
-            center: { lat: vLat, lng: vLng },
-          },
+          { ...mapOptions, center: { lat: vLat, lng: vLng } },
         );
         new AdvancedMarkerElement({
           position: { lat: vLat, lng: vLng },
@@ -329,35 +322,23 @@ function showAddressMismatchConfirm(vendorCentre, operatorCentre) {
 
         const operatorMap = new Map(
           document.getElementById("mismatchMapOperator"),
-          {
-            ...mapOptions,
-            center: { lat: oLat, lng: oLng },
-          },
+          { ...mapOptions, center: { lat: oLat, lng: oLng } },
         );
         new AdvancedMarkerElement({
           position: { lat: oLat, lng: oLng },
           map: operatorMap,
         });
       } catch (err) {
-        console.warn("Could not load maps for mismatch dialog:", err);
+        console.warn("Could not load maps for mismatch:", err);
       }
     })();
 
-    function close(result) {
-      overlay.classList.remove("active");
-      overlay.addEventListener("transitionend", () => overlay.remove());
-      resolve(result);
-    }
-
-    dialog
-      .querySelector("#mismatchCancel")
-      .addEventListener("click", () => close(false));
-    dialog
-      .querySelector("#mismatchConfirm")
-      .addEventListener("click", () => close(true));
-    overlay.addEventListener("click", (e) => {
-      if (e.target === overlay) close(false);
-    });
+    document
+      .getElementById("mismatchCancel")
+      .addEventListener("click", () => resolve(false));
+    document
+      .getElementById("mismatchConfirm")
+      .addEventListener("click", () => resolve(true));
   });
 }
 
@@ -571,7 +552,7 @@ async function handleLinkCode() {
       );
 
       if (!confirmed) {
-        activeLinkButton.disabled = false;
+        closeLinkPanel();
         return;
       }
 
