@@ -1051,6 +1051,7 @@ async function loadLinkedVendor(vendorId, code) {
     const v = vendorDoc.data();
     linkedVendorData = {
       vendorId: vendorId,
+      stallId: v.stallId || null,
       onboardCode: code,
       storeName: v.storeName || v.businessName || v.name || "",
       unitNumber: v.unitNumber || "",
@@ -1426,8 +1427,11 @@ async function handleApprove() {
     // Convert schedule to Firestore format
     const operatingHours = scheduleArrayToObject(scheduleData);
 
-    // Create foodStall document
-    const stallRef = await addDoc(collection(db, "foodStalls"), {
+    // Check if vendor already has a stall — update it instead of creating a new one
+    const existingStallId = linkedVendorData.stallId;
+    let stallId;
+
+    const stallData = {
       name: storeName,
       nameLower: storeName.toLowerCase(),
       ownerId: linkedVendorData.vendorId,
@@ -1441,8 +1445,6 @@ async function handleApprove() {
       operatingHours: operatingHours,
       imageUrl: linkedVendorData.coverPhoto || "",
       coverImageUrl: linkedVendorData.coverPhoto || "",
-      rating: 0,
-      reviewCount: 0,
       isActive: true,
       isOpen: true,
       bizRegNo: bizRegNo,
@@ -1450,9 +1452,23 @@ async function handleApprove() {
       contactNumber: contactNumber,
       hygieneCert: linkedVendorData.hygieneCert || null,
       halalCert: linkedVendorData.halalCert || null,
-      createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-    });
+    };
+
+    if (existingStallId) {
+      // Update existing stall
+      await updateDoc(doc(db, "foodStalls", existingStallId), stallData);
+      stallId = existingStallId;
+    } else {
+      // No existing stall — create one
+      const stallRef = await addDoc(collection(db, "foodStalls"), {
+        ...stallData,
+        rating: 0,
+        reviewCount: 0,
+        createdAt: serverTimestamp(),
+      });
+      stallId = stallRef.id;
+    }
 
     // Update the onboarding code to "approved"
     if (linkedVendorData.onboardCode) {
@@ -1461,7 +1477,7 @@ async function handleApprove() {
           doc(db, "onboardingCodes", linkedVendorData.onboardCode),
           {
             status: "approved",
-            stallId: stallRef.id,
+            stallId: stallId,
           },
         );
       } catch (err) {
@@ -1472,7 +1488,7 @@ async function handleApprove() {
     // Update vendor document with stall reference
     try {
       await updateDoc(doc(db, "vendors", linkedVendorData.vendorId), {
-        stallId: stallRef.id,
+        stallId: stallId,
         hawkerCentreId: currentHawkerCentre.id,
         storeLocation: currentHawkerCentre.name || "",
         tenancyLinkedAt: serverTimestamp(),

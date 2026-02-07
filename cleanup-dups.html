@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head><title>Cleanup Duplicate Stalls</title></head>
+<body>
+<h2>Duplicate Food Stall Cleanup</h2>
+<pre id="log" style="font-family:monospace;white-space:pre-wrap;max-width:900px"></pre>
+<button id="runBtn">Run Cleanup (Dry Run)</button>
+<button id="deleteBtn" style="background:red;color:white;display:none;margin-left:8px">Delete Duplicates</button>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore, collection, getDocs, deleteDoc, doc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getAuth
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDDnphzWwGQ6rGxgBJsMv6hxNg7eKH55rY",
+  authDomain: "hawkr-0.firebaseapp.com",
+  projectId: "hawkr-0",
+  storageBucket: "hawkr-0.firebasestorage.app",
+  messagingSenderId: "660265694240",
+  appId: "1:660265694240:web:baea70a40a35ea4f3ff845",
+  measurementId: "G-EBEY7TFVFY",
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+const logEl = document.getElementById("log");
+const deleteBtn = document.getElementById("deleteBtn");
+let toDelete = [];
+
+function log(msg) {
+  logEl.textContent += msg + "\n";
+}
+
+document.getElementById("runBtn").addEventListener("click", async () => {
+  logEl.textContent = "";
+  toDelete = [];
+
+  try {
+    // Wait for auth state
+    await new Promise((resolve) => {
+      const unsub = auth.onAuthStateChanged((user) => {
+        unsub();
+        if (user) log("Signed in as: " + user.email);
+        else log("WARNING: Not signed in. Sign in on the main app first, then come back here.");
+        resolve();
+      });
+    });
+
+    // Step 1: Get all vendors with a stallId
+    log("\n--- Step 1: Fetching vendors with stallId ---");
+    const vendorsSnap = await getDocs(collection(db, "vendors"));
+    const vendorStallMap = {};
+
+    vendorsSnap.forEach((d) => {
+      const data = d.data();
+      if (data.stallId) {
+        vendorStallMap[d.id] = data.stallId;
+        log("Vendor " + d.id + " -> canonical stall: " + data.stallId);
+      }
+    });
+
+    // Step 2: Get ALL food stalls
+    log("\n--- Step 2: Fetching all food stalls ---");
+    const stallsSnap = await getDocs(collection(db, "foodStalls"));
+    const stallsByOwner = {};
+
+    stallsSnap.forEach((d) => {
+      const data = d.data();
+      const ownerId = data.ownerId;
+      if (ownerId) {
+        if (!stallsByOwner[ownerId]) stallsByOwner[ownerId] = [];
+        stallsByOwner[ownerId].push({ id: d.id, ...data });
+      }
+    });
+
+    // Step 3: Find duplicates
+    log("\n--- Step 3: Identifying duplicates ---");
+    for (const [ownerId, stalls] of Object.entries(stallsByOwner)) {
+      const canonicalId = vendorStallMap[ownerId];
+      log("\nVendor " + ownerId + " has " + stalls.length + " stall(s) (canonical: " + (canonicalId || "NONE") + "):");
+
+      for (const stall of stalls) {
+        const isCanonical = stall.id === canonicalId;
+        const label = isCanonical ? "KEEP" : "DELETE";
+        const created = stall.createdAt?.toDate?.()?.toISOString?.() || "unknown";
+        log("  [" + label + "] " + stall.id + ' - "' + stall.name + '" (created: ' + created + ")");
+
+        if (!isCanonical) {
+          toDelete.push(stall.id);
+        }
+      }
+    }
+
+    // Step 4: Orphaned stalls (no ownerId)
+    log("\n--- Step 4: Orphaned stalls (no ownerId) ---");
+    let orphanCount = 0;
+    stallsSnap.forEach((d) => {
+      const data = d.data();
+      if (!data.ownerId) {
+        log("  [ORPHAN] " + d.id + ' - "' + (data.name || "unnamed") + '"');
+        toDelete.push(d.id);
+        orphanCount++;
+      }
+    });
+    if (orphanCount === 0) log("  None found.");
+
+    log("\n--- Summary ---");
+    log("Total stalls: " + stallsSnap.size);
+    log("To delete: " + toDelete.length);
+
+    if (toDelete.length > 0) {
+      deleteBtn.style.display = "inline-block";
+      log("\nReview above, then click 'Delete Duplicates' to remove them.");
+    } else {
+      log("No duplicates found!");
+    }
+  } catch (err) {
+    log("ERROR: " + err.message);
+    console.error(err);
+  }
+});
+
+deleteBtn.addEventListener("click", async () => {
+  log("\n--- Deleting ---");
+  let deleted = 0;
+  for (const stallId of toDelete) {
+    try {
+      await deleteDoc(doc(db, "foodStalls", stallId));
+      log("  Deleted: " + stallId);
+      deleted++;
+    } catch (err) {
+      log("  FAILED " + stallId + ": " + err.message);
+    }
+  }
+  log("\nDone! Deleted " + deleted + "/" + toDelete.length + " stalls.");
+  deleteBtn.style.display = "none";
+});
+</script>
+</body>
+</html>

@@ -50,7 +50,9 @@ export async function getHawkerCentreWithStalls(centreId) {
 
   // Import food stalls service
   const { getStallsByHawkerCentre } = await import("./foodStalls.js");
-  const stalls = await getStallsByHawkerCentre(centreId);
+  const allStalls = await getStallsByHawkerCentre(centreId);
+  // Only include stalls that are linked to a vendor
+  const stalls = allStalls.filter((s) => s.ownerId);
 
   return {
     ...centre,
