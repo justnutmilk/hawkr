@@ -27,315 +27,14 @@ let currentStallData = null;
 let realReviews = [];
 let selectedReviewId = null;
 let selectedReviewData = null;
+let completedOrders = [];
+let chartData = null;
+let topItemsBySales = [];
+let topItemsByLikes = [];
 
 const tagIcons = {
   Halal: "../../assets/icons/halal.png",
   Kosher: "../../assets/icons/kosher.svg",
-};
-
-const mockStore = {
-  name: "Chinese Foods Private Limited",
-  uen: "202401234K",
-  tags: ["Chinese", "Halal", "Halal"],
-  rent: { day: 50, month: 1500, year: 18000 },
-  charts: {
-    // Day: full 24 hours, nulls for hours with no data yet
-    day: {
-      labels: [
-        "12am",
-        "1am",
-        "2am",
-        "3am",
-        "4am",
-        "5am",
-        "6am",
-        "7am",
-        "8am",
-        "9am",
-        "10am",
-        "11am",
-        "12pm",
-        "1pm",
-        "2pm",
-        "3pm",
-        "4pm",
-        "5pm",
-        "6pm",
-        "7pm",
-        "8pm",
-        "9pm",
-        "10pm",
-        "11pm",
-      ],
-      salesByValue: [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        120,
-        185,
-        310,
-        480,
-        620,
-        540,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-      ],
-      salesByQty: [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        8,
-        14,
-        22,
-        35,
-        45,
-        38,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-      ],
-    },
-    // Month: all 12 months, nulls for future months (currently Feb)
-    month: {
-      labels: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ],
-      salesByValue: [
-        8200,
-        9100,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-      ],
-      salesByQty: [
-        580,
-        640,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-      ],
-    },
-    // Year: only years the shop has data for
-    year: {
-      labels: ["2025", "2026"],
-      salesByValue: [386500, 17300],
-      salesByQty: [27040, 1220],
-    },
-  },
-  topBySales: [
-    {
-      name: "Mala Tang",
-      image: "../../images/squirrelCard.svg",
-      price: 23.9,
-      count: 201,
-    },
-    {
-      name: "Char Kway Teow",
-      image: "../../images/squirrelCard.svg",
-      price: 8.5,
-      count: 187,
-    },
-    {
-      name: "Laksa",
-      image: "../../images/squirrelCard.svg",
-      price: 7.9,
-      count: 154,
-    },
-    {
-      name: "Hainanese Chicken Rice",
-      image: "../../images/squirrelCard.svg",
-      price: 5.5,
-      count: 143,
-    },
-    {
-      name: "Roti Prata",
-      image: "../../images/squirrelCard.svg",
-      price: 3.5,
-      count: 129,
-    },
-    {
-      name: "Nasi Lemak",
-      image: "../../images/squirrelCard.svg",
-      price: 6.0,
-      count: 118,
-    },
-    {
-      name: "Bak Chor Mee",
-      image: "../../images/squirrelCard.svg",
-      price: 6.5,
-      count: 102,
-    },
-  ],
-  topByLikes: [
-    {
-      name: "Mala Tang",
-      image: "../../images/squirrelCard.svg",
-      price: 23.9,
-      count: 67,
-    },
-    {
-      name: "Char Kway Teow",
-      image: "../../images/squirrelCard.svg",
-      price: 8.5,
-      count: 58,
-    },
-    {
-      name: "Laksa",
-      image: "../../images/squirrelCard.svg",
-      price: 7.9,
-      count: 45,
-    },
-    {
-      name: "Hainanese Chicken Rice",
-      image: "../../images/squirrelCard.svg",
-      price: 5.5,
-      count: 39,
-    },
-    {
-      name: "Roti Prata",
-      image: "../../images/squirrelCard.svg",
-      price: 3.5,
-      count: 31,
-    },
-    {
-      name: "Nasi Lemak",
-      image: "../../images/squirrelCard.svg",
-      price: 6.0,
-      count: 27,
-    },
-    {
-      name: "Bak Chor Mee",
-      image: "../../images/squirrelCard.svg",
-      price: 6.5,
-      count: 22,
-    },
-  ],
-  documents: [
-    {
-      title: "Rental Agreement",
-      icon: "agreement",
-      current: {
-        image: "../../images/squirrelCard.svg",
-        filename: "rental_agreement_2026.pdf",
-      },
-      archived: [
-        {
-          filename: "rental_agreement_2025.pdf",
-          uploaded: "1 Jan 2025",
-          replaced: "1 Jan 2026",
-          url: "../../images/squirrelCard.svg",
-        },
-        {
-          filename: "rental_agreement_2024.pdf",
-          uploaded: "1 Jan 2024",
-          replaced: "1 Jan 2025",
-          url: "../../images/squirrelCard.svg",
-        },
-      ],
-    },
-    {
-      title: "Halal Cert",
-      icon: "halal",
-      current: null,
-      archived: [],
-    },
-  ],
-  hygieneGrade: {
-    grade: "A",
-    lastUpdated: "15 Jan 2025",
-  },
-  reviews: [
-    {
-      title: "Chinese Sala nubbad",
-      body: "Ingredients used were fresh, and portion was great too! The real value for money.",
-      stars: 3,
-      date: "2 days ago",
-      author: "Jane Doe",
-      sentiment: "positive",
-    },
-    {
-      title: "Rude Staff!",
-      body: "Ah Poh screamed at me when it was my turn to order, rushing me to spit out a random menu item. The serving was small and gravy was overtly salty. Food is oily like my teenage child\u2019s nose pores. 10/10 DO NOT RECOMMEND.",
-      stars: 1,
-      date: "2 days ago",
-      author: "Jane's Foe",
-      sentiment: "negative",
-    },
-    {
-      title: "Inconsistent service",
-      body: "Most menu items are always not available and this vendor doesnt update the availability. So the food usually isnt ready when i get to the store! Always have to argue for a refund and pay again for another item. Such vendors make this marketplace an inconsistent and undesirable place to trade.\n\nThe Sala is good tho.",
-      stars: 2,
-      date: "2 days ago",
-      author: "Jane Loe",
-      sentiment: "negative",
-    },
-    {
-      title: "Great food, great vibes",
-      body: "Love the atmosphere and the food is always consistent. Will come back again!",
-      stars: 5,
-      date: "3 days ago",
-      author: "John Tan",
-      sentiment: "positive",
-    },
-    {
-      title: "Decent but pricey",
-      body: "Food quality is okay but a bit overpriced for hawker standards.",
-      stars: 3,
-      date: "4 days ago",
-      author: "Mary Lee",
-      sentiment: "negative",
-    },
-  ],
 };
 
 function renderTag(tag) {
@@ -345,6 +44,206 @@ function renderTag(tag) {
   }
   return `<span class="storeTag">${tag}</span>`;
 }
+
+// ============================================
+// DATA FETCHING & AGGREGATION
+// ============================================
+
+function aggregateChartData(orders) {
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const todayStart = new Date(currentYear, now.getMonth(), now.getDate());
+  const hourLabels = [
+    "12am",
+    "1am",
+    "2am",
+    "3am",
+    "4am",
+    "5am",
+    "6am",
+    "7am",
+    "8am",
+    "9am",
+    "10am",
+    "11am",
+    "12pm",
+    "1pm",
+    "2pm",
+    "3pm",
+    "4pm",
+    "5pm",
+    "6pm",
+    "7pm",
+    "8pm",
+    "9pm",
+    "10pm",
+    "11pm",
+  ];
+  const dayRevenue = new Array(24).fill(0);
+  const dayQty = new Array(24).fill(0);
+
+  const monthLabels = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  const monthRevenue = new Array(12).fill(0);
+  const monthQty = new Array(12).fill(0);
+
+  const yearMap = {};
+
+  orders.forEach((order) => {
+    const d = order.createdAt;
+    const itemQty = order.items.reduce(
+      (sum, item) => sum + (item.quantity || 0),
+      0,
+    );
+
+    if (d >= todayStart) {
+      const hour = d.getHours();
+      dayRevenue[hour] += order.total;
+      dayQty[hour] += itemQty;
+    }
+
+    if (d.getFullYear() === currentYear) {
+      const month = d.getMonth();
+      monthRevenue[month] += order.total;
+      monthQty[month] += itemQty;
+    }
+
+    const year = d.getFullYear();
+    if (!yearMap[year]) yearMap[year] = { revenue: 0, qty: 0 };
+    yearMap[year].revenue += order.total;
+    yearMap[year].qty += itemQty;
+  });
+
+  const dayRevenueChart = hourLabels.map((_, i) =>
+    i > currentHour ? null : Math.round(dayRevenue[i] * 100) / 100,
+  );
+  const dayQtyChart = hourLabels.map((_, i) =>
+    i > currentHour ? null : dayQty[i],
+  );
+
+  const monthRevenueChart = monthLabels.map((_, i) =>
+    i > currentMonth ? null : Math.round(monthRevenue[i] * 100) / 100,
+  );
+  const monthQtyChart = monthLabels.map((_, i) =>
+    i > currentMonth ? null : monthQty[i],
+  );
+
+  const sortedYears = Object.keys(yearMap).sort();
+  const yearLabels =
+    sortedYears.length > 0 ? sortedYears : [String(currentYear)];
+  const yearRevenueChart = yearLabels.map(
+    (y) => Math.round((yearMap[y]?.revenue || 0) * 100) / 100,
+  );
+  const yearQtyChart = yearLabels.map((y) => yearMap[y]?.qty || 0);
+
+  return {
+    day: { labels: hourLabels, revenue: dayRevenueChart, qty: dayQtyChart },
+    month: {
+      labels: monthLabels,
+      revenue: monthRevenueChart,
+      qty: monthQtyChart,
+    },
+    year: { labels: yearLabels, revenue: yearRevenueChart, qty: yearQtyChart },
+  };
+}
+
+function buildTopItemsBySales(orders) {
+  const itemMap = {};
+  orders.forEach((order) => {
+    order.items.forEach((item) => {
+      const key = item.menuItemId || item.name;
+      if (!itemMap[key]) {
+        itemMap[key] = {
+          name: item.name || "Unknown Item",
+          imageUrl: item.imageUrl || "",
+          unitPrice: item.unitPrice || 0,
+          count: 0,
+          revenue: 0,
+        };
+      }
+      itemMap[key].count += item.quantity || 0;
+      itemMap[key].revenue += item.totalPrice || 0;
+    });
+  });
+
+  return Object.values(itemMap).sort((a, b) => b.count - a.count);
+}
+
+async function loadCompletedOrders(stallId) {
+  try {
+    const q = query(
+      collection(db, "orders"),
+      where("stallId", "==", stallId),
+      where("status", "==", "ready"),
+    );
+    const snapshot = await getDocs(q);
+
+    completedOrders = snapshot.docs.map((d) => {
+      const data = d.data();
+      return {
+        id: d.id,
+        total: data.total || 0,
+        items: data.items || [],
+        createdAt: data.createdAt?.toDate?.() || new Date(data.createdAt),
+      };
+    });
+
+    chartData = aggregateChartData(completedOrders);
+    topItemsBySales = buildTopItemsBySales(completedOrders);
+  } catch (error) {
+    console.error("Error loading completed orders:", error);
+    completedOrders = [];
+    chartData = aggregateChartData([]);
+    topItemsBySales = [];
+  }
+}
+
+async function loadMenuItemLikes(stallId) {
+  try {
+    const menuRef = collection(db, "foodStalls", stallId, "menuItems");
+    const snapshot = await getDocs(menuRef);
+
+    topItemsByLikes = snapshot.docs
+      .map((d) => ({
+        id: d.id,
+        name: d.data().name || "Unknown Item",
+        imageUrl: d.data().imageUrl || "",
+        unitPrice: d.data().price || 0,
+        likesCount: d.data().likesCount || 0,
+      }))
+      .filter((item) => item.likesCount > 0)
+      .sort((a, b) => b.likesCount - a.likesCount);
+  } catch (error) {
+    console.error("Error loading menu item likes:", error);
+    topItemsByLikes = [];
+  }
+}
+
+function getRent() {
+  if (currentStallData && currentStallData.rent) {
+    return currentStallData.rent[currentTimeframe] || 0;
+  }
+  return 0;
+}
+
+// ============================================
+// CHARTS
+// ============================================
 
 // Tracks the currently selected timeframe for charts (day, month, year)
 let currentTimeframe = "month";
@@ -418,71 +317,45 @@ function drawBarChart(labels, values, color, elementId) {
 
 // Draws all 3 charts using the currently selected timeframe's data
 function drawAllCharts() {
-  const store = mockStore;
-  // Get the data for the current timeframe (day, month, or year)
-  const timeframeData = store.charts[currentTimeframe];
-  // Get rent for this timeframe to calculate profit
-  const rent = store.rent[currentTimeframe];
+  if (!chartData) return;
+
+  const tf = chartData[currentTimeframe];
+  const rent = getRent();
 
   // Chart 1: Sales by Value ($) — purple line
-  drawSingleChart(
-    timeframeData.labels,
-    timeframeData.salesByValue,
-    "#913b9f",
-    "chartSalesByValue",
-  );
+  drawSingleChart(tf.labels, tf.revenue, "#913b9f", "chartSalesByValue");
 
   // Chart 2: Sales by Product Qty — dark red bar chart
-  drawBarChart(
-    timeframeData.labels,
-    timeframeData.salesByQty,
-    "#6b1d1d",
-    "chartSalesByQty",
-  );
+  drawBarChart(tf.labels, tf.qty, "#6b1d1d", "chartSalesByQty");
 
-  // Chart 3: Profit after Rent — calculated as cumulative sales minus rent
-  // Each point shows the running total of sales up to that period minus the rent
-  // e.g. for "month" view: Week 1 profit = week1Sales - rent,
-  //   Week 2 = (week1 + week2) sales - rent, etc.
+  // Chart 3: Profit after Rent — cumulative revenue minus rent
   const profitData = [];
   let cumulativeSales = 0;
-  for (let index = 0; index < timeframeData.salesByValue.length; index++) {
-    if (timeframeData.salesByValue[index] === null) {
-      // No data for this period yet
+  for (let i = 0; i < tf.revenue.length; i++) {
+    if (tf.revenue[i] === null) {
       profitData.push(null);
     } else {
-      // Add this period's sales to the running total
-      cumulativeSales += timeframeData.salesByValue[index];
-      // Subtract the full timeframe rent to show profit
-      profitData.push(cumulativeSales - rent);
+      cumulativeSales += tf.revenue[i];
+      profitData.push(Math.round((cumulativeSales - rent) * 100) / 100);
     }
   }
-  drawSingleChart(
-    timeframeData.labels,
-    profitData,
-    "#e67e22",
-    "chartProfitAfterRent",
-  );
+  drawSingleChart(tf.labels, profitData, "#e67e22", "chartProfitAfterRent");
 }
 
 // Updates the chart total labels to reflect the current timeframe's data
 function updateChartTotals() {
-  const timeframeData = mockStore.charts[currentTimeframe];
-  const rent = mockStore.rent[currentTimeframe];
-  const totalSales = timeframeData.salesByValue.reduce(
-    (sum, value) => sum + (value || 0),
-    0,
-  );
-  const totalQty = timeframeData.salesByQty.reduce(
-    (sum, value) => sum + (value || 0),
-    0,
-  );
+  if (!chartData) return;
+
+  const tf = chartData[currentTimeframe];
+  const rent = getRent();
+  const totalRevenue = tf.revenue.reduce((sum, v) => sum + (v || 0), 0);
+  const totalQty = tf.qty.reduce((sum, v) => sum + (v || 0), 0);
 
   const totals = document.querySelectorAll(".chartTotal");
   if (totals.length >= 3) {
-    totals[0].textContent = `$${totalSales.toLocaleString()}`;
+    totals[0].textContent = `$${totalRevenue.toLocaleString()}`;
     totals[1].textContent = `${totalQty.toLocaleString()} items`;
-    totals[2].textContent = `$${(totalSales - rent).toLocaleString()}`;
+    totals[2].textContent = `$${(totalRevenue - rent).toLocaleString()}`;
   }
 }
 
@@ -508,18 +381,49 @@ const ITEMS_INITIAL = 1;
 const ITEMS_PER_LOAD = 3;
 const visibleCounts = { sales: ITEMS_INITIAL, likes: ITEMS_INITIAL };
 
-function renderTopItemCard(item) {
+function renderSalesItemCard(item) {
+  const imgSrc = item.imageUrl || "";
+  const imgHTML = imgSrc
+    ? `<img class="topItemImage" src="${imgSrc}" alt="${item.name}" onerror="this.style.display='none'" />`
+    : `<div class="topItemImage"></div>`;
   return `
     <div class="topItemCard">
-      <img class="topItemImage" src="${item.image}" alt="${item.name}" />
+      ${imgHTML}
       <span class="topItemName">${item.name}</span>
-      <span class="topItemPrice">$${item.price.toFixed(1)}</span>
-      <span class="topItemStat">${item.count} To Month</span>
+      <span class="topItemPrice">$${item.unitPrice.toFixed(2)}</span>
+      <span class="topItemStat">${item.count} sold</span>
     </div>
   `;
 }
 
-function renderTopItemSection(type, badge, title, items) {
+function renderLikesItemCard(item) {
+  const imgSrc = item.imageUrl || "";
+  const imgHTML = imgSrc
+    ? `<img class="topItemImage" src="${imgSrc}" alt="${item.name}" onerror="this.style.display='none'" />`
+    : `<div class="topItemImage"></div>`;
+  return `
+    <div class="topItemCard">
+      ${imgHTML}
+      <span class="topItemName">${item.name}</span>
+      <span class="topItemPrice">$${item.unitPrice.toFixed(2)}</span>
+      <span class="topItemStat">${item.likesCount} like${item.likesCount !== 1 ? "s" : ""}</span>
+    </div>
+  `;
+}
+
+function renderTopItemSection(type, badge, title, items, cardRenderer) {
+  if (items.length === 0) {
+    return `
+      <div class="topItemSection">
+        <div class="topItemHeader">
+          ${badge}
+          <span class="topItemTitle">${title}</span>
+        </div>
+        <p class="topItemEmpty">No data yet</p>
+      </div>
+    `;
+  }
+
   const visible = items.slice(0, visibleCounts[type]);
   const hasMore = visibleCounts[type] < items.length;
   const loadMoreButton = hasMore
@@ -531,7 +435,7 @@ function renderTopItemSection(type, badge, title, items) {
         ${badge}
         <span class="topItemTitle">${title}</span>
       </div>
-      ${visible.map(renderTopItemCard).join("")}
+      ${visible.map(cardRenderer).join("")}
       ${loadMoreButton}
     </div>
   `;
@@ -1030,18 +934,17 @@ const heartBadge = `<svg class="topItemIcon" viewBox="0 0 36 36" fill="none" xml
 </svg>`;
 
 function renderPage() {
-  const store = mockStore;
-
-  // Use real stall data for header if available, fallback to mock
-  const displayName = currentStallData?.name || store.name;
-  const displayUen = currentStallData?.bizRegNo || store.uen;
-  const displayTags = (currentStallData?.cuisineNames || store.tags)
+  const displayName = currentStallData?.name || "Loading...";
+  const displayUen = currentStallData?.bizRegNo || "";
+  const displayTags = (currentStallData?.cuisineNames || [])
     .map(renderTag)
     .join("");
 
   // Get current timeframe data for rendering totals in the chart headers
-  const timeframeData = store.charts[currentTimeframe];
-  const rent = store.rent[currentTimeframe];
+  const tf = chartData ? chartData[currentTimeframe] : { revenue: [], qty: [] };
+  const rent = getRent();
+  const totalRevenue = tf.revenue.reduce((sum, v) => sum + (v || 0), 0);
+  const totalQty = tf.qty.reduce((sum, v) => sum + (v || 0), 0);
 
   document.getElementById("pageContent").innerHTML = `
     <div class="storeHeader">
@@ -1087,7 +990,7 @@ function renderPage() {
       <!-- Chart 1: Sales by dollar value -->
       <div class="chartBlock">
         <div class="chartBlockHeader">
-          <span class="chartTotal">$${timeframeData.salesByValue.reduce((sum, value) => sum + (value || 0), 0).toLocaleString()}</span>
+          <span class="chartTotal">$${totalRevenue.toLocaleString()}</span>
           <span class="chartLabel">Sales by Value</span>
         </div>
         <div class="chartContainer" id="chartSalesByValue"></div>
@@ -1096,7 +999,7 @@ function renderPage() {
       <!-- Chart 2: Sales by number of items sold -->
       <div class="chartBlock">
         <div class="chartBlockHeader">
-          <span class="chartTotal">${timeframeData.salesByQty.reduce((sum, value) => sum + (value || 0), 0).toLocaleString()} items</span>
+          <span class="chartTotal">${totalQty.toLocaleString()} items</span>
           <span class="chartLabel">Sales by Product Qty</span>
         </div>
         <div class="chartContainer" id="chartSalesByQty"></div>
@@ -1105,7 +1008,7 @@ function renderPage() {
       <!-- Chart 3: Total sales minus rent for the timeframe -->
       <div class="chartBlock">
         <div class="chartBlockHeader">
-          <span class="chartTotal">$${(timeframeData.salesByValue.reduce((sum, value) => sum + (value || 0), 0) - rent).toLocaleString()}</span>
+          <span class="chartTotal">$${(totalRevenue - rent).toLocaleString()}</span>
           <div class="chartLabelGroup">
             <span class="chartLabel">Profit after Rent</span>
             <span class="chartMicrocopy">Not including vendor ingredients</span>
@@ -1115,9 +1018,9 @@ function renderPage() {
       </div>
     </div>
 
-    ${renderTopItemSection("sales", starBadge, "Top Item by Sales", store.topBySales)}
+    ${renderTopItemSection("sales", starBadge, "Top Item by Sales", topItemsBySales, renderSalesItemCard)}
 
-    ${renderTopItemSection("likes", heartBadge, "Top Item by Likes", store.topByLikes)}
+    ${renderTopItemSection("likes", heartBadge, "Top Item by Likes", topItemsByLikes, renderLikesItemCard)}
 
     ${renderReviewsSection(realReviews)}
 
@@ -1209,16 +1112,23 @@ async function loadStallData() {
       return;
     }
 
-    try {
-      const result = await getFeedbackByStall(currentStallId, {
-        limitCount: 50,
-        publicOnly: false,
-      });
-      realReviews = result.feedback || [];
-    } catch (err) {
-      console.warn("Could not fetch reviews:", err);
-      realReviews = [];
-    }
+    // Fetch reviews, completed orders, and menu item likes in parallel
+    await Promise.all([
+      (async () => {
+        try {
+          const result = await getFeedbackByStall(currentStallId, {
+            limitCount: 50,
+            publicOnly: false,
+          });
+          realReviews = result.feedback || [];
+        } catch (err) {
+          console.warn("Could not fetch reviews:", err);
+          realReviews = [];
+        }
+      })(),
+      loadCompletedOrders(currentStallId),
+      loadMenuItemLikes(currentStallId),
+    ]);
   }
 }
 
