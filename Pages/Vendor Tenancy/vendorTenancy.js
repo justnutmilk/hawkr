@@ -190,15 +190,27 @@ function listenToVendorStatus(uid) {
  * Listen to the food stall doc. If ownerId is removed (operator unlinked),
  * the vendor cleans up their own doc so the UI updates.
  */
+let currentStallListenerId = null;
+
 function startStallListener(uid, stallId) {
   // Don't restart if already listening to the same stall
-  if (stallUnsubscribe && stallUnsubscribe._stallId === stallId) return;
+  if (currentStallListenerId === stallId) return;
   stopStallListener();
+  currentStallListenerId = stallId;
 
-  const unsub = onSnapshot(
+  let initialLoad = true;
+
+  stallUnsubscribe = onSnapshot(
     doc(db, "foodStalls", stallId),
     async (snapshot) => {
-      if (!snapshot.exists() || !snapshot.data().ownerId) {
+      // Skip the initial snapshot — only react to changes
+      if (initialLoad) {
+        initialLoad = false;
+        return;
+      }
+
+      const ownerRemoved = !snapshot.exists() || !snapshot.data().ownerId;
+      if (ownerRemoved) {
         // Operator removed ownerId — vendor self-cleans their doc
         stopStallListener();
         try {
@@ -217,8 +229,6 @@ function startStallListener(uid, stallId) {
       console.warn("Stall listener error:", error);
     },
   );
-  unsub._stallId = stallId;
-  stallUnsubscribe = unsub;
 }
 
 function stopStallListener() {
@@ -226,6 +236,7 @@ function stopStallListener() {
     stallUnsubscribe();
     stallUnsubscribe = null;
   }
+  currentStallListenerId = null;
 }
 
 /**
