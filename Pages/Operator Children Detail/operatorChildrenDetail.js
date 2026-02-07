@@ -3,7 +3,15 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/fi
 import {
   doc,
   getDoc,
+  updateDoc,
+  deleteDoc,
+  deleteField,
+  collection,
+  query,
+  where,
+  getDocs,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { showConfirm } from "../../assets/js/toast.js";
 import { getStallById } from "../../firebase/services/foodStalls.js";
 import {
   getFeedbackByStall,
@@ -807,20 +815,111 @@ function bindResolveModal() {
 
 // Medal icon
 function renderHygieneGrade(hygiene) {
+  if (!hygiene || !hygiene.grade) {
+    return `
+      <div class="hygieneBlock">
+        <span class="hygieneTitle">Hygiene Grade</span>
+        <div class="docEmpty">No hygiene grade assigned.</div>
+      </div>
+    `;
+  }
+
+  const lastUpdated = hygiene.lastUpdated
+    ? typeof hygiene.lastUpdated === "string"
+      ? hygiene.lastUpdated
+      : hygiene.lastUpdated.toDate
+        ? hygiene.lastUpdated.toDate().toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          })
+        : ""
+    : "";
+
   return `
     <div class="hygieneBlock">
       <span class="hygieneTitle">Hygiene Grade</span>
       <div class="hygieneGradeRow">
         <span class="hygieneGrade">${hygiene.grade}</span>
       </div>
-      <div class="hygieneUpdatedRow">
-        <span class="hygieneUpdated">Last updated ${hygiene.lastUpdated}</span>
-      </div>
+      ${lastUpdated ? `<div class="hygieneUpdatedRow"><span class="hygieneUpdated">Last updated ${lastUpdated}</span></div>` : ""}
       <div class="hygieneHistoryRow">
-        <a class="hygieneHistory" href="operatorChildrenHygiene.html">view history &gt;</a>
+        <a class="hygieneHistory" href="operatorChildrenHygiene.html?id=${currentStallId}">view history &gt;</a>
       </div>
     </div>
   `;
+}
+
+/**
+ * Build documents array from real stall data.
+ * Falls back to empty states when no documents exist.
+ */
+function getStallDocuments() {
+  const docs = [];
+
+  // Rental Agreement
+  const rental = currentStallData?.rentalAgreement;
+  docs.push({
+    title: "Rental Agreement",
+    icon: "agreement",
+    current: rental?.currentUrl
+      ? {
+          image: rental.currentUrl,
+          filename: rental.filename || "rental_agreement.pdf",
+        }
+      : null,
+    archived: (rental?.archived || []).map((a) => ({
+      filename: a.filename || "rental_agreement.pdf",
+      uploaded: a.uploadedAt?.toDate
+        ? a.uploadedAt.toDate().toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          })
+        : a.uploaded || "",
+      replaced: a.replacedAt?.toDate
+        ? a.replacedAt.toDate().toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          })
+        : a.replaced || "",
+      url: a.url || "#",
+    })),
+  });
+
+  // Halal Cert
+  const halal = currentStallData?.halalCert;
+  docs.push({
+    title: "Halal Cert",
+    icon: "halal",
+    current: halal?.currentUrl
+      ? {
+          image: halal.currentUrl,
+          filename: halal.filename || "halal_cert.pdf",
+        }
+      : null,
+    archived: (halal?.archived || []).map((a) => ({
+      filename: a.filename || "halal_cert.pdf",
+      uploaded: a.uploadedAt?.toDate
+        ? a.uploadedAt.toDate().toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          })
+        : a.uploaded || "",
+      replaced: a.replacedAt?.toDate
+        ? a.replacedAt.toDate().toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          })
+        : a.replaced || "",
+      url: a.url || "#",
+    })),
+  });
+
+  return docs;
 }
 
 // Document icon map
@@ -918,7 +1017,7 @@ function bindDocTabs() {
       const index = parseInt(e.target.dataset.docIndex);
       docTabs[index] = e.target.value;
       const container = document.querySelector(`[data-doc-content="${index}"]`);
-      container.innerHTML = renderDocContent(mockStore.documents[index], index);
+      container.innerHTML = renderDocContent(getStallDocuments()[index], index);
     });
   });
 }
@@ -952,7 +1051,14 @@ function renderPage() {
           <span class="storeName">${displayName}</span>
           <span class="storeUen">UEN: ${displayUen}</span>
         </div>
-        <div class="storeTags">${displayTags}</div>
+        <div class="storeHeaderRight">
+          <button class="unlinkChildBtn" id="unlinkChildBtn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+            Unlink child
+            <span class="unlinkKeyboard">${navigator.platform.includes("Mac") ? "\u2318" : "CTRL"} <span class="unlinkKeySep"></span> ⌫</span>
+          </button>
+          <div class="storeTags">${displayTags}</div>
+        </div>
       </div>
     </div>
 
@@ -1015,9 +1121,9 @@ function renderPage() {
 
     ${renderReviewsSection(realReviews)}
 
-    ${renderDocumentsSection(store.documents)}
+    ${renderDocumentsSection(getStallDocuments())}
 
-    ${renderHygieneGrade(store.hygieneGrade)}
+    ${renderHygieneGrade(currentStallData?.hygieneGrade || null)}
   `;
 
   // Draw all 3 charts with the default timeframe
@@ -1028,6 +1134,62 @@ function renderPage() {
   bindReviewTabs();
   bindDocTabs();
   bindResolveButtons();
+
+  // Bind unlink button
+  const unlinkBtn = document.getElementById("unlinkChildBtn");
+  if (unlinkBtn) {
+    unlinkBtn.addEventListener("click", handleUnlinkChild);
+  }
+}
+
+async function handleUnlinkChild() {
+  if (!currentStallId || !currentStallData) return;
+
+  const stallName = currentStallData.name || "this child";
+  const confirmed = await showConfirm(
+    `Unlink ${stallName}?`,
+    "The stall will remain in your hawker centre but the vendor will be disconnected.",
+    { confirmLabel: "Unlink", destructive: true },
+  );
+  if (!confirmed) return;
+
+  try {
+    const ownerId = currentStallData.ownerId;
+
+    // 1. Remove ownerId from the food stall
+    await updateDoc(doc(db, "foodStalls", currentStallId), {
+      ownerId: deleteField(),
+    });
+
+    // 2. If vendor exists, remove their hawkerCentreId, tenancyLinkedAt, stallId, storeLocation
+    if (ownerId) {
+      try {
+        await updateDoc(doc(db, "vendors", ownerId), {
+          hawkerCentreId: deleteField(),
+          tenancyLinkedAt: deleteField(),
+          stallId: deleteField(),
+          storeLocation: deleteField(),
+        });
+      } catch (err) {
+        console.warn("Could not update vendor doc:", err);
+      }
+
+      // 3. Delete onboarding codes linked to this vendor
+      const codesQuery = query(
+        collection(db, "onboardingCodes"),
+        where("vendorId", "==", ownerId),
+      );
+      const codesSnapshot = await getDocs(codesQuery);
+      for (const codeDoc of codesSnapshot.docs) {
+        await deleteDoc(doc(db, "onboardingCodes", codeDoc.id));
+      }
+    }
+
+    // Navigate back to My Children
+    window.location.href = "../Operator Children/operatorChildren.html";
+  } catch (error) {
+    console.error("Error unlinking child:", error);
+  }
 }
 
 async function loadStallData() {
@@ -1092,6 +1254,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (modifier && e.key === "k") {
       e.preventDefault();
       document.getElementById("searchInput").focus();
+    }
+    if (modifier && e.key === "Backspace") {
+      e.preventDefault();
+      handleUnlinkChild();
     }
   });
 

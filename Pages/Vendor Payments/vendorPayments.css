@@ -256,6 +256,7 @@ body {
     flex-direction: column;
     gap: 24px;
     padding: 0 48px 48px 48px;
+    flex: 1;
 }
 
 /* Header */
@@ -411,6 +412,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    flex: 1;
 }
 
 .transactionRow {
@@ -418,7 +420,7 @@ body {
     gap: 16px;
     padding: 8px;
     border-radius: 8px;
-    align-items: flex-start;
+    align-items: center;
     transition: background 0.15s ease;
 }
 
@@ -684,6 +686,24 @@ body {
     pointer-events: none;
 }
 
+.skeletonRow .transactionCell {
+    line-height: 0;
+    font-size: 0;
+}
+
+.skeletonRow .transactionCellTransactionId {
+    display: block;
+    gap: 0;
+}
+
+.skeletonRow .paymentMethodBox {
+    align-self: center;
+}
+
+.skeletonRow .skeleton {
+    flex: none;
+}
+
 @keyframes shimmer {
     0% {
         background-position: 200% 0;
@@ -702,8 +722,23 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 80px 48px;
+    padding: 48px;
     gap: 8px;
+    flex: 1;
+}
+
+.paymentsEmptyFilterMsg {
+    color: #808080;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 400;
+    margin-bottom: 8px;
+}
+
+.paymentsEmptyIllustration {
+    width: 240px;
+    height: auto;
+    margin-bottom: 16px;
 }
 
 .paymentsEmptyTitle {
@@ -713,7 +748,7 @@ body {
     font-weight: 700;
     line-height: 1.4;
     text-align: center;
-    max-width: 420px;
+    white-space: nowrap;
 }
 
 .paymentsEmptySubtitle {
@@ -731,9 +766,8 @@ body {
     align-items: center;
     justify-content: center;
     gap: 12px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     margin-top: 28px;
-    max-width: 400px;
 }
 
 .paymentsEmptyIcon {
@@ -748,14 +782,26 @@ body {
     transform: scale(1.12);
 }
 
-.paymentsEmptyPowered {
+.paymentsEmptyFooterWrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin-top: 12px;
+}
+
+.paymentsEmptyFooter {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-top: 32px;
 }
 
-.paymentsEmptyPowered span {
+.paymentsEmptyLogo {
+    height: 18px;
+    width: auto;
+}
+
+.paymentsEmptyFooterText {
     color: #a0a0a0;
     font-family: Aptos, sans-serif;
     font-size: 13px;

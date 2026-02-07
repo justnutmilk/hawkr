@@ -326,14 +326,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const emptyState = document.createElement("div");
     emptyState.className = "paymentsEmptyState";
     emptyState.innerHTML = `
+      <p class="paymentsEmptyFilterMsg">No transactions yet</p>
+      <img src="../../images/noTransactions.svg" alt="" class="paymentsEmptyIllustration" />
       <p class="paymentsEmptyTitle">Hawkr opens possibilities you've never thought of.</p>
       <p class="paymentsEmptySubtitle">We connect all the popular payment methods into one system.</p>
       <div class="paymentsEmptyIcons">
         ${paymentIcons.map((icon) => `<img src="${paymentMethodsBasePath}${icon}" alt="${icon.replace(".svg", "")}" class="paymentsEmptyIcon" />`).join("")}
       </div>
-      <div class="paymentsEmptyPowered">
-        <span>powered by</span>
-        <img src="../../images/Stripe logo.svg" alt="Stripe" class="paymentsEmptyStripeLogo" />
+      <div class="paymentsEmptyFooterWrap">
+        <div class="paymentsEmptyFooter">
+          <span class="paymentsEmptyFooterText">powered by</span>
+          <img src="../../images/Stripe logo.svg" alt="Stripe" class="paymentsEmptyStripeLogo" />
+        </div>
+        <img src="../../images/hawkrOS.svg" alt="HawkrOS" class="paymentsEmptyLogo" />
       </div>
     `;
     table.appendChild(emptyState);
@@ -438,13 +443,40 @@ document.addEventListener("DOMContentLoaded", () => {
     const filtered = getFiltered();
 
     if (filtered.length === 0) {
-      const emptyRow = document.createElement("div");
-      emptyRow.style.cssText =
-        "padding: 48px; text-align: center; color: #808080; font-family: 'Geist Mono', monospace; font-size: 14px;";
-      emptyRow.textContent =
+      const msg =
         activeFilter !== "all"
           ? `No ${activeFilter} transactions`
-          : "No transactions found";
+          : "No transactions yet";
+      const paymentIcons = [
+        "Apple Pay.svg",
+        "Google Pay.svg",
+        "Visa.svg",
+        "MasterCard.svg",
+        "Amex.svg",
+        "UnionPay.svg",
+        "Alipay.svg",
+        "GrabPay.svg",
+        "PayNow.svg",
+        "Link.svg",
+      ];
+      const emptyRow = document.createElement("div");
+      emptyRow.className = "paymentsEmptyState";
+      emptyRow.innerHTML = `
+        <p class="paymentsEmptyFilterMsg">${msg}</p>
+        <img src="../../images/noTransactions.svg" alt="" class="paymentsEmptyIllustration" />
+        <p class="paymentsEmptyTitle">Hawkr opens possibilities you've never thought of.</p>
+        <p class="paymentsEmptySubtitle">We connect all the popular payment methods into one system.</p>
+        <div class="paymentsEmptyIcons">
+          ${paymentIcons.map((icon) => `<img src="${paymentMethodsBasePath}${icon}" alt="${icon.replace(".svg", "")}" class="paymentsEmptyIcon" />`).join("")}
+        </div>
+        <div class="paymentsEmptyFooterWrap">
+          <div class="paymentsEmptyFooter">
+            <span class="paymentsEmptyFooterText">powered by</span>
+            <img src="../../images/Stripe logo.svg" alt="Stripe" class="paymentsEmptyStripeLogo" />
+          </div>
+          <img src="../../images/hawkrOS.svg" alt="HawkrOS" class="paymentsEmptyLogo" />
+        </div>
+      `;
       table.appendChild(emptyRow);
       return;
     }

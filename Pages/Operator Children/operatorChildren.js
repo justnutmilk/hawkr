@@ -46,6 +46,7 @@ let archivedStalls = []; // Inactive stalls
 let currentOnboardCode = "";
 let codeRefreshInterval = null;
 let codeSnapshotUnsubscribe = null;
+let stallsUnsubscribe = null;
 let linkedVendorData = null;
 let autofillAnimationRunning = false;
 let autofillTimeouts = [];
@@ -512,33 +513,50 @@ async function loadOperatorData(userId) {
       operatorNameEl.textContent = currentHawkerCentre.name || "My Centre";
     }
 
-    // Fetch all stalls for this centre (active)
-    stalls = await getStallsByHawkerCentre(currentHawkerCentre.id);
-
-    // Also fetch archived (inactive) stalls
-    try {
-      const archivedQuery = query(
-        collection(db, "foodStalls"),
-        where("hawkerCentreId", "==", currentHawkerCentre.id),
-        where("isActive", "==", false),
-      );
-      const archivedSnapshot = await getDocs(archivedQuery);
-      archivedStalls = archivedSnapshot.docs.map((d) => ({
-        id: d.id,
-        ...d.data(),
-      }));
-    } catch (err) {
-      console.warn("Could not fetch archived stalls:", err);
-      archivedStalls = [];
-    }
-
-    renderPage("current");
+    // Realtime listener on all stalls for this centre
+    listenToStalls(currentHawkerCentre.id);
   } catch (error) {
     console.error("Error loading operator data:", error);
     stalls = [];
     archivedStalls = [];
     renderPage("current");
   }
+}
+
+/**
+ * Realtime listener on foodStalls — updates grid when vendors link/unlink
+ */
+function listenToStalls(centreId) {
+  // Clean up previous listener
+  if (stallsUnsubscribe) {
+    stallsUnsubscribe();
+    stallsUnsubscribe = null;
+  }
+
+  const stallsQuery = query(
+    collection(db, "foodStalls"),
+    where("hawkerCentreId", "==", centreId),
+  );
+
+  stallsUnsubscribe = onSnapshot(
+    stallsQuery,
+    (snapshot) => {
+      const allStalls = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      const linked = allStalls.filter((s) => s.ownerId);
+      stalls = linked.filter((s) => s.isActive !== false);
+      archivedStalls = linked.filter((s) => s.isActive === false);
+
+      // Get current active tab
+      const activeRadio = document.querySelector(
+        'input[name="stallTab"]:checked',
+      );
+      const tab = activeRadio ? activeRadio.value : "current";
+      renderPage(tab);
+    },
+    (error) => {
+      console.error("Error listening to stalls:", error);
+    },
+  );
 }
 
 // ============================================
@@ -1391,15 +1409,16 @@ async function handleApprove() {
       await updateDoc(doc(db, "vendors", linkedVendorData.vendorId), {
         stallId: stallRef.id,
         hawkerCentreId: currentHawkerCentre.id,
+        storeLocation: currentHawkerCentre.name || "",
+        tenancyLinkedAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
     } catch (err) {
       console.warn("Could not update vendor doc:", err);
     }
 
-    // Close panel and refresh stalls
+    // Close panel — stalls grid updates automatically via realtime listener
     closeOnboardPanel();
-    await loadOperatorData(currentOperatorId);
   } catch (error) {
     console.error("Error approving onboarding:", error);
     if (approveBtn) {

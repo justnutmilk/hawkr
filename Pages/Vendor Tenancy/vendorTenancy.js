@@ -14,6 +14,7 @@ import {
   doc,
   getDoc,
   updateDoc,
+  deleteDoc,
   deleteField,
   serverTimestamp,
   onSnapshot,
@@ -44,8 +45,9 @@ const tenancySkeleton = document.getElementById("tenancySkeleton");
 const originalLinkBodyHTML = linkBody ? linkBody.innerHTML : "";
 const originalLinkFooterHTML = linkFooter ? linkFooter.innerHTML : "";
 
-// Snapshot listener for approval status
+// Snapshot listeners
 let approvalUnsubscribe = null;
+let vendorUnsubscribe = null;
 
 /**
  * Initialize the page
@@ -55,9 +57,15 @@ document.addEventListener("DOMContentLoaded", () => {
   setupMobileHamburger();
 
   // Listen for auth state
-  onAuthStateChanged(auth, async (user) => {
+  onAuthStateChanged(auth, (user) => {
+    // Clean up previous listener
+    if (vendorUnsubscribe) {
+      vendorUnsubscribe();
+      vendorUnsubscribe = null;
+    }
+
     if (user) {
-      await checkTenancyStatus(user.uid);
+      listenToVendorStatus(user.uid);
     }
   });
 
@@ -145,29 +153,30 @@ function setupMobileHamburger() {
 }
 
 /**
- * Check if vendor already has a tenancy link
+ * Realtime listener on vendor doc — updates UI when tenancy changes
  */
-async function checkTenancyStatus(uid) {
-  try {
-    const vendorDoc = await getDoc(doc(db, "vendors", uid));
+function listenToVendorStatus(uid) {
+  vendorUnsubscribe = onSnapshot(
+    doc(db, "vendors", uid),
+    async (snapshot) => {
+      if (!snapshot.exists()) {
+        showEmptyState();
+        return;
+      }
 
-    if (!vendorDoc.exists()) {
+      const vendorData = snapshot.data();
+
+      if (vendorData.hawkerCentreId) {
+        await showLinkedState(vendorData.hawkerCentreId);
+      } else {
+        showEmptyState();
+      }
+    },
+    (error) => {
+      console.error("Error listening to vendor status:", error);
       showEmptyState();
-      return;
-    }
-
-    const vendorData = vendorDoc.data();
-
-    if (vendorData.hawkerCentreId) {
-      // Vendor is already linked - fetch hawker centre info
-      await showLinkedState(vendorData.hawkerCentreId);
-    } else {
-      showEmptyState();
-    }
-  } catch (error) {
-    console.error("Error checking tenancy status:", error);
-    showEmptyState();
-  }
+    },
+  );
 }
 
 /**
@@ -363,14 +372,6 @@ async function handleLinkCode() {
       linkedAt: serverTimestamp(),
     });
 
-    // If the code has a hawkerCentreId, update the vendor profile too
-    if (codeData.hawkerCentreId) {
-      await updateDoc(doc(db, "vendors", user.uid), {
-        hawkerCentreId: codeData.hawkerCentreId,
-        tenancyLinkedAt: serverTimestamp(),
-      });
-    }
-
     // Show waiting state inside the panel (vendor waits for operator approval)
     showLinkConfirmation(fullCode);
   } catch (error) {
@@ -494,13 +495,9 @@ function showApprovedState() {
     footer.innerHTML = `
       <button class="linkButton" id="linkDoneBtn">Done</button>
     `;
-    document
-      .getElementById("linkDoneBtn")
-      .addEventListener("click", async () => {
-        closeLinkPanel();
-        const user = auth.currentUser;
-        if (user) await checkTenancyStatus(user.uid);
-      });
+    document.getElementById("linkDoneBtn").addEventListener("click", () => {
+      closeLinkPanel();
+    });
   }
 }
 
@@ -552,6 +549,7 @@ async function handleDisconnect() {
   const confirmed = await showConfirm(
     "Disconnect from operator?",
     "You will need a new onboarding code to reconnect.",
+    { confirmLabel: "Disconnect", destructive: true },
   );
   if (!confirmed) return;
 
@@ -567,10 +565,34 @@ async function handleDisconnect() {
       return;
     }
 
-    // Remove hawkerCentreId and tenancyLinkedAt from vendor doc
+    // 1. Unlink vendor from their food stall (keep the stall)
+    const stallsQuery = query(
+      collection(db, "foodStalls"),
+      where("ownerId", "==", user.uid),
+    );
+    const stallsSnapshot = await getDocs(stallsQuery);
+    for (const stallDoc of stallsSnapshot.docs) {
+      await updateDoc(doc(db, "foodStalls", stallDoc.id), {
+        ownerId: deleteField(),
+      });
+    }
+
+    // 2. Reset any onboarding codes linked to this vendor
+    const codesQuery = query(
+      collection(db, "onboardingCodes"),
+      where("vendorId", "==", user.uid),
+    );
+    const codesSnapshot = await getDocs(codesQuery);
+    for (const codeDoc of codesSnapshot.docs) {
+      await deleteDoc(doc(db, "onboardingCodes", codeDoc.id));
+    }
+
+    // 3. Remove hawkerCentreId, tenancyLinkedAt, stallId, and storeLocation from vendor doc
     await updateDoc(doc(db, "vendors", user.uid), {
       hawkerCentreId: deleteField(),
       tenancyLinkedAt: deleteField(),
+      stallId: deleteField(),
+      storeLocation: deleteField(),
     });
 
     // Show the empty state again

@@ -33,7 +33,10 @@ export function showToast(message, type = "info") {
  * Liquid glass confirm dialog — returns a Promise<boolean>
  * Usage: const ok = await showConfirm("Are you sure?", "This cannot be undone.");
  */
-export function showConfirm(title, message) {
+export function showConfirm(title, message, options = {}) {
+  const confirmLabel = options.confirmLabel || "Confirm";
+  const destructive = options.destructive || false;
+
   return new Promise((resolve) => {
     // Overlay
     const overlay = document.createElement("div");
@@ -47,7 +50,7 @@ export function showConfirm(title, message) {
       ${message ? `<p class="confirmMessage">${message}</p>` : ""}
       <div class="confirmActions">
         <button class="confirmBtn confirmBtnCancel">Cancel</button>
-        <button class="confirmBtn confirmBtnConfirm">Confirm</button>
+        <button class="confirmBtn confirmBtnConfirm${destructive ? " destructive" : ""}">${confirmLabel}</button>
       </div>
     `;
 
