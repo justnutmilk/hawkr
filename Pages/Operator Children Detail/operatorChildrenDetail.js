@@ -189,7 +189,7 @@ async function loadCompletedOrders(stallId) {
     const q = query(
       collection(db, "orders"),
       where("stallId", "==", stallId),
-      where("status", "==", "ready"),
+      where("status", "in", ["ready", "completed"]),
     );
     const snapshot = await getDocs(q);
 
