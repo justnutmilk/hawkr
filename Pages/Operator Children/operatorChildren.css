@@ -515,6 +515,30 @@ body {
     white-space: nowrap;
 }
 
+.archivedCard {
+    cursor: default;
+    opacity: 0.6;
+}
+
+.archivedCard:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.archivedBadge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 16px;
+    border-radius: 48px;
+    background: #f0f0f0;
+    color: #808080;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: normal;
+    white-space: nowrap;
+}
+
 .childTagIcon {
     width: 16px;
     height: 16px;

@@ -354,6 +354,26 @@ function renderChildCard(stall) {
   `;
 }
 
+function renderArchivedCard(stall) {
+  const cuisines = stall.cuisineNames || stall.tags || [];
+  const tags = cuisines.map(renderTag).join("");
+  const image =
+    stall.imageUrl || stall.image || "../../images/squirrelCard.svg";
+  const stallName = stall.name || "Unnamed Stall";
+  const reason = stall.ownerId ? "Inactive" : "Unlinked";
+
+  return `
+    <div class="childCard archivedCard">
+      <img class="childCardImage" src="${image}" alt="${stallName}" onerror="this.src='../../images/squirrelCard.svg'" />
+      <span class="childCardName">${stallName}</span>
+      <div class="childCardTags">
+        ${tags}
+        <span class="archivedBadge">${reason}</span>
+      </div>
+    </div>
+  `;
+}
+
 // ============================================
 // PAGE RENDERING
 // ============================================
@@ -387,7 +407,7 @@ function renderCurrentContent() {
 function renderArchivedContent() {
   const stallCards =
     archivedStalls.length > 0
-      ? archivedStalls.map(renderChildCard).join("")
+      ? archivedStalls.map(renderArchivedCard).join("")
       : `<div class="emptyState">
           <p class="emptyStateText">No archived stalls.</p>
         </div>`;

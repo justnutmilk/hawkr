@@ -1203,6 +1203,12 @@ async function loadStallData() {
       console.warn("Could not fetch stall data:", err);
     }
 
+    // Block access to unlinked stalls
+    if (!currentStallData || !currentStallData.ownerId) {
+      window.location.href = "../Operator Children/operatorChildren.html";
+      return;
+    }
+
     try {
       const result = await getFeedbackByStall(currentStallId, {
         limitCount: 50,
