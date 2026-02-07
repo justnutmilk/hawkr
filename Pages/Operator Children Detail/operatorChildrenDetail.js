@@ -1059,7 +1059,6 @@ async function handleUnlinkChild() {
     const ownerId = currentStallData.ownerId;
 
     // 1. Remove operator-related fields from the food stall (keep ownerId — vendor still owns it)
-    // The vendor's stall listener will detect operatorId removal and self-clean the vendor doc
     await updateDoc(doc(db, "foodStalls", currentStallId), {
       operatorId: deleteField(),
       operatorName: deleteField(),
@@ -1067,8 +1066,19 @@ async function handleUnlinkChild() {
       unitNumber: deleteField(),
     });
 
-    // 2. Delete onboarding codes linked to this vendor
+    // 2. Clean up vendor doc (remove tenancy fields, keep stallId)
     if (ownerId) {
+      try {
+        await updateDoc(doc(db, "vendors", ownerId), {
+          hawkerCentreId: deleteField(),
+          tenancyLinkedAt: deleteField(),
+          storeLocation: deleteField(),
+        });
+      } catch (err) {
+        console.warn("Could not update vendor doc:", err);
+      }
+
+      // 3. Delete onboarding codes linked to this vendor
       const codesQuery = query(
         collection(db, "onboardingCodes"),
         where("vendorId", "==", ownerId),
