@@ -588,18 +588,23 @@ async function completeOnboarding() {
   }
 
   try {
-    // Step 2: Create stall
+    // Step 2: Create or update stall
     if (submitBtn) submitBtn.textContent = "Creating stall...";
     const firebaseOperatingHours = convertOperatingHours(
       vendorData.operatingHours,
     );
 
-    stallId = await createStall({
+    // Check if vendor already has a stall (e.g. re-onboarding after unlink)
+    const vendorSnap = await getDoc(doc(db, "vendors", currentUser.uid));
+    const existingStallId = vendorSnap.exists()
+      ? vendorSnap.data().stallId
+      : null;
+
+    const stallFields = {
       ownerId: currentUser.uid,
       hawkerCentreId: hawkerCentre.id,
       name: vendorData.storeName,
-      description: "",
-      cuisineIds: [],
+      nameLower: vendorData.storeName.toLowerCase(),
       cuisineNames: vendorData.cuisines,
       isHalal:
         vendorData.cuisines.includes("Halal") ||
@@ -609,14 +614,27 @@ async function completeOnboarding() {
       imageUrl: vendorData.storePhotoUrl || "",
       coverImageUrl: vendorData.storePhotoUrl || "",
       operatingHours: firebaseOperatingHours,
-    });
+      updatedAt: serverTimestamp(),
+    };
 
-    if (!stallId) {
-      throw new Error("createStall returned empty stallId");
+    if (existingStallId) {
+      // Update existing stall instead of creating a duplicate
+      await updateDoc(doc(db, "foodStalls", existingStallId), stallFields);
+      stallId = existingStallId;
+      console.log("Existing stall updated:", stallId);
+    } else {
+      stallId = await createStall({
+        ...stallFields,
+        description: "",
+        cuisineIds: [],
+      });
+      if (!stallId) {
+        throw new Error("createStall returned empty stallId");
+      }
+      console.log("Stall created:", stallId);
     }
-    console.log("Stall created:", stallId);
   } catch (error) {
-    console.error("Error creating stall:", error);
+    console.error("Error creating/updating stall:", error);
     alert("Failed to create your stall. Please try again.");
     if (submitBtn) {
       submitBtn.disabled = false;
