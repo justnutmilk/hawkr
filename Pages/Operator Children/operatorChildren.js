@@ -771,13 +771,23 @@ const filePreviewUrls = {};
 
 function renderCertField(certValue, fieldKey) {
   if (certValue) {
-    const previewUrl = filePreviewUrls[fieldKey];
+    const previewUrl =
+      filePreviewUrls[fieldKey] ||
+      (typeof certValue === "string" && certValue.startsWith("http")
+        ? certValue
+        : null);
+    const displayName =
+      fieldKey === "hygieneCert"
+        ? "Hygiene certificate"
+        : fieldKey === "halalCert"
+          ? "Halal certificate"
+          : certValue;
     return `<div class="onboardFilePreview">
       <div class="onboardFilePreviewBox">
         ${previewUrl ? `<iframe class="onboardPdfPreview" src="${previewUrl}"></iframe>` : `<div class="onboardPdfPlaceholder"><span class="onboardPdfPlaceholderText">PDF</span></div>`}
         <button class="onboardFileDelete" data-field="${fieldKey}"><img src="../../assets/icons/delete.svg" alt="Delete" class="onboardFileDeleteIcon" /></button>
       </div>
-      <span class="onboardFileBadge">${tickIcon} ${certValue}</span>
+      <span class="onboardFileBadge">${tickIcon} ${typeof certValue === "string" && certValue.startsWith("http") ? displayName : certValue}</span>
     </div>`;
   }
   return `
@@ -792,13 +802,17 @@ function renderCertField(certValue, fieldKey) {
 
 function renderPhotoField(photoValue) {
   if (photoValue) {
-    const previewUrl = filePreviewUrls["coverPhoto"];
+    const previewUrl =
+      filePreviewUrls["coverPhoto"] ||
+      (typeof photoValue === "string" && photoValue.startsWith("http")
+        ? photoValue
+        : null);
     return `<div class="onboardFilePreview">
       <div class="onboardFilePreviewBox">
         ${previewUrl ? `<img class="onboardImagePreview" src="${previewUrl}" alt="Cover photo" />` : `<div class="onboardPdfPlaceholder"><span class="onboardPdfPlaceholderText">IMG</span></div>`}
         <button class="onboardFileDelete" data-field="coverPhoto"><img src="../../assets/icons/delete.svg" alt="Delete" class="onboardFileDeleteIcon" /></button>
       </div>
-      <span class="onboardFileBadge">${tickIcon} ${photoValue}</span>
+      <span class="onboardFileBadge">${tickIcon} ${typeof photoValue === "string" && photoValue.startsWith("http") ? "Cover photo" : photoValue}</span>
     </div>`;
   }
   return `
