@@ -48,6 +48,7 @@ const originalLinkFooterHTML = linkFooter ? linkFooter.innerHTML : "";
 // Snapshot listeners
 let approvalUnsubscribe = null;
 let vendorUnsubscribe = null;
+let stallUnsubscribe = null;
 
 /**
  * Initialize the page
@@ -160,6 +161,7 @@ function listenToVendorStatus(uid) {
     doc(db, "vendors", uid),
     async (snapshot) => {
       if (!snapshot.exists()) {
+        stopStallListener();
         showEmptyState();
         return;
       }
@@ -167,8 +169,13 @@ function listenToVendorStatus(uid) {
       const vendorData = snapshot.data();
 
       if (vendorData.hawkerCentreId) {
+        // Start listening to the stall for operator-initiated unlinks
+        if (vendorData.stallId) {
+          startStallListener(uid, vendorData.stallId);
+        }
         await showLinkedState(vendorData.hawkerCentreId);
       } else {
+        stopStallListener();
         showEmptyState();
       }
     },
@@ -177,6 +184,48 @@ function listenToVendorStatus(uid) {
       showEmptyState();
     },
   );
+}
+
+/**
+ * Listen to the food stall doc. If ownerId is removed (operator unlinked),
+ * the vendor cleans up their own doc so the UI updates.
+ */
+function startStallListener(uid, stallId) {
+  // Don't restart if already listening to the same stall
+  if (stallUnsubscribe && stallUnsubscribe._stallId === stallId) return;
+  stopStallListener();
+
+  const unsub = onSnapshot(
+    doc(db, "foodStalls", stallId),
+    async (snapshot) => {
+      if (!snapshot.exists() || !snapshot.data().ownerId) {
+        // Operator removed ownerId — vendor self-cleans their doc
+        stopStallListener();
+        try {
+          await updateDoc(doc(db, "vendors", uid), {
+            hawkerCentreId: deleteField(),
+            tenancyLinkedAt: deleteField(),
+            stallId: deleteField(),
+            storeLocation: deleteField(),
+          });
+        } catch (err) {
+          console.warn("Could not self-clean vendor doc:", err);
+        }
+      }
+    },
+    (error) => {
+      console.warn("Stall listener error:", error);
+    },
+  );
+  unsub._stallId = stallId;
+  stallUnsubscribe = unsub;
+}
+
+function stopStallListener() {
+  if (stallUnsubscribe) {
+    stallUnsubscribe();
+    stallUnsubscribe = null;
+  }
 }
 
 /**
