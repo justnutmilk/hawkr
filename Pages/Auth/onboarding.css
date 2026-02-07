@@ -2029,7 +2029,8 @@
     margin-top: 8px;
 }
 
-.mapContainer #map {
+.mapContainer #map,
+.mapContainer #vendorMap {
     width: 100%;
     height: 400px;
 }
@@ -2089,7 +2090,8 @@
 }
 
 @media (max-width: 768px) {
-    .mapContainer #map {
+    .mapContainer #map,
+    .mapContainer #vendorMap {
         height: 300px;
     }
 }
