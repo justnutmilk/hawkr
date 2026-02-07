@@ -444,7 +444,7 @@ function listenForApproval(codeId) {
 
   approvalUnsubscribe = onSnapshot(
     doc(db, "onboardingCodes", codeId),
-    (snapshot) => {
+    async (snapshot) => {
       if (!snapshot.exists()) {
         // Code doc was deleted (operator rejected)
         showRejectedState();
@@ -456,6 +456,37 @@ function listenForApproval(codeId) {
           approvalUnsubscribe();
           approvalUnsubscribe = null;
         }
+
+        // Vendor writes their own doc with linkage fields from the approved code
+        const user = auth.currentUser;
+        if (user && (data.hawkerCentreId || data.stallId)) {
+          try {
+            const updates = {
+              tenancyLinkedAt: serverTimestamp(),
+              updatedAt: serverTimestamp(),
+            };
+            if (data.hawkerCentreId)
+              updates.hawkerCentreId = data.hawkerCentreId;
+            if (data.stallId) updates.stallId = data.stallId;
+
+            // Fetch hawker centre name for storeLocation
+            if (data.hawkerCentreId) {
+              try {
+                const centreSnap = await getDoc(
+                  doc(db, "hawkerCentres", data.hawkerCentreId),
+                );
+                if (centreSnap.exists()) {
+                  updates.storeLocation = centreSnap.data().name || "";
+                }
+              } catch (_) {}
+            }
+
+            await updateDoc(doc(db, "vendors", user.uid), updates);
+          } catch (err) {
+            console.warn("Could not self-update vendor doc on approval:", err);
+          }
+        }
+
         showApprovedState();
       } else if (data.status === "rejected") {
         if (approvalUnsubscribe) {
