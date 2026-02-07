@@ -1,0 +1,16 @@
+[debug] [2026-02-07T16:37:52.913Z] ----------------------------------------------------------------------
+[debug] [2026-02-07T16:37:52.915Z] Command:       C:\Users\jaspe\OneDrive\Documents\hawkr\node_modules\node\bin\node.exe C:\Users\jaspe\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting
+[debug] [2026-02-07T16:37:52.915Z] CLI Version:   15.5.1
+[debug] [2026-02-07T16:37:52.915Z] Platform:      win32
+[debug] [2026-02-07T16:37:52.915Z] Node Version:  v25.6.0
+[debug] [2026-02-07T16:37:52.915Z] Time:          Sun Feb 08 2026 00:37:52 GMT+0800 (Singapore Standard Time)
+[debug] [2026-02-07T16:37:52.916Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-02-07T16:37:53.641Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-02-07T16:37:53.642Z] > authorizing via signed-in user (jasperissmart@gmail.com)
+[debug] [2026-02-07T16:37:53.642Z] [iam] checking project hawkr-0 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-02-07T16:37:53.642Z] Checked if tokens are valid: true, expires at: 1770484118132
+[debug] [2026-02-07T16:37:53.642Z] Checked if tokens are valid: true, expires at: 1770484118132
+[debug] [2026-02-07T16:37:53.643Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/hawkr-0:testIamPermissions [none]
+[debug] [2026-02-07T16:37:53.643Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/hawkr-0:testIamPermissions  x-goog-user-project=hawkr-0
+[debug] [2026-02-07T16:37:53.643Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/hawkr-0:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}

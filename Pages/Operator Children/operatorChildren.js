@@ -542,9 +542,10 @@ function listenToStalls(centreId) {
     stallsQuery,
     (snapshot) => {
       const allStalls = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-      const linked = allStalls.filter((s) => s.ownerId);
-      stalls = linked.filter((s) => s.isActive !== false);
-      archivedStalls = linked.filter((s) => s.isActive === false);
+      stalls = allStalls.filter((s) => s.ownerId && s.isActive !== false);
+      archivedStalls = allStalls.filter(
+        (s) => !s.ownerId || s.isActive === false,
+      );
 
       // Get current active tab
       const activeRadio = document.querySelector(
