@@ -3,10 +3,7 @@
 // ============================================
 
 import { initVendorNavbar } from "../../assets/js/vendorNavbar.js";
-import {
-  initLiquidGlassToggle,
-  initMiniLiquidGlassToggle,
-} from "../../assets/js/liquidGlassToggle.js";
+import { initLiquidGlassToggle } from "../../assets/js/liquidGlassToggle.js";
 import { auth, db, storage } from "../../firebase/config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
@@ -141,7 +138,7 @@ function renderHoursTable(hours) {
           (day, dayIdx) => `
           <div class="hoursRow">
             <div class="hoursDay">${day.day}</div>
-            <label class="liquidGlassToggle mini hoursToggle" data-day="${dayIdx}">
+            <label class="liquidGlassToggle small hoursToggle" data-day="${dayIdx}">
               <input type="checkbox" ${day.active ? "checked" : ""} disabled />
               <span class="toggleTrack">
                 <span class="toggleThumb ${day.active ? "glass" : ""}"></span>
@@ -395,7 +392,7 @@ function renderSettingsPage(vendor, stall) {
   document
     .querySelectorAll(".stallHoursTableReadonly .hoursToggle")
     .forEach((toggleLabel) => {
-      initMiniLiquidGlassToggle(toggleLabel);
+      initLiquidGlassToggle(toggleLabel);
     });
 }
 
@@ -1029,7 +1026,7 @@ function renderEditHours() {
       (day, dayIdx) => `
         <div class="hoursRow">
           <div class="hoursDay">${day.day}</div>
-          <label class="liquidGlassToggle mini hoursToggle" data-day="${dayIdx}">
+          <label class="liquidGlassToggle small hoursToggle" data-day="${dayIdx}">
             <input type="checkbox" ${day.active ? "checked" : ""} />
             <span class="toggleTrack">
               <span class="toggleThumb ${day.active ? "glass" : ""}"></span>
@@ -1060,7 +1057,7 @@ function renderEditHours() {
   // Toggles
   container.querySelectorAll(".hoursToggle").forEach((toggleLabel) => {
     const dayIdx = parseInt(toggleLabel.dataset.day);
-    initMiniLiquidGlassToggle(toggleLabel, (isChecked) => {
+    initLiquidGlassToggle(toggleLabel, (isChecked) => {
       editStallHours[dayIdx].active = isChecked;
       if (isChecked && editStallHours[dayIdx].slots.length === 0) {
         editStallHours[dayIdx].slots.push({ from: "09:00", to: "21:00" });
