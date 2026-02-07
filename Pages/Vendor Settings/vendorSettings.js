@@ -187,7 +187,7 @@ function renderDocumentItem(label, url, fieldKey, accept, microcopy) {
             <button class="documentDeleteBtn" data-field="${fieldKey}">Remove</button>
           </div>
         </div>
-        <div class="documentPreviewBox">
+        <div class="documentPreviewBox ${isImage ? "imagePreview" : "pdfPreview"}">
           ${isImage ? `<img class="documentPreviewImg" src="${url}" alt="${label}" />` : `<iframe class="documentPreviewPdf" src="${url}"></iframe>`}
         </div>
       </div>
