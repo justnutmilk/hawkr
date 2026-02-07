@@ -132,19 +132,36 @@ function renderHoursTable(hours) {
   }
 
   return `
-    <div class="stallHoursTable">
+    <div class="hoursTable stallHoursTableReadonly">
       ${hours
-        .map((day) => {
-          const slots =
-            day.active && day.slots && day.slots.length > 0
-              ? day.slots.map((s) => `${s.from} – ${s.to}`).join(", ")
-              : "Closed";
-          return `
-          <div class="stallHoursRow${!day.active ? " stallHoursClosed" : ""}">
-            <span class="stallHoursDay">${day.day}</span>
-            <span class="stallHoursTime">${slots}</span>
-          </div>`;
-        })
+        .map(
+          (day, dayIdx) => `
+          <div class="hoursRow">
+            <div class="hoursDay">${day.day}</div>
+            <label class="liquidGlassToggle hoursToggle" data-day="${dayIdx}">
+              <input type="checkbox" ${day.active ? "checked" : ""} disabled />
+              <span class="toggleTrack">
+                <span class="toggleThumb ${day.active ? "glass" : ""}"></span>
+              </span>
+            </label>
+            <div class="hoursSlots">
+              ${
+                day.active && day.slots && day.slots.length > 0
+                  ? day.slots
+                      .map(
+                        (slot) => `
+                    <div class="hoursSlot">
+                      <input type="time" class="hoursTime" value="${slot.from}" disabled />
+                      <span class="hoursTo">to</span>
+                      <input type="time" class="hoursTime" value="${slot.to}" disabled />
+                    </div>`,
+                      )
+                      .join("")
+                  : `<span class="hoursClosed">Closed</span>`
+              }
+            </div>
+          </div>`,
+        )
         .join("")}
     </div>
   `;
@@ -371,6 +388,12 @@ function renderSettingsPage(vendor, stall) {
 
   attachEventListeners();
   initSettingsMap();
+  // Init liquid glass toggles on read-only hours table (visual only, inputs are disabled)
+  document
+    .querySelectorAll(".stallHoursTableReadonly .hoursToggle")
+    .forEach((toggleLabel) => {
+      initLiquidGlassToggle(toggleLabel);
+    });
 }
 
 /**
@@ -610,6 +633,54 @@ const defaultHours = [
   { day: "Sat", active: true, slots: [{ from: "09:00", to: "21:00" }] },
   { day: "Sun", active: false, slots: [] },
 ];
+
+// Convert operatingHours from Firestore into the array format used by the UI.
+// Handles: array format (new), map/object format (legacy from foodStalls.js), or empty/null.
+const dayMap = {
+  monday: "Mon",
+  tuesday: "Tue",
+  wednesday: "Wed",
+  thursday: "Thu",
+  friday: "Fri",
+  saturday: "Sat",
+  sunday: "Sun",
+};
+
+function normalizeOperatingHours(raw) {
+  if (!raw) return [];
+  // Already an array (new format)
+  if (Array.isArray(raw) && raw.length > 0) return raw;
+  // Legacy object/map format: { monday: { open, close, isClosed }, ... }
+  if (typeof raw === "object" && !Array.isArray(raw)) {
+    const keys = Object.keys(raw);
+    if (keys.length === 0) return [];
+    // Check if it's the legacy map with day-name keys
+    const dayOrder = [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday",
+    ];
+    const matched = dayOrder.filter((d) => raw[d]);
+    if (matched.length > 0) {
+      return dayOrder.map((dayKey) => {
+        const entry = raw[dayKey];
+        if (!entry) return { day: dayMap[dayKey], active: false, slots: [] };
+        return {
+          day: dayMap[dayKey],
+          active: !entry.isClosed,
+          slots: entry.isClosed
+            ? []
+            : [{ from: entry.open || "09:00", to: entry.close || "21:00" }],
+        };
+      });
+    }
+  }
+  return [];
+}
 
 function openEditStall() {
   const popup = document.getElementById("editStallPopup");
@@ -1432,7 +1503,7 @@ async function initializeSettingsPage() {
           location: stallDocData.location || stallDocData.hawkerCentre || "",
           unitNumber: stallDocData.unitNumber || "",
           cuisines: stallDocData.cuisineNames || stallDocData.cuisines || [],
-          operatingHours: stallDocData.operatingHours || [],
+          operatingHours: normalizeOperatingHours(stallDocData.operatingHours),
           hawkerCentreId:
             stallDocData.hawkerCentreId || vendorData.hawkerCentreId || null,
         };
