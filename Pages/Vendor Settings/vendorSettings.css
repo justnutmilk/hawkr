@@ -509,6 +509,147 @@ body {
 }
 
 /* ============================================
+   DOCUMENTS SECTION
+   ============================================ */
+
+.documentItems {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.documentItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+}
+
+.documentItemLeft {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+}
+
+.documentLabel {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: normal;
+}
+
+.documentMicrocopy {
+    color: #999;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.documentPreviewBox {
+    width: 180px;
+    height: 120px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e0e0e0;
+    background: #f9f9f9;
+}
+
+.documentPreviewImg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.documentPreviewPdf {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.documentItemActions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-top: 28px;
+}
+
+.documentUploadBtn {
+    display: flex;
+    padding: 4px 12px;
+    align-items: center;
+    gap: 8px;
+    border-radius: 8px;
+    border: 1px solid #ede5ec;
+    background: #fff;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 24px;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.documentUploadBtn:hover {
+    background: #f4edf3;
+    border-color: #ddd2dc;
+}
+
+.documentReplaceBtn {
+    display: flex;
+    padding: 4px 12px;
+    align-items: center;
+    gap: 8px;
+    border-radius: 8px;
+    border: 1px solid #ede5ec;
+    background: #fff;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 24px;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.documentReplaceBtn:hover {
+    background: #f4edf3;
+    border-color: #ddd2dc;
+}
+
+.documentDeleteBtn {
+    display: flex;
+    padding: 4px 12px;
+    align-items: center;
+    border-radius: 8px;
+    border: 1px solid #ffdde1;
+    background: #fff0f2;
+    color: #eb001b;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 24px;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.documentDeleteBtn:hover {
+    background: #ffe0e3;
+    border-color: #ffbfc4;
+}
+
+/* ============================================
    NOTIFICATIONS SECTION
    ============================================ */
 
@@ -1063,6 +1204,15 @@ body {
     .dangerItem {
         flex-direction: column;
         gap: 16px;
+    }
+
+    .documentItem {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .documentItemActions {
+        margin-top: 0;
     }
 
     .sectionHeader {

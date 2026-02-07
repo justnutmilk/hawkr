@@ -4,17 +4,25 @@
 
 import { initVendorNavbar } from "../../assets/js/vendorNavbar.js";
 import { initLiquidGlassToggle } from "../../assets/js/liquidGlassToggle.js";
-import { auth, db } from "../../firebase/config.js";
+import { auth, db, storage } from "../../firebase/config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
   doc,
   getDoc,
   updateDoc,
+  deleteField,
   collection,
   query,
   where,
   getDocs,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+import { showToast } from "../../assets/js/toast.js";
 
 // ============================================
 // STATE
@@ -33,6 +41,9 @@ let vendorData = {
   telegramLinked: false,
   telegramUsername: null,
   browserNotifications: false,
+  storePhotoUrl: null,
+  hygieneCertUrl: null,
+  halalCertUrl: null,
 };
 
 let stallData = null; // { id, cuisines, operatingHours, ... }
@@ -161,6 +172,56 @@ function formatOperatingHours(hours) {
     .join("<br/>");
 }
 
+function renderDocumentItem(label, url, fieldKey, accept, microcopy) {
+  if (url) {
+    const isImage = accept.startsWith("image");
+    return `
+      <div class="documentItem" data-field="${fieldKey}">
+        <div class="documentItemLeft">
+          <span class="documentLabel">${label}</span>
+          <div class="documentPreviewBox">
+            ${isImage ? `<img class="documentPreviewImg" src="${url}" alt="${label}" />` : `<iframe class="documentPreviewPdf" src="${url}"></iframe>`}
+          </div>
+        </div>
+        <div class="documentItemActions">
+          <label class="documentReplaceBtn">
+            Replace
+            <input type="file" accept="${accept}" data-field="${fieldKey}" class="documentFileInput" hidden />
+          </label>
+          <button class="documentDeleteBtn" data-field="${fieldKey}">Remove</button>
+        </div>
+      </div>
+    `;
+  }
+  return `
+    <div class="documentItem" data-field="${fieldKey}">
+      <div class="documentItemLeft">
+        <span class="documentLabel">${label}</span>
+        <span class="documentMicrocopy">${microcopy}</span>
+      </div>
+      <label class="documentUploadBtn">
+        Upload
+        <input type="file" accept="${accept}" data-field="${fieldKey}" class="documentFileInput" hidden />
+      </label>
+    </div>
+  `;
+}
+
+function renderDocumentsSection(vendor) {
+  return `
+    <div class="settingsSection">
+      <div class="sectionHeader">
+        <span class="sectionTitle">Documents</span>
+      </div>
+      <div class="documentItems">
+        ${renderDocumentItem("Cover Photo", vendor.storePhotoUrl, "storePhotoUrl", "image/jpeg,image/png,image/webp", "JPEG, PNG, or WEBP under 2 MB.")}
+        ${renderDocumentItem("Hygiene Certificate", vendor.hygieneCertUrl, "hygieneCertUrl", ".pdf", "PDF under 2 MB.")}
+        ${renderDocumentItem("Halal Certificate", vendor.halalCertUrl, "halalCertUrl", ".pdf", "PDF under 2 MB.")}
+      </div>
+    </div>
+  `;
+}
+
 function renderNotificationsSection(vendor) {
   let telegramHTML;
 
@@ -248,6 +309,7 @@ function renderSettingsPage(vendor, stall) {
     <div class="sectionsContainer">
       ${renderBusinessDetails(vendor)}
       ${renderStallDetails(stall)}
+      ${renderDocumentsSection(vendor)}
       ${renderNotificationsSection(vendor)}
       ${renderDangerZone()}
     </div>
@@ -582,6 +644,119 @@ async function handleTelegramUnlink() {
 }
 
 // ============================================
+// DOCUMENT UPLOAD / DELETE
+// ============================================
+
+const storagePathMap = {
+  storePhotoUrl: (uid, ext) => `vendors/${uid}/storePhoto.${ext}`,
+  hygieneCertUrl: (uid, ext) => `vendors/${uid}/hygieneCert.${ext}`,
+  halalCertUrl: (uid, ext) => `vendors/${uid}/halalCert.${ext}`,
+};
+
+async function handleDocumentUpload(file, fieldKey) {
+  if (!currentUserId || !file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    showToast("File must be under 2 MB.", "error");
+    return;
+  }
+
+  const ext = file.name.split(".").pop();
+  const path = storagePathMap[fieldKey](currentUserId, ext);
+
+  try {
+    const storageRef = ref(storage, path);
+    const snapshot = await uploadBytes(storageRef, file);
+    const downloadUrl = await getDownloadURL(snapshot.ref);
+
+    const updates = { [fieldKey]: downloadUrl };
+
+    // Also update the food stall doc if linked
+    if (vendorData.stallId) {
+      const stallFieldMap = {
+        storePhotoUrl: { imageUrl: downloadUrl, coverImageUrl: downloadUrl },
+        hygieneCertUrl: { hygieneCert: downloadUrl },
+        halalCertUrl: { halalCert: downloadUrl },
+      };
+      const stallUpdates = stallFieldMap[fieldKey];
+      if (stallUpdates) {
+        try {
+          await updateDoc(
+            doc(db, "foodStalls", vendorData.stallId),
+            stallUpdates,
+          );
+        } catch (err) {
+          console.warn("Could not update stall doc:", err);
+        }
+      }
+    }
+
+    await updateDoc(doc(db, "vendors", currentUserId), updates);
+    vendorData[fieldKey] = downloadUrl;
+    renderSettingsPage(vendorData, stallData);
+    showToast("File uploaded.", "success");
+  } catch (error) {
+    console.error("Error uploading document:", error);
+    showToast("Failed to upload file. Please try again.", "error");
+  }
+}
+
+async function handleDocumentDelete(fieldKey) {
+  if (!currentUserId) return;
+
+  try {
+    const updates = { [fieldKey]: deleteField() };
+
+    if (vendorData.stallId) {
+      const stallFieldMap = {
+        storePhotoUrl: {
+          imageUrl: deleteField(),
+          coverImageUrl: deleteField(),
+        },
+        hygieneCertUrl: { hygieneCert: deleteField() },
+        halalCertUrl: { halalCert: deleteField() },
+      };
+      const stallUpdates = stallFieldMap[fieldKey];
+      if (stallUpdates) {
+        try {
+          await updateDoc(
+            doc(db, "foodStalls", vendorData.stallId),
+            stallUpdates,
+          );
+        } catch (err) {
+          console.warn("Could not update stall doc:", err);
+        }
+      }
+    }
+
+    await updateDoc(doc(db, "vendors", currentUserId), updates);
+    vendorData[fieldKey] = null;
+    renderSettingsPage(vendorData, stallData);
+    showToast("File removed.", "success");
+  } catch (error) {
+    console.error("Error removing document:", error);
+    showToast("Failed to remove file. Please try again.", "error");
+  }
+}
+
+function bindDocumentListeners() {
+  document.querySelectorAll(".documentFileInput").forEach((input) => {
+    input.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      const fieldKey = e.target.dataset.field;
+      if (file && fieldKey) handleDocumentUpload(file, fieldKey);
+    });
+  });
+
+  document.querySelectorAll(".documentDeleteBtn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const fieldKey = e.currentTarget.dataset.field;
+      if (fieldKey) handleDocumentDelete(fieldKey);
+    });
+  });
+}
+
+// ============================================
 // EVENT LISTENERS
 // ============================================
 
@@ -627,6 +802,9 @@ function attachEventListeners() {
     editStallDetails.addEventListener("click", openEditStall);
   }
 
+  // Documents (upload / delete)
+  bindDocumentListeners();
+
   // Delete account
   const deleteAccount = document.getElementById("deleteAccount");
   if (deleteAccount) {
@@ -669,6 +847,10 @@ async function initializeSettingsPage() {
         vendorData.telegramLinked = data.telegramLinked || false;
         vendorData.telegramUsername = data.telegramUsername || null;
         vendorData.browserNotifications = data.browserNotifications || false;
+        vendorData.storePhotoUrl = data.storePhotoUrl || null;
+        vendorData.hygieneCertUrl = data.hygieneCertUrl || null;
+        vendorData.halalCertUrl = data.halalCertUrl || null;
+        vendorData.stallId = data.stallId || null;
       }
     } catch (error) {
       console.error("Error loading vendor data:", error);
