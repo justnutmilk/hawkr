@@ -3,18 +3,24 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/fi
 import {
   doc,
   getDoc,
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  getDocs,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   // Firebase Auth — check onboarding before initialising page
   onAuthStateChanged(auth, async (user) => {
     if (user) {
-      // Check onboarding status
       const operatorDoc = await getDoc(doc(db, "operators", user.uid));
       if (!operatorDoc.exists() || !operatorDoc.data().onboardingComplete) {
         window.location.href = "../Auth/onboarding-operator.html";
         return;
       }
+      loadTransactions(user.uid);
     } else {
       window.location.href = "../Auth/login.html";
       return;
@@ -32,191 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const paymentMethodsBasePath = "../../Payment Methods/";
   const iconsBasePath = "../../assets/icons/";
 
-  // Mock data: operator transactions (B2B and B2C)
-  const ordersByDate = {
-    "28-01-2026, 02:34 pm": [
-      {
-        amount: 1250.0,
-        status: "Successful",
-        logos: ["PayNow.svg"],
-        methodLabel: "PayNow",
-        paymentBrand: "PayNow",
-        paymentSub: "",
-        txnId: "b2b-kR4Tmn82xP-RENT",
-        customer: "Ching Chong Foods Pte Ltd",
-        type: "b2b",
-      },
-      {
-        amount: 12.5,
-        status: "Successful",
-        logos: ["Apple Pay.svg", "Visa.svg"],
-        methodLabel: "\u2022\u2022\u2022\u2022 9402",
-        paymentBrand: "Apple Pay",
-        paymentSub: "Visa 9402",
-        txnId: "b2c-j29Sksix93Q-FOOD",
-        customer: "Sarah Chen",
-        type: "b2c",
-      },
-      {
-        amount: 49.02,
-        status: "Successful",
-        logos: ["MasterCard.svg"],
-        methodLabel: "\u2022\u2022\u2022\u2022 0347",
-        paymentBrand: "MasterCard",
-        paymentSub: "MasterCard 0347",
-        txnId: "b2c-xR3Kmp47aB-FOOD",
-        customer: "Sarah Chen",
-        type: "b2c",
-      },
-    ],
-    "28-01-2026, 01:12 pm": [
-      {
-        amount: 8.0,
-        status: "Successful",
-        logos: ["PayNow.svg"],
-        methodLabel: "PayNow",
-        paymentBrand: "PayNow",
-        paymentSub: "",
-        txnId: "b2c-k83Tmn20xP-REFUND",
-        customer: "Ahmad Rizal",
-        type: "b2c",
-      },
-    ],
-    "27-01-2026, 06:45 pm": [
-      {
-        amount: 850.0,
-        status: "Successful",
-        logos: ["NETS.svg"],
-        methodLabel: "NETS",
-        paymentBrand: "NETS",
-        paymentSub: "",
-        txnId: "b2b-pQ7Wvn41rK-RENT",
-        customer: "Malay Delights Pte Ltd",
-        type: "b2b",
-      },
-      {
-        amount: 45.0,
-        status: "Successful",
-        logos: ["GrabPay.svg"],
-        methodLabel: "GrabPay",
-        paymentBrand: "GrabPay",
-        paymentSub: "",
-        txnId: "b2b-nT8Qwz61cD-FOOD",
-        customer: "FoodPanda SG",
-        type: "b2b",
-      },
-    ],
-    "27-01-2026, 04:20 pm": [
-      {
-        amount: 6.5,
-        status: "Successful",
-        logos: ["NETS.svg"],
-        methodLabel: "NETS",
-        paymentBrand: "NETS",
-        paymentSub: "",
-        txnId: "b2c-aL5Rnp08yM-FOOD",
-        customer: "Wei Ming Tan",
-        type: "b2c",
-      },
-    ],
-    "27-01-2026, 12:05 pm": [
-      {
-        amount: 2400.0,
-        status: "Successful",
-        logos: ["PayNow.svg"],
-        methodLabel: "PayNow",
-        paymentBrand: "PayNow",
-        paymentSub: "",
-        txnId: "b2b-dF9Xbc62hJ-UTIL",
-        customer: "SP Group",
-        type: "b2b",
-      },
-    ],
-    "26-01-2026, 07:30 pm": [
-      {
-        amount: 22.0,
-        status: "Successful",
-        logos: ["MasterCard.svg"],
-        methodLabel: "\u2022\u2022\u2022\u2022 1738",
-        paymentBrand: "MasterCard",
-        paymentSub: "MasterCard 1738",
-        txnId: "b2c-gH2Yem75sN-FOOD",
-        customer: "James Lim",
-        type: "b2c",
-      },
-      {
-        amount: 9.8,
-        status: "Successful",
-        logos: ["Google Pay.svg", "MasterCard.svg"],
-        methodLabel: "\u2022\u2022\u2022\u2022 5201",
-        paymentBrand: "Google Pay",
-        paymentSub: "MasterCard 5201",
-        txnId: "b2c-mN4Zpq89wT-REFUND",
-        customer: "Priya Nair",
-        type: "b2c",
-      },
-    ],
-    "26-01-2026, 03:15 pm": [
-      {
-        amount: 750.0,
-        status: "Successful",
-        logos: ["PayNow.svg"],
-        methodLabel: "PayNow",
-        paymentBrand: "PayNow",
-        paymentSub: "",
-        txnId: "b2b-rS6Atu13xV-RENT",
-        customer: "Indian Cuisine Pte Ltd",
-        type: "b2b",
-      },
-    ],
-    "25-01-2026, 11:50 am": [
-      {
-        amount: 35.0,
-        status: "Successful",
-        logos: ["CDC Voucher.png"],
-        methodLabel: "CDC Voucher",
-        paymentBrand: "CDC Voucher",
-        paymentSub: "",
-        txnId: "b2c-rS6Atu13xV-FOOD",
-        customer: "Tan Ah Kow",
-        type: "b2c",
-      },
-    ],
-    "25-01-2026, 10:20 am": [
-      {
-        amount: 5.0,
-        status: "Successful",
-        logos: ["Cash.png"],
-        methodLabel: "Cash",
-        paymentBrand: "Cash",
-        paymentSub: "",
-        txnId: "b2c-wU8Bvw47zX-FOOD",
-        customer: "David Wong",
-        type: "b2c",
-      },
-      {
-        amount: 18.5,
-        status: "Failed",
-        logos: ["Visa.svg"],
-        methodLabel: "\u2022\u2022\u2022\u2022 4411",
-        paymentBrand: "Visa",
-        paymentSub: "Visa 4411",
-        txnId: "b2c-qJ3Lfn92kW-FOOD",
-        customer: "Rachel Tan",
-        type: "b2c",
-      },
-    ],
-  };
-
-  // Flatten the grouped orders into a single transactions array, attaching the date to each
-  const transactions = [];
-  for (const [dateTime, orders] of Object.entries(ordersByDate)) {
-    for (const order of orders) {
-      order.date = dateTime;
-      transactions.push(order);
-    }
-  }
-
+  let transactions = [];
   let activeFilter = "all";
 
   const filterDefs = [
@@ -228,66 +50,265 @@ document.addEventListener("DOMContentLoaded", () => {
     { key: "b2c", label: "B2C" },
   ];
 
-  // Check if a transaction is a refund based on its transaction ID suffix
+  // ============================================
+  // DATE FORMATTING
+  // ============================================
+
+  function formatDate(timestamp) {
+    if (!timestamp) return "—";
+    const date = timestamp.toDate?.() || new Date(timestamp) || new Date();
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const ampm = hours >= 12 ? "pm" : "am";
+    hours = hours % 12 || 12;
+    const hoursStr = String(hours).padStart(2, "0");
+    return `${day}-${month}-${year}, ${hoursStr}:${minutes} ${ampm}`;
+  }
+
+  // ============================================
+  // PAYMENT METHOD MAPPING
+  // ============================================
+
+  function capitalize(str) {
+    if (!str) return "";
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  function getPaymentDisplay(order) {
+    const method = order.paymentMethod || "paynow";
+    const details = order.paymentDetails || {};
+
+    const mapping = {
+      card: () => {
+        const brand = (details.brand || "visa").toLowerCase();
+        const last4 = details.lastFour || details.cardLast4 || "****";
+        const brandLogos = {
+          visa: "Visa.svg",
+          mastercard: "MasterCard.svg",
+          amex: "Amex.svg",
+        };
+        if (details.wallet === "apple_pay") {
+          return {
+            logos: ["Apple Pay.svg", brandLogos[brand] || "Visa.svg"],
+            methodLabel: `\u2022\u2022\u2022\u2022 ${last4}`,
+          };
+        }
+        if (details.wallet === "google_pay") {
+          return {
+            logos: ["Google Pay.svg", brandLogos[brand] || "Visa.svg"],
+            methodLabel: `\u2022\u2022\u2022\u2022 ${last4}`,
+          };
+        }
+        return {
+          logos: [brandLogos[brand] || "Visa.svg"],
+          methodLabel: `\u2022\u2022\u2022\u2022 ${last4}`,
+        };
+      },
+      grabpay: () => ({ logos: ["GrabPay.svg"], methodLabel: "GrabPay" }),
+      paynow: () => ({ logos: ["PayNow.svg"], methodLabel: "PayNow" }),
+      alipay: () => ({ logos: ["Alipay.svg"], methodLabel: "Alipay" }),
+      nets: () => ({ logos: ["NETS.svg"], methodLabel: "NETS" }),
+      cash: () => ({ logos: ["Cash.png"], methodLabel: "Cash" }),
+    };
+
+    const getDisplay = mapping[method] || mapping.paynow;
+    return getDisplay();
+  }
+
+  // ============================================
+  // MAP ORDER TO TRANSACTION
+  // ============================================
+
+  function orderToTransaction(order) {
+    const paymentDisplay = getPaymentDisplay(order);
+    let status = "Successful";
+    if (order.paymentStatus === "refunded" || order.status === "cancelled") {
+      status = "Refunded";
+    }
+    if (order.paymentStatus === "failed" || order.status === "failed") {
+      status = "Failed";
+    }
+
+    const txnId = order.hawkrTransactionId || "—";
+    let type = "b2b";
+    if (txnId.startsWith("b2c-")) type = "b2c";
+
+    return {
+      id: order.id,
+      amount: order.total || order.amount || 0,
+      status,
+      logos: paymentDisplay.logos,
+      methodLabel: paymentDisplay.methodLabel,
+      txnId,
+      customer: order.vendorName || order.customerName || "—",
+      type,
+      date: formatDate(order.createdAt),
+    };
+  }
+
+  // ============================================
+  // LOAD TRANSACTIONS FROM FIREBASE
+  // ============================================
+
+  async function loadTransactions(userId) {
+    try {
+      const operatorDoc = await getDoc(doc(db, "operators", userId));
+      if (!operatorDoc.exists()) {
+        renderEmptyState();
+        return;
+      }
+
+      const opData = operatorDoc.data();
+      const hawkerCentreId = opData.hawkerCentreId;
+      if (!hawkerCentreId) {
+        renderEmptyState();
+        return;
+      }
+
+      // Query rent/operator transactions for this hawker centre
+      let ordersSnapshot;
+      try {
+        const q = query(
+          collection(db, "operatorTransactions"),
+          where("hawkerCentreId", "==", hawkerCentreId),
+          orderBy("createdAt", "desc"),
+          limit(100),
+        );
+        ordersSnapshot = await getDocs(q);
+      } catch (indexError) {
+        console.warn("Index not ready, fetching without orderBy:", indexError);
+        try {
+          const fallbackQ = query(
+            collection(db, "operatorTransactions"),
+            where("hawkerCentreId", "==", hawkerCentreId),
+            limit(100),
+          );
+          ordersSnapshot = await getDocs(fallbackQ);
+        } catch {
+          // Collection may not exist yet
+          renderEmptyState();
+          return;
+        }
+      }
+
+      const orders = ordersSnapshot.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      }));
+
+      orders.sort((a, b) => {
+        const dateA =
+          a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
+        const dateB =
+          b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
+        return dateB - dateA;
+      });
+
+      transactions = orders.map(orderToTransaction);
+
+      renderFilterCards();
+      renderTable();
+    } catch (error) {
+      console.error("Error loading transactions:", error);
+      renderEmptyState();
+    }
+  }
+
+  // ============================================
+  // EMPTY STATE
+  // ============================================
+
+  function renderEmptyState() {
+    transactions = [];
+    renderFilterCards();
+    const table = document.getElementById("transactionTable");
+    const header = table.querySelector(".transactionRowHeader");
+    table.innerHTML = "";
+    table.appendChild(header);
+
+    const paymentIcons = [
+      "Apple Pay.svg",
+      "Google Pay.svg",
+      "Visa.svg",
+      "MasterCard.svg",
+      "Amex.svg",
+      "UnionPay.svg",
+      "Alipay.svg",
+      "GrabPay.svg",
+      "PayNow.svg",
+      "Link.svg",
+    ];
+
+    const emptyState = document.createElement("div");
+    emptyState.className = "paymentsEmptyState";
+    emptyState.innerHTML = `
+      <p class="paymentsEmptyTitle">Hawkr opens possibilities you've never thought of.</p>
+      <p class="paymentsEmptySubtitle">We connect all the popular payment methods into one system.</p>
+      <div class="paymentsEmptyIcons">
+        ${paymentIcons.map((icon) => `<img src="${paymentMethodsBasePath}${icon}" alt="${icon.replace(".svg", "")}" class="paymentsEmptyIcon" />`).join("")}
+      </div>
+      <div class="paymentsEmptyPowered">
+        <span>powered by</span>
+        <img src="../../images/Stripe logo.svg" alt="Stripe" class="paymentsEmptyStripeLogo" />
+      </div>
+    `;
+    table.appendChild(emptyState);
+  }
+
+  // ============================================
+  // FILTERS & RENDERING
+  // ============================================
+
   const isRefund = (transaction) => transaction.txnId.endsWith("-REFUND");
 
-  // Returns the count of transactions matching a given filter key
   function getCount(key) {
     if (key === "all") return transactions.length;
     if (key === "successful")
       return transactions.filter(
-        (transaction) =>
-          transaction.status === "Successful" && !isRefund(transaction),
+        (t) => t.status === "Successful" && !isRefund(t),
       ).length;
     if (key === "refunds")
-      return transactions.filter((transaction) => isRefund(transaction)).length;
+      return transactions.filter((t) => isRefund(t)).length;
     if (key === "failed")
-      return transactions.filter(
-        (transaction) => transaction.status === "Failed",
-      ).length;
+      return transactions.filter((t) => t.status === "Failed").length;
     if (key === "b2b")
-      return transactions.filter((transaction) => transaction.type === "b2b")
-        .length;
+      return transactions.filter((t) => t.type === "b2b").length;
     if (key === "b2c")
-      return transactions.filter((transaction) => transaction.type === "b2c")
-        .length;
+      return transactions.filter((t) => t.type === "b2c").length;
     return 0;
   }
 
-  // Returns transactions filtered by the active filter card and search query
   function getFiltered() {
-    const query = document
+    const searchQuery = document
       .getElementById("searchInput")
       .value.toLowerCase()
       .trim();
     let filtered = transactions;
 
-    // Apply the active filter card
     if (activeFilter === "successful")
       filtered = filtered.filter(
-        (transaction) =>
-          transaction.status === "Successful" && !isRefund(transaction),
+        (t) => t.status === "Successful" && !isRefund(t),
       );
     else if (activeFilter === "refunds")
-      filtered = filtered.filter((transaction) => isRefund(transaction));
+      filtered = filtered.filter((t) => isRefund(t));
     else if (activeFilter === "failed")
-      filtered = filtered.filter(
-        (transaction) => transaction.status === "Failed",
-      );
+      filtered = filtered.filter((t) => t.status === "Failed");
     else if (activeFilter === "b2b")
-      filtered = filtered.filter((transaction) => transaction.type === "b2b");
+      filtered = filtered.filter((t) => t.type === "b2b");
     else if (activeFilter === "b2c")
-      filtered = filtered.filter((transaction) => transaction.type === "b2c");
+      filtered = filtered.filter((t) => t.type === "b2c");
 
-    // Apply search query across customer name, transaction ID, payment method, date, and amount
-    if (query) {
+    if (searchQuery) {
       filtered = filtered.filter(
-        (transaction) =>
-          transaction.customer.toLowerCase().includes(query) ||
-          transaction.txnId.toLowerCase().includes(query) ||
-          transaction.methodLabel.toLowerCase().includes(query) ||
-          transaction.date.toLowerCase().includes(query) ||
-          `s$${transaction.amount.toFixed(2)}`.includes(query),
+        (t) =>
+          t.customer.toLowerCase().includes(searchQuery) ||
+          t.txnId.toLowerCase().includes(searchQuery) ||
+          t.methodLabel.toLowerCase().includes(searchQuery) ||
+          t.date.toLowerCase().includes(searchQuery) ||
+          `s$${t.amount.toFixed(2)}`.includes(searchQuery),
       );
     }
 
@@ -324,12 +345,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const filtered = getFiltered();
 
+    if (filtered.length === 0) {
+      const emptyRow = document.createElement("div");
+      emptyRow.style.cssText =
+        "padding: 48px; text-align: center; color: #808080; font-family: 'Geist Mono', monospace; font-size: 14px;";
+      emptyRow.textContent =
+        activeFilter !== "all"
+          ? `No ${activeFilter} transactions`
+          : "No transactions found";
+      table.appendChild(emptyRow);
+      return;
+    }
+
     filtered.forEach((transaction) => {
       const row = document.createElement("div");
       row.className = "transactionRow";
       row.style.cursor = "pointer";
 
-      // Determine badge styling based on transaction status and refund flag
       const transactionIsRefund = isRefund(transaction);
       const badgeClass =
         transaction.status === "Failed"
@@ -351,7 +383,6 @@ document.addEventListener("DOMContentLoaded", () => {
             ? `<img src="${iconsBasePath}refund.svg" alt="">`
             : `<img src="${iconsBasePath}successful.svg" alt="">`;
 
-      // Build payment method logo images
       const logosHtml = transaction.logos.length
         ? transaction.logos
             .map(
@@ -387,10 +418,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Re-render the table whenever the search input changes
+  // ============================================
+  // EVENT LISTENERS
+  // ============================================
+
   document.getElementById("searchInput").addEventListener("input", renderTable);
 
-  // Keyboard shortcuts for refund (r) and invoice (n) buttons
   document.addEventListener("keydown", (e) => {
     if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
 
@@ -404,7 +437,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Ctrl/Cmd+K focus search
   document.addEventListener("keydown", (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === "k") {
       e.preventDefault();
@@ -412,11 +444,39 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Placeholder button actions
   document.getElementById("btnRefund").addEventListener("click", () => {});
   document.getElementById("btnInvoice").addEventListener("click", () => {});
 
-  // Initial render
+  // ============================================
+  // INIT: Show skeleton while loading
+  // ============================================
+
   renderFilterCards();
-  renderTable();
+  const table = document.getElementById("transactionTable");
+  for (let i = 0; i < 6; i++) {
+    const skeleton = document.createElement("div");
+    skeleton.className = "transactionRow skeletonRow";
+    skeleton.innerHTML = `
+      <div class="transactionCell transactionCellAmount">
+        <span class="skeleton" style="width:64px;height:16px"></span>
+        <span class="skeleton" style="width:72px;height:20px;border-radius:8px"></span>
+      </div>
+      <div class="transactionCell transactionCellMethod">
+        <div class="paymentMethodBox">
+          <span class="skeleton" style="width:24px;height:24px;border-radius:6px"></span>
+          <span class="skeleton" style="width:80px;height:14px"></span>
+        </div>
+      </div>
+      <div class="transactionCell transactionCellTransactionId">
+        <span class="skeleton" style="width:140px;height:14px"></span>
+      </div>
+      <div class="transactionCell transactionCellCustomer">
+        <span class="skeleton" style="width:90px;height:14px"></span>
+      </div>
+      <div class="transactionCell transactionCellDate">
+        <span class="skeleton" style="width:130px;height:14px"></span>
+      </div>
+    `;
+    table.appendChild(skeleton);
+  }
 });

@@ -33,6 +33,7 @@ import {
   findOrCreateHawkerCentre,
 } from "../../firebase/services/hawkerCentres.js";
 import { getStallsByHawkerCentre } from "../../firebase/services/foodStalls.js";
+import { showToast } from "../../assets/js/toast.js";
 
 // ============================================
 // STATE
@@ -46,6 +47,95 @@ let currentOnboardCode = "";
 let codeRefreshInterval = null;
 let codeSnapshotUnsubscribe = null;
 let linkedVendorData = null;
+let autofillAnimationRunning = false;
+let autofillTimeouts = [];
+
+// ============================================
+// AUTOFILL ANIMATION UTILITIES
+// ============================================
+
+function autofillDelay(ms) {
+  return new Promise((resolve) => {
+    const id = setTimeout(resolve, ms);
+    autofillTimeouts.push(id);
+  });
+}
+
+function typeIntoInput(inputId, text, charDelay = 28) {
+  return new Promise((resolve) => {
+    const input = document.getElementById(inputId);
+    if (!input || !text) {
+      if (input) input.value = text || "";
+      resolve();
+      return;
+    }
+    input.value = "";
+    input.classList.add("autofill-active");
+    let index = 0;
+
+    function typeNext() {
+      if (index < text.length) {
+        input.value = text.substring(0, index + 1);
+        index++;
+        const id = setTimeout(typeNext, charDelay);
+        autofillTimeouts.push(id);
+      } else {
+        input.classList.remove("autofill-active");
+        resolve();
+      }
+    }
+    typeNext();
+  });
+}
+
+function fadeInElement(element, duration = 400) {
+  return new Promise((resolve) => {
+    if (!element) {
+      resolve();
+      return;
+    }
+    element.style.opacity = "0";
+    element.style.transform = "translateY(8px)";
+    element.style.transition = `opacity ${duration}ms ease, transform ${duration}ms ease`;
+    element.offsetHeight; // force reflow
+    element.style.opacity = "1";
+    element.style.transform = "translateY(0)";
+    const id = setTimeout(() => {
+      element.style.transition = "";
+      element.style.transform = "";
+      resolve();
+    }, duration);
+    autofillTimeouts.push(id);
+  });
+}
+
+function fadeInCuisineTags(delay = 120) {
+  return new Promise((resolve) => {
+    const container = document.getElementById("onboardCuisineContainer");
+    if (!container) {
+      resolve();
+      return;
+    }
+    const tags = container.querySelectorAll(".onboardCuisineTag");
+    if (!tags.length) {
+      resolve();
+      return;
+    }
+    let i = 0;
+    function showNext() {
+      if (i < tags.length) {
+        tags[i].style.opacity = "1";
+        tags[i].style.transform = "scale(1)";
+        i++;
+        const id = setTimeout(showNext, delay);
+        autofillTimeouts.push(id);
+      } else {
+        resolve();
+      }
+    }
+    showNext();
+  });
+}
 
 // ============================================
 // TIME / HOURS FORMATTING UTILITIES
@@ -456,7 +546,7 @@ async function loadOperatorData(userId) {
 // ============================================
 
 function generateCode() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code = "";
   for (let i = 0; i < 6; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -515,7 +605,8 @@ function listenForCodeLink(code) {
       if (!snapshot.exists()) return;
       const data = snapshot.data();
       if (data.status === "linked" && data.vendorId) {
-        // Stop the refresh interval since we have a linked vendor
+        // Stop the countdown and refresh interval since we have a linked vendor
+        stopCountdown();
         if (codeRefreshInterval) {
           clearInterval(codeRefreshInterval);
           codeRefreshInterval = null;
@@ -557,6 +648,9 @@ async function refreshCode() {
     codeEl.innerHTML = `<span class="onboardCodePrefix">OBD-</span>${newCode}`;
   }
 
+  // Reset countdown
+  startCountdown();
+
   // Re-attach listener
   listenForCodeLink(newCode);
 }
@@ -565,21 +659,80 @@ async function refreshCode() {
 // ONBOARD PANEL — CODE STATE
 // ============================================
 
+let countdownInterval = null;
+let countdownSeconds = 30;
+
+function startCountdown() {
+  countdownSeconds = 30;
+  updateCountdownRing();
+
+  if (countdownInterval) clearInterval(countdownInterval);
+  countdownInterval = setInterval(async () => {
+    countdownSeconds--;
+    if (countdownSeconds <= 0) {
+      try {
+        await refreshCode();
+      } catch (err) {
+        console.error("Error refreshing onboarding code:", err);
+        countdownSeconds = 30;
+        updateCountdownRing();
+      }
+      return;
+    }
+    updateCountdownRing();
+  }, 1000);
+}
+
+function stopCountdown() {
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+  }
+}
+
+function updateCountdownRing() {
+  const circle = document.getElementById("countdownCircle");
+  const text = document.getElementById("countdownText");
+  if (!circle || !text) return;
+
+  const circumference = 2 * Math.PI * 54;
+  const progress = countdownSeconds / 30;
+  circle.style.strokeDashoffset = circumference * (1 - progress);
+  text.textContent = countdownSeconds;
+}
+
 function renderCodeState() {
+  const circumference = 2 * Math.PI * 54;
+
+  // Render countdown ring in header (replacing close button)
+  document.getElementById("onboardHeaderRight").innerHTML = `
+    <div class="countdownRing" id="countdownRingWrapper">
+      <svg class="countdownSvg" viewBox="0 0 120 120">
+        <circle class="countdownTrack" cx="60" cy="60" r="54" />
+        <circle class="countdownProgress" id="countdownCircle" cx="60" cy="60" r="54"
+          stroke-dasharray="${circumference}"
+          stroke-dashoffset="0" />
+      </svg>
+      <span class="countdownText" id="countdownText">30</span>
+      <div class="countdownTooltip">Each code refreshes every 30s</div>
+    </div>
+  `;
+
   document.getElementById("onboardBody").innerHTML = `
     <div class="onboardCodeSection">
       <span class="onboardCode"><span class="onboardCodePrefix">OBD-</span>${currentOnboardCode}</span>
-      <span class="onboardCodeSubtitle">Share this code with the vendor. They can enter it in their Settings to begin onboarding.</span>
+      <span class="onboardCodeSubtitle">Share this code with the vendor. They can key it in under their Tenancy page to begin onboarding.</span>
       <button class="onboardCopyBtn" id="copyCodeBtn">Copy code</button>
       <span class="onboardWaiting">${loadingIcon} Waiting for vendor...</span>
     </div>
   `;
+  startCountdown();
   document.getElementById("onboardFooter").innerHTML = `
-    <button class="onboardCancelBtn" id="onboardCancelBtn">Cancel</button>
+    <button class="onboardCancelBtn" id="onboardCancelBtn">Cancel <kbd class="onboardCancelKbd">ESC</kbd></button>
   `;
 
   document.getElementById("copyCodeBtn").addEventListener("click", () => {
-    navigator.clipboard.writeText(`OBD-${currentOnboardCode}`);
+    navigator.clipboard.writeText(currentOnboardCode);
     document.getElementById("copyCodeBtn").textContent = "Copied!";
     setTimeout(() => {
       const btn = document.getElementById("copyCodeBtn");
@@ -900,9 +1053,133 @@ function scheduleArrayToObject(arr) {
   return result;
 }
 
+async function runAutofillAnimation() {
+  autofillAnimationRunning = true;
+  const v = linkedVendorData;
+  if (!v) {
+    autofillAnimationRunning = false;
+    return;
+  }
+
+  const phoneClean = (v.contactNumber || "")
+    .replace("+65 ", "")
+    .replace("+65", "")
+    .trim();
+  const body = document.getElementById("onboardBody");
+
+  function scrollToField(el) {
+    if (el && body) el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  // Wait for panel transition to finish
+  await autofillDelay(350);
+
+  // Store Name
+  scrollToField(
+    document.getElementById("onboardStoreName")?.closest(".onboardField"),
+  );
+  await typeIntoInput("onboardStoreName", v.storeName, 28);
+  await autofillDelay(180);
+
+  // Unit Number
+  scrollToField(
+    document.getElementById("onboardUnitNo")?.closest(".onboardField"),
+  );
+  await typeIntoInput("onboardUnitNo", v.unitNumber, 28);
+  await autofillDelay(180);
+
+  // Cuisines — tags pop in one by one
+  scrollToField(
+    document
+      .getElementById("onboardCuisineContainer")
+      ?.closest(".onboardField"),
+  );
+  await fadeInCuisineTags(120);
+  await autofillDelay(200);
+
+  // Operating Hours — fade in
+  const scheduleWrap = document.getElementById("onboardScheduleWrap");
+  scrollToField(scheduleWrap?.closest(".onboardField"));
+  await fadeInElement(scheduleWrap, 450);
+  await autofillDelay(180);
+
+  // Cover Photo — fade in
+  const coverWrap = document.querySelector(
+    '[data-cert="coverPhoto"] .autofill-fade-wrap',
+  );
+  scrollToField(coverWrap?.closest(".onboardField"));
+  await fadeInElement(coverWrap, 400);
+  await autofillDelay(150);
+
+  // Hygiene Certificate — fade in
+  const hygieneWrap = document.querySelector(
+    '[data-cert="hygieneCert"] .autofill-fade-wrap',
+  );
+  scrollToField(hygieneWrap?.closest(".onboardField"));
+  await fadeInElement(hygieneWrap, 400);
+  await autofillDelay(150);
+
+  // Halal Certification — fade in
+  const halalWrap = document.querySelector(
+    '[data-cert="halalCert"] .autofill-fade-wrap',
+  );
+  scrollToField(halalWrap?.closest(".onboardField"));
+  await fadeInElement(halalWrap, 400);
+  await autofillDelay(180);
+
+  // UEN
+  scrollToField(
+    document.getElementById("onboardBizReg")?.closest(".onboardField"),
+  );
+  await typeIntoInput("onboardBizReg", v.bizRegNo, 28);
+  await autofillDelay(180);
+
+  // Contact Person
+  scrollToField(
+    document.getElementById("onboardContact")?.closest(".onboardField"),
+  );
+  await typeIntoInput("onboardContact", v.contactPerson, 28);
+  await autofillDelay(180);
+
+  // Contact Number
+  scrollToField(
+    document.getElementById("onboardPhone")?.closest(".onboardField"),
+  );
+  await typeIntoInput("onboardPhone", phoneClean, 35);
+  await autofillDelay(100);
+
+  // Animation complete — unlock form
+  unlockAutofillForm();
+  autofillAnimationRunning = false;
+}
+
+function unlockAutofillForm() {
+  // Remove readonly from all text inputs
+  document
+    .querySelectorAll(".onboardFields .onboardFieldInput[readonly]")
+    .forEach((input) => {
+      input.removeAttribute("readonly");
+    });
+
+  // Enable approve/reject buttons
+  const approveBtn = document.getElementById("onboardApproveBtn");
+  const rejectBtn = document.getElementById("onboardRejectBtn");
+  if (approveBtn) approveBtn.disabled = false;
+  if (rejectBtn) rejectBtn.disabled = false;
+
+  // Bind interactive handlers now
+  bindCuisineInput();
+  bindSchedule();
+  bindCertUploads();
+}
+
 function renderLinkedState() {
   const v = linkedVendorData;
   scheduleData = operatingHoursToArray(v.operatingHours);
+
+  // Clear the countdown ring from the header
+  const headerRight = document.getElementById("onboardHeaderRight");
+  if (headerRight) headerRight.innerHTML = "";
 
   const phoneClean = (v.contactNumber || "")
     .replace("+65 ", "")
@@ -914,57 +1191,57 @@ function renderLinkedState() {
       <div class="onboardField">
         <label class="onboardFieldLabel" for="onboardStoreName">Store Name</label>
         <span class="onboardFieldMicrocopy">Enter your ACRA-registered business name — we'll use this for verification and records.</span>
-        <input class="onboardFieldInput" id="onboardStoreName" type="text" value="${v.storeName}" />
+        <input class="onboardFieldInput" id="onboardStoreName" type="text" value="" readonly />
       </div>
       <div class="onboardField">
         <label class="onboardFieldLabel" for="onboardUnitNo">Unit Number</label>
-        <input class="onboardFieldInput" id="onboardUnitNo" type="text" value="${v.unitNumber}" />
+        <input class="onboardFieldInput" id="onboardUnitNo" type="text" value="" readonly />
       </div>
       <div class="onboardField">
         <label class="onboardFieldLabel" for="onboardCuisineInput">Cuisines Served</label>
         <div class="onboardCuisineContainer" id="onboardCuisineContainer">
-          ${v.cuisines.map((c) => `<span class="onboardCuisineTag ${c.toLowerCase()}" data-cuisine="${c}">${renderOnboardTag(c)}<button class="onboardCuisineRemove" data-cuisine="${c}">&times;</button></span>`).join("")}
+          ${v.cuisines.map((c) => `<span class="onboardCuisineTag ${c.toLowerCase()}" data-cuisine="${c}" style="opacity:0;transform:scale(0.8);transition:opacity 150ms ease,transform 150ms ease">${renderOnboardTag(c)}<button class="onboardCuisineRemove" data-cuisine="${c}">&times;</button></span>`).join("")}
           <input class="onboardCuisineInput" id="onboardCuisineInput" type="text" placeholder="Add cuisine..." />
         </div>
       </div>
       <div class="onboardField">
         <label class="onboardFieldLabel">Operating Hours</label>
-        ${renderSchedule()}
+        <div id="onboardScheduleWrap" style="opacity:0;transform:translateY(8px)">${renderSchedule()}</div>
       </div>
       <div class="onboardField" data-cert="coverPhoto">
         <label class="onboardFieldLabel">Cover Photo</label>
-        ${renderPhotoField(v.coverPhoto)}
+        <div class="autofill-fade-wrap" style="opacity:0;transform:translateY(8px)">${renderPhotoField(v.coverPhoto)}</div>
       </div>
       <div class="onboardField" data-cert="hygieneCert">
         <label class="onboardFieldLabel">Hygiene Certificate</label>
-        ${renderCertField(v.hygieneCert, "hygieneCert")}
+        <div class="autofill-fade-wrap" style="opacity:0;transform:translateY(8px)">${renderCertField(v.hygieneCert, "hygieneCert")}</div>
       </div>
       <div class="onboardField" data-cert="halalCert">
         <label class="onboardFieldLabel">Halal Certification</label>
-        ${renderCertField(v.halalCert, "halalCert")}
+        <div class="autofill-fade-wrap" style="opacity:0;transform:translateY(8px)">${renderCertField(v.halalCert, "halalCert")}</div>
       </div>
       <div class="onboardField">
         <label class="onboardFieldLabel" for="onboardBizReg">UEN</label>
-        <input class="onboardFieldInput" id="onboardBizReg" type="text" value="${v.bizRegNo}" />
+        <input class="onboardFieldInput" id="onboardBizReg" type="text" value="" readonly />
       </div>
       <div class="onboardField">
         <label class="onboardFieldLabel" for="onboardContact">Contact Person</label>
-        <input class="onboardFieldInput" id="onboardContact" type="text" value="${v.contactPerson}" />
+        <input class="onboardFieldInput" id="onboardContact" type="text" value="" readonly />
       </div>
       <div class="onboardField">
         <label class="onboardFieldLabel" for="onboardPhone">Contact Number</label>
         <div class="onboardPhoneRow">
           <img src="../../assets/icons/singapore.svg" alt="SG" class="onboardPhoneFlag" />
           <span class="onboardPhonePrefix">+65</span>
-          <input class="onboardFieldInput" id="onboardPhone" type="tel" value="${phoneClean}" maxlength="9" placeholder="8XXX XXXX" />
+          <input class="onboardFieldInput" id="onboardPhone" type="tel" value="" maxlength="9" placeholder="8XXX XXXX" readonly />
         </div>
       </div>
     </div>
   `;
 
   document.getElementById("onboardFooter").innerHTML = `
-    <button class="onboardRejectBtn" id="onboardRejectBtn">Reject</button>
-    <button class="onboardApproveBtn" id="onboardApproveBtn">Approve Onboarding</button>
+    <button class="onboardRejectBtn" id="onboardRejectBtn" disabled>Reject</button>
+    <button class="onboardApproveBtn" id="onboardApproveBtn" disabled>Approve Onboarding</button>
   `;
 
   document
@@ -974,9 +1251,8 @@ function renderLinkedState() {
     .getElementById("onboardApproveBtn")
     .addEventListener("click", handleApprove);
 
-  bindCuisineInput();
-  bindSchedule();
-  bindCertUploads();
+  // Kick off the autofill animation (binds interactive handlers after completion)
+  runAutofillAnimation();
 }
 
 // ============================================
@@ -1130,7 +1406,7 @@ async function handleApprove() {
       approveBtn.disabled = false;
       approveBtn.textContent = "Approve Onboarding";
     }
-    alert("Failed to approve onboarding. Please try again.");
+    showToast("Failed to approve onboarding. Please try again.", "error");
   }
 }
 
@@ -1161,7 +1437,10 @@ async function handleReject() {
 
 async function openOnboardPanel() {
   if (!currentHawkerCentre) {
-    alert("No hawker centre data loaded yet. Please wait and try again.");
+    showToast(
+      "No hawker centre data loaded yet. Please wait and try again.",
+      "error",
+    );
     return;
   }
 
@@ -1176,26 +1455,29 @@ async function openOnboardPanel() {
     // Start listening for vendor link
     listenForCodeLink(code);
 
-    // Set up 30-second code refresh interval
-    codeRefreshInterval = setInterval(async () => {
-      try {
-        await refreshCode();
-      } catch (err) {
-        console.error("Error refreshing onboarding code:", err);
-      }
-    }, 30000);
-
     // Open the panel
     document.getElementById("onboardOverlay").classList.add("active");
     document.getElementById("onboardPanel").classList.add("active");
     document.body.style.overflow = "hidden";
   } catch (error) {
     console.error("Error opening onboard panel:", error);
-    alert("Failed to generate onboarding code. Please try again.");
+    showToast("Failed to generate onboarding code. Please try again.", "error");
   }
 }
 
 function closeOnboardPanel() {
+  // Clear any running autofill animation
+  autofillTimeouts.forEach((id) => clearTimeout(id));
+  autofillTimeouts = [];
+  autofillAnimationRunning = false;
+
+  // Clear the countdown
+  stopCountdown();
+
+  // Clear the header ring
+  const headerRight = document.getElementById("onboardHeaderRight");
+  if (headerRight) headerRight.innerHTML = "";
+
   // Clear the code refresh interval
   if (codeRefreshInterval) {
     clearInterval(codeRefreshInterval);
@@ -1265,14 +1547,17 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       openOnboardPanel();
     }
+    if (e.key === "Escape") {
+      const panel = document.getElementById("onboardPanel");
+      if (panel && panel.classList.contains("active")) {
+        closeOnboardPanel();
+      }
+    }
   });
 
   // Onboard panel close handlers
   document
     .getElementById("onboardOverlay")
-    .addEventListener("click", closeOnboardPanel);
-  document
-    .getElementById("onboardClose")
     .addEventListener("click", closeOnboardPanel);
 
   // Firebase Auth — load operator data when authenticated

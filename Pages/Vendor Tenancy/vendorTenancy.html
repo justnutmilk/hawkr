@@ -8,6 +8,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="stylesheet" href="../../assets/css/searchModule.css" />
         <link rel="stylesheet" href="vendorTenancy.css" />
+        <link rel="stylesheet" href="../../assets/css/toast.css" />
     </head>
 
     <body>
@@ -321,33 +322,50 @@
 
             <!-- Tenancy Content -->
             <div class="tenancyContent" id="tenancyContent">
-                <span class="sectionLabel">TENANCY</span>
+                <div class="tenancyHeader">
+                    <span class="sectionLabel">TENANCY</span>
+                    <button
+                        class="buttonFilled"
+                        id="headerLinkBtn"
+                        style="display: none"
+                    >
+                        Link to Operator
+                        <kbd class="buttonKeyboard buttonKeyboardLight">L</kbd>
+                    </button>
+                </div>
 
-                <!-- Code Entry Form (shown when not linked) -->
-                <div class="tenancyCard" id="tenancyCardForm">
-                    <h2 class="tenancyTitle">Link to Operator</h2>
-                    <p class="tenancyDescription">
-                        Enter the 6-character onboarding code provided by your
-                        hawker centre operator to link your stall.
-                    </p>
-                    <div class="codeInputWrapper">
-                        <span class="codePrefix">OBD-</span>
-                        <div class="codeInputRow">
-                            <input
-                                type="text"
-                                class="codeInput"
-                                id="codeInput"
-                                maxlength="6"
-                                placeholder="XXXXXX"
-                                autocomplete="off"
-                                spellcheck="false"
-                            />
-                        </div>
+                <!-- Skeleton State (shown while loading) -->
+                <div class="tenancySkeleton" id="tenancySkeleton">
+                    <div class="tenancyCard">
+                        <div class="skeletonLine skeletonLineTitle"></div>
+                        <div class="skeletonBadge"></div>
+                        <div class="skeletonLine skeletonLineDesc"></div>
+                        <div class="skeletonLine skeletonLineDescShort"></div>
+                        <div class="skeletonBtn"></div>
                     </div>
-                    <button class="linkButton" id="linkButton">
+                </div>
+
+                <!-- Empty State (shown when not linked and form not open) -->
+                <div
+                    class="tenancyEmptyState"
+                    id="tenancyEmptyState"
+                    style="display: none"
+                >
+                    <img
+                        src="../../images/onboardingSquirrel.svg"
+                        alt="Not linked yet"
+                        class="tenancyEmptyImage"
+                    />
+                    <p class="tenancyEmptyText">
+                        Not linked to an operator yet
+                    </p>
+                    <p class="tenancyEmptySubtext">
+                        Ask your hawker centre operator for a 6-character
+                        onboarding code to get started.
+                    </p>
+                    <button class="tenancyEmptyCta" id="emptyLinkBtn">
                         Link to Operator
                     </button>
-                    <div class="tenancyStatus" id="tenancyStatus"></div>
                 </div>
 
                 <!-- Linked State (shown when already linked) -->
@@ -381,6 +399,46 @@
                         Disconnect
                     </button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Link Panel Overlay -->
+        <div class="linkOverlay" id="linkOverlay"></div>
+
+        <!-- Link Panel -->
+        <div class="linkPanel" id="linkPanel">
+            <div class="linkHeader">
+                <span class="linkTitle">Link to Operator</span>
+            </div>
+            <div class="linkBody" id="linkBody">
+                <p class="linkDescription">
+                    Enter the 6-character onboarding code provided by your
+                    hawker centre operator to link your stall.
+                </p>
+                <div class="codeInputWrapper">
+                    <span class="codePrefix">OBD-</span>
+                    <div class="codeInputRow">
+                        <input
+                            type="text"
+                            class="codeInput"
+                            id="codeInput"
+                            maxlength="6"
+                            placeholder="XXXXXX"
+                            autocomplete="off"
+                            spellcheck="false"
+                        />
+                    </div>
+                </div>
+                <div class="tenancyStatus" id="tenancyStatus"></div>
+            </div>
+            <div class="linkFooter" id="linkFooter">
+                <button class="linkCancelBtn" id="linkCancelBtn">
+                    Cancel <kbd class="linkCancelKbd">ESC</kbd>
+                </button>
+                <button class="linkButton" id="linkButton">
+                    Link
+                    <kbd class="linkEnterKbd">ENTER ↵</kbd>
+                </button>
             </div>
         </div>
 

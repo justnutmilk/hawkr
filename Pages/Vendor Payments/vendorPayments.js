@@ -309,11 +309,34 @@ document.addEventListener("DOMContentLoaded", () => {
     const header = table.querySelector(".transactionRowHeader");
     table.innerHTML = "";
     table.appendChild(header);
-    const emptyRow = document.createElement("div");
-    emptyRow.style.cssText =
-      "padding: 48px; text-align: center; color: #808080; font-family: 'Geist Mono', monospace; font-size: 14px;";
-    emptyRow.textContent = "No transactions yet";
-    table.appendChild(emptyRow);
+
+    const paymentIcons = [
+      "Apple Pay.svg",
+      "Google Pay.svg",
+      "Visa.svg",
+      "MasterCard.svg",
+      "Amex.svg",
+      "UnionPay.svg",
+      "Alipay.svg",
+      "GrabPay.svg",
+      "PayNow.svg",
+      "Link.svg",
+    ];
+
+    const emptyState = document.createElement("div");
+    emptyState.className = "paymentsEmptyState";
+    emptyState.innerHTML = `
+      <p class="paymentsEmptyTitle">Hawkr opens possibilities you've never thought of.</p>
+      <p class="paymentsEmptySubtitle">We connect all the popular payment methods into one system.</p>
+      <div class="paymentsEmptyIcons">
+        ${paymentIcons.map((icon) => `<img src="${paymentMethodsBasePath}${icon}" alt="${icon.replace(".svg", "")}" class="paymentsEmptyIcon" />`).join("")}
+      </div>
+      <div class="paymentsEmptyPowered">
+        <span>powered by</span>
+        <img src="../../images/Stripe logo.svg" alt="Stripe" class="paymentsEmptyStripeLogo" />
+      </div>
+    `;
+    table.appendChild(emptyState);
   }
 
   // ============================================
@@ -589,16 +612,36 @@ document.addEventListener("DOMContentLoaded", () => {
   // INIT: Wait for auth, then load
   // ============================================
 
-  // Show loading state
+  // Show skeleton loading state
   renderFilterCards();
   const table = document.getElementById("transactionTable");
   const header = table.querySelector(".transactionRowHeader");
-  const loadingRow = document.createElement("div");
-  loadingRow.id = "loadingRow";
-  loadingRow.style.cssText =
-    "padding: 48px; text-align: center; color: #808080; font-family: 'Geist Mono', monospace; font-size: 14px;";
-  loadingRow.textContent = "Loading transactions...";
-  table.appendChild(loadingRow);
+  for (let i = 0; i < 6; i++) {
+    const skeleton = document.createElement("div");
+    skeleton.className = "transactionRow skeletonRow";
+    skeleton.innerHTML = `
+      <div class="transactionCell transactionCellAmount">
+        <span class="skeleton" style="width:64px;height:16px"></span>
+        <span class="skeleton" style="width:72px;height:20px;border-radius:8px"></span>
+      </div>
+      <div class="transactionCell transactionCellMethod">
+        <div class="paymentMethodBox">
+          <span class="skeleton" style="width:24px;height:24px;border-radius:6px"></span>
+          <span class="skeleton" style="width:80px;height:14px"></span>
+        </div>
+      </div>
+      <div class="transactionCell transactionCellTransactionId">
+        <span class="skeleton" style="width:140px;height:14px"></span>
+      </div>
+      <div class="transactionCell transactionCellCustomer">
+        <span class="skeleton" style="width:90px;height:14px"></span>
+      </div>
+      <div class="transactionCell transactionCellDate">
+        <span class="skeleton" style="width:130px;height:14px"></span>
+      </div>
+    `;
+    table.appendChild(skeleton);
+  }
 
   onAuthStateChanged(auth, (user) => {
     if (user) {
