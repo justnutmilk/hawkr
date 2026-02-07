@@ -942,6 +942,67 @@ body {
 }
 
 /* ============================================
+   ADDRESS MISMATCH DIALOG
+   ============================================ */
+
+.mismatchDialog {
+    max-width: 420px;
+    width: 90vw;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 24px;
+    gap: 12px;
+}
+
+.mismatchLocations {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    margin-top: 8px;
+}
+
+.mismatchLocation {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.mismatchLocationLabel {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.mismatchMapContainer {
+    width: 100%;
+    height: 160px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f0f0f0;
+}
+
+.mismatchLocationName {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-top: 4px;
+}
+
+.mismatchLocationAddress {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+/* ============================================
    RESPONSIVE
    ============================================ */
 

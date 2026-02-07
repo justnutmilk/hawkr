@@ -21,6 +21,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { initVendorNavbar } from "../../assets/js/vendorNavbar.js";
 import { showToast, showConfirm } from "../../assets/js/toast.js";
+import { getHawkerCentreById } from "../../firebase/services/hawkerCentres.js";
 
 // DOM Elements
 const tenancyCardLinked = document.getElementById("tenancyCardLinked");
@@ -239,6 +240,122 @@ function stopStallListener() {
 }
 
 /**
+ * Show address mismatch confirmation with two Google Maps.
+ * Returns Promise<boolean> — true if vendor wants to update address.
+ */
+function showAddressMismatchConfirm(vendorCentre, operatorCentre) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "confirmOverlay";
+
+    const dialog = document.createElement("div");
+    dialog.className = "confirmDialog mismatchDialog";
+
+    const vLat =
+      vendorCentre.location?.latitude || vendorCentre.location?._lat || 1.3521;
+    const vLng =
+      vendorCentre.location?.longitude ||
+      vendorCentre.location?._long ||
+      103.8198;
+    const oLat =
+      operatorCentre.location?.latitude ||
+      operatorCentre.location?._lat ||
+      1.3521;
+    const oLng =
+      operatorCentre.location?.longitude ||
+      operatorCentre.location?._long ||
+      103.8198;
+
+    dialog.innerHTML = `
+      <p class="confirmTitle">Address mismatch</p>
+      <p class="confirmMessage">Your stall location doesn't match this operator's hawker centre. Would you like to update your address?</p>
+      <div class="mismatchLocations">
+        <div class="mismatchLocation">
+          <span class="mismatchLocationLabel">Your location</span>
+          <div class="mismatchMapContainer" id="mismatchMapVendor"></div>
+          <span class="mismatchLocationName">${vendorCentre.name || "Unknown"}</span>
+          <span class="mismatchLocationAddress">${vendorCentre.address || ""}</span>
+        </div>
+        <div class="mismatchLocation">
+          <span class="mismatchLocationLabel">Operator's location</span>
+          <div class="mismatchMapContainer" id="mismatchMapOperator"></div>
+          <span class="mismatchLocationName">${operatorCentre.name || "Unknown"}</span>
+          <span class="mismatchLocationAddress">${operatorCentre.address || ""}</span>
+        </div>
+      </div>
+      <div class="confirmActions">
+        <button class="confirmBtn confirmBtnCancel" id="mismatchCancel">Cancel</button>
+        <button class="confirmBtn confirmBtnConfirm" id="mismatchConfirm">Update & Link</button>
+      </div>
+    `;
+
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add("active"));
+
+    // Initialize maps after DOM insertion
+    (async () => {
+      try {
+        const { Map } = await google.maps.importLibrary("maps");
+        const { AdvancedMarkerElement } =
+          await google.maps.importLibrary("marker");
+
+        const mapOptions = {
+          zoom: 15,
+          mapId: "hawkr-mismatch",
+          disableDefaultUI: true,
+          zoomControl: false,
+          gestureHandling: "none",
+          clickableIcons: false,
+        };
+
+        const vendorMap = new Map(
+          document.getElementById("mismatchMapVendor"),
+          {
+            ...mapOptions,
+            center: { lat: vLat, lng: vLng },
+          },
+        );
+        new AdvancedMarkerElement({
+          position: { lat: vLat, lng: vLng },
+          map: vendorMap,
+        });
+
+        const operatorMap = new Map(
+          document.getElementById("mismatchMapOperator"),
+          {
+            ...mapOptions,
+            center: { lat: oLat, lng: oLng },
+          },
+        );
+        new AdvancedMarkerElement({
+          position: { lat: oLat, lng: oLng },
+          map: operatorMap,
+        });
+      } catch (err) {
+        console.warn("Could not load maps for mismatch dialog:", err);
+      }
+    })();
+
+    function close(result) {
+      overlay.classList.remove("active");
+      overlay.addEventListener("transitionend", () => overlay.remove());
+      resolve(result);
+    }
+
+    dialog
+      .querySelector("#mismatchCancel")
+      .addEventListener("click", () => close(false));
+    dialog
+      .querySelector("#mismatchConfirm")
+      .addEventListener("click", () => close(true));
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) close(false);
+    });
+  });
+}
+
+/**
  * Show the empty state (default for unlinked vendors)
  */
 function showEmptyState() {
@@ -436,15 +553,37 @@ async function handleLinkCode() {
     }
 
     if (vendorHawkerCentreId !== operatorHawkerCentreId) {
-      setStatus(
-        "Your stall location doesn't match this operator's hawker centre. Please check your address.",
-        "error",
+      // Fetch both hawker centre docs for the map confirmation
+      const [vendorCentre, operatorCentre] = await Promise.all([
+        getHawkerCentreById(vendorHawkerCentreId),
+        getHawkerCentreById(operatorHawkerCentreId),
+      ]);
+
+      const confirmed = await showAddressMismatchConfirm(
+        vendorCentre || { name: "Your location" },
+        operatorCentre || { name: "Operator's location" },
       );
-      activeLinkButton.disabled = false;
-      return;
+
+      if (!confirmed) {
+        activeLinkButton.disabled = false;
+        return;
+      }
+
+      // Vendor confirmed — update their location to match operator's
+      await updateDoc(doc(db, "vendors", user.uid), {
+        hawkerCentreId: operatorHawkerCentreId,
+        storeLocation: operatorCentre?.name || "",
+      });
+
+      const vData = vendorDoc.data();
+      if (vData.stallId) {
+        await updateDoc(doc(db, "foodStalls", vData.stallId), {
+          hawkerCentreId: operatorHawkerCentreId,
+        });
+      }
     }
 
-    // Code is valid and address matches - update it with vendor info
+    // Code is valid (address matches or vendor confirmed update) - update it with vendor info
     await updateDoc(doc(db, "onboardingCodes", fullCode), {
       status: "linked",
       vendorId: user.uid,
