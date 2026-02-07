@@ -5,7 +5,7 @@
 import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
 import { initLiquidGlassToggle } from "../../assets/js/liquidGlassToggle.js";
 import { injectMobileMenu } from "../../assets/js/mobileMenu.js";
-import { auth, db } from "../../firebase/config.js";
+import { auth, db, app } from "../../firebase/config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
   doc,
@@ -13,9 +13,19 @@ import {
   updateDoc,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import {
+  loadStripe,
+  createSetupIntent,
+  createCardElement,
+  saveCard,
   getPaymentMethods,
   deletePaymentMethod,
 } from "../../firebase/services/stripe.js";
+import {
+  getFunctions,
+  httpsCallable,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
+
+const functions = getFunctions(app, "asia-southeast1");
 
 // ============================================
 // USER DATA
@@ -23,6 +33,11 @@ import {
 
 // Current user ID (set on auth)
 let currentUserId = null;
+
+// Stripe state
+let stripeInstance = null;
+let cardElement = null;
+let setupIntentClientSecret = null;
 
 // User data object (populated from Firebase and Stripe)
 let userData = {
@@ -99,15 +114,18 @@ function renderNotificationsSection(user) {
 
   if (user.telegramLinked) {
     // Telegram is connected - show connected status and unlink option
+    const handle = user.telegramUsername
+      ? `@${user.telegramUsername}`
+      : "Linked";
     telegramHTML = `
       <div class="notificationMethodRight telegramConnected">
-        <span class="telegramStatus connected">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M13.5 4.5L6.5 11.5L3 8" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Telegram connected
-        </span>
-        <button class="telegramUnlinkButton" id="telegramUnlink">Unlink</button>
+        <div class="telegramConnectedInfo">
+          <span class="telegramConnectedLabel">Connected Telegram Account</span>
+          <div class="telegramConnectedAccount">
+            <span class="telegramHandle">${handle}</span>
+            <button class="telegramDisconnectButton" id="telegramUnlink">Disconnect</button>
+          </div>
+        </div>
       </div>
     `;
   } else {
@@ -128,7 +146,7 @@ function renderNotificationsSection(user) {
         <div class="notificationMethod" id="telegramNotificationMethod">
           <div class="notificationMethodLeft">
             <span class="notificationMethodTitle">Telegram</span>
-            <span class="notificationMethodDescription">Get instant order updates on Telegram. We'll notify you when your order is confirmed, ready, and complete.</span>
+            <span class="notificationMethodDescription">${user.telegramLinked ? "You can now receive updates from us, even when Hawkr's web app is closed." : "Get instant order updates on Telegram. We'll notify you when your order is confirmed, ready, and complete."}</span>
           </div>
           ${telegramHTML}
         </div>
@@ -184,6 +202,8 @@ function renderPaymentSection(user) {
         <img src="../../images/noCards.svg" alt="No payment methods" class="emptyStateImage" />
         <span class="emptyStateTitle">No payment methods</span>
         <span class="emptyStateDescription">Add a card to make checkout faster and easier.</span>
+        <button class="addCardCtaBtn" id="emptyAddCard"><img src="../../assets/icons/add.svg" alt="" /> Add new card</button>
+        <span class="stripeBadge">Powered by <svg class="stripeLogo" width="33" height="14" viewBox="0 0 60 25" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M60 12.8C60 8.55 57.95 5.18 54.12 5.18C50.27 5.18 47.88 8.55 47.88 12.77C47.88 17.72 50.63 20.33 54.57 20.33C56.5 20.33 57.96 19.87 59.08 19.22V16.04C57.96 16.62 56.67 16.97 55.05 16.97C53.45 16.97 52.04 16.42 51.87 14.51H59.97C59.97 14.29 60 13.33 60 12.8ZM51.82 11.75C51.82 9.93 52.88 9.15 54.1 9.15C55.29 9.15 56.29 9.93 56.29 11.75H51.82ZM41.41 5.18C39.79 5.18 38.76 5.93 38.19 6.45L37.98 5.43H34.5V24.53L38.36 23.71L38.37 19.26C38.96 19.69 39.82 20.33 41.39 20.33C44.58 20.33 47.48 17.89 47.48 12.63C47.46 7.79 44.52 5.18 41.41 5.18ZM40.55 16.83C39.49 16.83 38.87 16.46 38.37 15.99L38.36 9.85C38.9 9.33 39.54 8.98 40.55 8.98C42.16 8.98 43.3 10.74 43.3 12.89C43.3 15.1 42.18 16.83 40.55 16.83ZM29.04 4.18L32.92 3.35V0.12L29.04 0.94V4.18ZM29.04 5.45H32.92V20.05H29.04V5.45ZM24.93 6.59L24.67 5.45H21.27V20.05H25.12V10.01C26.06 8.82 27.61 9.05 28.09 9.22V5.45C27.59 5.26 25.87 4.93 24.93 6.59ZM17.09 1.72L13.32 2.52L13.3 16.22C13.3 18.54 15.07 20.34 17.38 20.34C18.64 20.34 19.56 20.11 20.07 19.83V16.62C19.58 16.83 17.07 17.55 17.07 15.23V9.17H20.07V5.45H17.07L17.09 1.72ZM5.61 9.88C5.61 9.3 6.09 9.08 6.88 9.08C8.05 9.08 9.52 9.42 10.69 10.04V6.2C9.42 5.7 8.17 5.5 6.88 5.5C3.5 5.5 1.28 7.22 1.28 10.1C1.28 14.62 7.52 13.93 7.52 15.86C7.52 16.55 6.92 16.77 6.08 16.77C4.8 16.77 3.18 16.26 1.88 15.56V19.45C3.32 20.06 4.78 20.33 6.08 20.33C9.55 20.33 11.91 18.66 11.91 15.74C11.89 10.86 5.61 11.7 5.61 9.88Z" fill="currentColor"/></svg></span>
       </div>`;
 
   const editButton = hasPaymentMethods
@@ -204,7 +224,7 @@ function renderPaymentSection(user) {
     ? ""
     : `<button class="actionButton addCard" id="addCard">
         <img src="${icons.add}" alt="Add" />
-        Add Card
+        Add new card
       </button>`;
 
   const containerClass = paymentEditMode
@@ -410,191 +430,145 @@ async function saveEditDetails() {
 }
 
 // ============================================
-// ADD CARD POPUP
+// ADD CARD (STRIPE ELEMENTS)
 // ============================================
 
-const cardTypeConfig = {
-  Visa: { logo: "../../Payment Methods/visaCard.svg", cardClass: "visa" },
-  MasterCard: {
-    logo: "../../Payment Methods/masterCardCard.svg",
-    cardClass: "mastercard",
-  },
-  "American Express": {
-    logo: "../../Payment Methods/americanExpressCard.svg",
-    cardClass: "amex",
-  },
-  UnionPay: {
-    logo: "../../Payment Methods/unionPayCard.svg",
-    cardClass: "unionpay",
-  },
-  "Apple Pay": {
-    logo: "../../Payment Methods/applePayCard.svg",
-    cardClass: "applepay",
-  },
-  "Google Pay": {
-    logo: "../../Payment Methods/googlePayCard.svg",
-    cardClass: "googlepay",
-  },
-};
+async function handleAddCard() {
+  if (!currentUserId) {
+    alert("Please log in to add a payment method");
+    return;
+  }
 
-const cardTypesWithNumber = [
-  "Visa",
-  "MasterCard",
-  "American Express",
-  "UnionPay",
-];
+  try {
+    // Load Stripe if not already loaded
+    if (!stripeInstance) {
+      stripeInstance = await loadStripe();
+    }
 
-function renderAddCardPopup() {
-  const typeOptions = Object.keys(cardTypeConfig)
-    .map((type) => `<option value="${type}">${type}</option>`)
-    .join("");
+    // Create SetupIntent for saving card
+    const { clientSecret } = await createSetupIntent();
+    setupIntentClientSecret = clientSecret;
 
-  return `
-    <div class="editPopupHeader">
-      <h2 class="editPopupTitle">Add Card</h2>
-      <button class="editPopupClose" id="addCardClose" aria-label="Close">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path d="M18 6L6 18M6 6L18 18" stroke="#341539" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-    </div>
-    <div class="editPopupContent">
-      <div class="editFormGroup">
-        <span class="editFormLabel">Card Type</span>
-        <select class="editFormSelect" id="addCardType">
-          <option value="" disabled selected>Select a card type</option>
-          ${typeOptions}
-        </select>
-      </div>
-      <div class="editFormGroup" id="addCardNumberGroup">
-        <span class="editFormLabel">Card Number</span>
-        <input type="text" class="editFormInput" id="addCardNumber" maxlength="19" placeholder="XXXX XXXX XXXX XXXX" />
-      </div>
-      <div class="editFormGroup">
-        <span class="editFormLabel">Expiry Date</span>
-        <input type="text" class="editFormInput" id="addCardExpiry" maxlength="5" placeholder="MM/YY" />
-      </div>
-    </div>
-    <div class="editPopupFooter">
-      <button class="editPopupSaveBtn" id="addCardSave">Add Card</button>
-    </div>
-  `;
+    // Open the modal
+    openCardModal();
+
+    // Create and mount card element
+    if (cardElement) {
+      cardElement.destroy();
+    }
+    cardElement = createCardElement(stripeInstance, "cardElement");
+
+    // Listen for card element changes
+    cardElement.on("change", (event) => {
+      const errorElement = document.getElementById("cardError");
+      if (event.error) {
+        errorElement.textContent = event.error.message;
+      } else {
+        errorElement.textContent = "";
+      }
+    });
+  } catch (error) {
+    console.error("Error setting up card input:", error);
+    alert("Failed to set up card input. Please try again.");
+  }
 }
 
-function openAddCard() {
-  const popup = document.getElementById("addCardPopup");
-  const overlay = document.getElementById("addCardOverlay");
-  if (!popup || !overlay) return;
-
-  popup.innerHTML = renderAddCardPopup();
-  overlay.classList.add("active");
-  document.body.style.overflow = "hidden";
-
-  // Close button
-  document
-    .getElementById("addCardClose")
-    .addEventListener("click", closeAddCard);
-
-  // Save button
-  document.getElementById("addCardSave").addEventListener("click", saveAddCard);
-
-  // Close on overlay click
-  overlay.addEventListener("click", function (e) {
-    if (e.target === overlay) {
-      closeAddCard();
-    }
-  });
-
-  // Toggle card number field visibility based on type
-  const typeSelect = document.getElementById("addCardType");
-  typeSelect.addEventListener("change", function () {
-    const numberGroup = document.getElementById("addCardNumberGroup");
-    if (cardTypesWithNumber.includes(this.value)) {
-      numberGroup.style.display = "flex";
-    } else {
-      numberGroup.style.display = "none";
-    }
-  });
-
-  // Auto-format card number with spaces
-  const cardNumberInput = document.getElementById("addCardNumber");
-  cardNumberInput.addEventListener("input", function () {
-    let value = this.value.replace(/\D/g, "");
-    value = value.replace(/(.{4})/g, "$1 ").trim();
-    this.value = value;
-  });
-
-  // Auto-format expiry with slash
-  const expiryInput = document.getElementById("addCardExpiry");
-  expiryInput.addEventListener("input", function () {
-    let value = this.value.replace(/\D/g, "");
-    if (value.length >= 2) {
-      value = value.slice(0, 2) + "/" + value.slice(2);
-    }
-    this.value = value;
-  });
+function openCardModal() {
+  const overlay = document.getElementById("cardModalOverlay");
+  if (overlay) {
+    overlay.classList.add("active");
+    document.body.style.overflow = "hidden";
+  }
 }
 
-function closeAddCard() {
-  const overlay = document.getElementById("addCardOverlay");
+function closeCardModal() {
+  const overlay = document.getElementById("cardModalOverlay");
   if (overlay) {
     overlay.classList.remove("active");
     document.body.style.overflow = "";
   }
+
+  // Clear error
+  const errorElement = document.getElementById("cardError");
+  if (errorElement) {
+    errorElement.textContent = "";
+  }
 }
 
-function saveAddCard() {
-  const type = document.getElementById("addCardType").value;
-  const expiry = document.getElementById("addCardExpiry").value.trim();
-  const numberInput = document.getElementById("addCardNumber");
-  const cardNumber = numberInput ? numberInput.value.trim() : "";
+async function handleSaveCard() {
+  const saveBtn = document.getElementById("cardModalSaveBtn");
+  const errorElement = document.getElementById("cardError");
 
-  // Validate type
-  if (!type) {
-    document.getElementById("addCardType").style.borderColor = "#eb001b";
+  if (!stripeInstance || !cardElement || !setupIntentClientSecret) {
+    errorElement.textContent = "Card setup not ready. Please try again.";
     return;
   }
 
-  // Validate card number for card types that need it
-  if (cardTypesWithNumber.includes(type)) {
-    const digits = cardNumber.replace(/\D/g, "");
-    if (digits.length < 4) {
-      numberInput.style.borderColor = "#eb001b";
-      numberInput.focus();
+  try {
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Saving...";
+
+    const result = await saveCard(
+      stripeInstance,
+      cardElement,
+      setupIntentClientSecret,
+    );
+
+    if (!result.success) {
+      errorElement.textContent = result.error;
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Save Card";
       return;
     }
-  }
 
-  // Validate expiry
-  const expiryMatch = expiry.match(/^(0[1-9]|1[0-2])\/\d{2}$/);
-  if (!expiryMatch) {
-    document.getElementById("addCardExpiry").style.borderColor = "#eb001b";
-    document.getElementById("addCardExpiry").focus();
-    return;
-  }
+    // Card saved successfully - reload payment methods from Stripe
+    const stripePaymentMethods = await getPaymentMethods();
+    userData.paymentMethods = stripePaymentMethods.map((pm) => {
+      const brand = pm.brand || "unknown";
+      const brandConfig = getBrandConfig(brand);
+      return {
+        id: pm.id,
+        type: brandConfig.displayName,
+        lastFour: pm.lastFour || "",
+        expiry:
+          pm.expMonth && pm.expYear
+            ? `${String(pm.expMonth).padStart(2, "0")}/${String(pm.expYear).slice(-2)}`
+            : "",
+        logo: brandConfig.logo,
+        cardClass: brandConfig.cardClass,
+      };
+    });
 
-  // Build card object
-  const config = cardTypeConfig[type];
-  const digits = cardNumber.replace(/\D/g, "");
-  const lastFour = cardTypesWithNumber.includes(type) ? digits.slice(-4) : "";
+    closeCardModal();
 
-  const newCard = {
-    type: type,
-    lastFour: lastFour,
-    expiry: expiry,
-    logo: config.logo,
-    cardClass: config.cardClass,
-  };
+    // Re-render payment section
+    const paymentSection = document.getElementById("paymentSection");
+    if (paymentSection) {
+      paymentSection.outerHTML = renderPaymentSection(userData);
+      attachPaymentListeners();
+    }
 
-  userData.paymentMethods.push(newCard);
+    // Notify card added
+    try {
+      const newCard =
+        userData.paymentMethods[userData.paymentMethods.length - 1];
+      const notifyCard = httpsCallable(functions, "notifyCardEvent");
+      await notifyCard({
+        eventType: "card_added",
+        cardBrand: newCard ? newCard.type : "Card",
+        cardLast4: newCard ? newCard.lastFour : "",
+      });
+    } catch (notifErr) {
+      console.error("Card added notification failed:", notifErr);
+    }
 
-  closeAddCard();
-
-  // Re-render payment section
-  const paymentSection = document.getElementById("paymentSection");
-  if (paymentSection) {
-    paymentSection.outerHTML = renderPaymentSection(userData);
-    attachPaymentListeners();
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Save Card";
+  } catch (error) {
+    console.error("Error saving card:", error);
+    errorElement.textContent = "Failed to save card. Please try again.";
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Save Card";
   }
 }
 
@@ -693,6 +667,18 @@ async function confirmRemoveCard() {
       paymentSection.outerHTML = renderPaymentSection(userData);
       attachPaymentListeners();
     }
+
+    // Notify card removed
+    try {
+      const notifyCard = httpsCallable(functions, "notifyCardEvent");
+      await notifyCard({
+        eventType: "card_removed",
+        cardBrand: cardType,
+        cardLast4: cardLastFour,
+      });
+    } catch (notifErr) {
+      console.error("Card removed notification failed:", notifErr);
+    }
   } catch (error) {
     console.error("Error removing card:", error);
     alert("Failed to remove card. Please try again.");
@@ -760,6 +746,7 @@ window.onTelegramAuth = async function (user) {
 
     // Update local state
     userData.telegramLinked = true;
+    userData.telegramUsername = user.username || null;
 
     // Re-render the page to show connected status
     rerenderTelegramSection();
@@ -797,6 +784,7 @@ async function handleTelegramUnlink() {
     });
 
     userData.telegramLinked = false;
+    userData.telegramUsername = null;
 
     rerenderTelegramSection();
   } catch (error) {
@@ -949,7 +937,7 @@ function attachPaymentListeners() {
             ? ""
             : `<button class="actionButton addCard" id="addCard">
                 <img src="${icons.add}" alt="Add" />
-                Add Card
+                Add new card
               </button>`;
 
           const editButton = paymentEditMode
@@ -984,7 +972,15 @@ function attachPaymentListeners() {
   const addCard = document.getElementById("addCard");
   if (addCard) {
     addCard.addEventListener("click", function () {
-      openAddCard();
+      handleAddCard();
+    });
+  }
+
+  // Add card from empty state
+  const emptyAddCard = document.getElementById("emptyAddCard");
+  if (emptyAddCard) {
+    emptyAddCard.addEventListener("click", function () {
+      handleAddCard();
     });
   }
 
@@ -1006,6 +1002,13 @@ function attachEventListeners() {
   if (browserToggleLabel) {
     initLiquidGlassToggle(browserToggleLabel, (isChecked) => {
       userData.browserNotifications = isChecked;
+      if (currentUserId) {
+        updateDoc(doc(db, "customers", currentUserId), {
+          browserNotifications: isChecked,
+        }).catch((err) =>
+          console.error("Error saving browser notification pref:", err),
+        );
+      }
     });
   }
 
@@ -1088,15 +1091,11 @@ async function initializeSettingsPage() {
 
         // Telegram status
         userData.telegramLinked = customerData.telegramLinked || false;
+        userData.telegramUsername = customerData.telegramUsername || null;
 
-        // Browser notifications - check both root level and preferences object
+        // Browser notifications
         if (customerData.browserNotifications !== undefined) {
           userData.browserNotifications = customerData.browserNotifications;
-        } else if (
-          customerData.preferences?.browserNotifications !== undefined
-        ) {
-          userData.browserNotifications =
-            customerData.preferences.browserNotifications;
         }
       }
     } catch (error) {
@@ -1213,6 +1212,23 @@ document.addEventListener("DOMContentLoaded", function () {
     backButton.addEventListener("click", handleBackClick);
   }
 
+  // Card modal event listeners
+  const cardModalClose = document.getElementById("cardModalClose");
+  const cardModalCancelBtn = document.getElementById("cardModalCancelBtn");
+  const cardModalSaveBtn = document.getElementById("cardModalSaveBtn");
+  const cardModalOverlayEl = document.getElementById("cardModalOverlay");
+
+  if (cardModalClose) cardModalClose.addEventListener("click", closeCardModal);
+  if (cardModalCancelBtn)
+    cardModalCancelBtn.addEventListener("click", closeCardModal);
+  if (cardModalSaveBtn)
+    cardModalSaveBtn.addEventListener("click", handleSaveCard);
+  if (cardModalOverlayEl) {
+    cardModalOverlayEl.addEventListener("click", function (e) {
+      if (e.target === cardModalOverlayEl) closeCardModal();
+    });
+  }
+
   // Search input focus shortcut
   const searchInput = document.getElementById("searchInput");
 
@@ -1224,9 +1240,9 @@ document.addEventListener("DOMContentLoaded", function () {
         closeRemoveCard();
         return;
       }
-      const addCardOverlay = document.getElementById("addCardOverlay");
-      if (addCardOverlay && addCardOverlay.classList.contains("active")) {
-        closeAddCard();
+      const cardModalOverlay = document.getElementById("cardModalOverlay");
+      if (cardModalOverlay && cardModalOverlay.classList.contains("active")) {
+        closeCardModal();
         return;
       }
       const detailsOverlay = document.getElementById("editDetailsOverlay");

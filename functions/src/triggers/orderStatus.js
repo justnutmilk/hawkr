@@ -28,7 +28,12 @@ const onOrderStatusChange = functions.firestore
     const oldStatus = beforeData.status;
     const newStatus = afterData.status;
 
-    console.log(`Order ${orderId}: Status changed from ${oldStatus} to ${newStatus}`);
+    console.log(
+      `Order ${orderId}: Status changed from ${oldStatus} to ${newStatus}`,
+    );
+
+    // Only send Telegram notifications for confirmed and ready statuses
+    const telegramStatuses = ["confirmed", "ready"];
 
     // Get customer data to find Telegram chat ID
     const customerId = afterData.customerId;
@@ -52,16 +57,24 @@ const onOrderStatusChange = functions.firestore
       const customerData = customerDoc.data();
       const telegramChatId = customerData.telegramChatId;
 
-      // Also create in-app notification regardless of Telegram status
+      // Always create in-app notification regardless of Telegram status
       await createInAppNotification(customerId, newStatus, {
         id: orderId,
         ...afterData,
       });
 
+      // Only send Telegram for confirmed and ready statuses
+      if (!telegramStatuses.includes(newStatus)) {
+        console.log(
+          `Order ${orderId}: Skipping Telegram for status ${newStatus}`,
+        );
+        return null;
+      }
+
       // Check if customer has Telegram linked
       if (!telegramChatId) {
         console.log(
-          `Order ${orderId}: Customer ${customerId} has no Telegram linked`
+          `Order ${orderId}: Customer ${customerId} has no Telegram linked`,
         );
         return null;
       }
@@ -73,7 +86,9 @@ const onOrderStatusChange = functions.firestore
       });
 
       if (!notification) {
-        console.log(`Order ${orderId}: No notification template for status ${newStatus}`);
+        console.log(
+          `Order ${orderId}: No notification template for status ${newStatus}`,
+        );
         return null;
       }
 
@@ -84,12 +99,12 @@ const onOrderStatusChange = functions.firestore
 
       if (result.ok) {
         console.log(
-          `Order ${orderId}: Telegram notification sent to ${telegramChatId}`
+          `Order ${orderId}: Telegram notification sent to ${telegramChatId}`,
         );
       } else {
         console.error(
           `Order ${orderId}: Failed to send Telegram notification:`,
-          result
+          result,
         );
       }
 
@@ -109,26 +124,19 @@ const onOrderStatusChange = functions.firestore
 async function createInAppNotification(customerId, status, orderData) {
   const notificationTypes = {
     confirmed: "order_confirmed",
-    preparing: "order_preparing",
     ready: "order_ready",
-    completed: "order_complete",
-    cancelled: "order_cancelled",
   };
 
   const titles = {
     confirmed: "Order Confirmed",
-    preparing: "Order Being Prepared",
     ready: "Order Ready for Collection",
-    completed: "Order Complete",
-    cancelled: "Order Cancelled",
   };
 
+  const orderNumber =
+    orderData.orderNumber || orderData.id?.slice(-4).toUpperCase();
   const messages = {
-    confirmed: `Your order #${orderData.id?.slice(-4).toUpperCase()} from ${orderData.stallName} has been confirmed.`,
-    preparing: `Your order #${orderData.id?.slice(-4).toUpperCase()} is now being prepared.`,
-    ready: `Your order #${orderData.id?.slice(-4).toUpperCase()} is ready! Please collect from ${orderData.stallName}.`,
-    completed: `Your order #${orderData.id?.slice(-4).toUpperCase()} is complete. Please collect within 15 minutes.`,
-    cancelled: `Your order #${orderData.id?.slice(-4).toUpperCase()} has been cancelled.`,
+    confirmed: `Your order #${orderNumber} from ${orderData.stallName} has been confirmed.`,
+    ready: `Your order #${orderNumber} is ready! Please collect from ${orderData.stallName}.`,
   };
 
   const type = notificationTypes[status];

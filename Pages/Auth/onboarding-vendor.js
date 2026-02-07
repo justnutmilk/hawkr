@@ -59,7 +59,7 @@ const stepToSection = {
 // Vendor data
 const vendorData = {
   storeName: "",
-  storeLocation: "",
+  storeLocation: null,
   unitNumber: "",
   cuisines: [],
   operatingHours: [
@@ -173,7 +173,7 @@ function isFieldFilled(value) {
 function getFieldValidation() {
   return {
     storeName: isFieldFilled(vendorData.storeName),
-    storeLocation: isFieldFilled(vendorData.storeLocation),
+    storeLocation: isFieldFilled(vendorData.storeLocation?.name),
     unitNumber: isFieldFilled(vendorData.unitNumber),
     cuisines: isFieldFilled(vendorData.cuisines),
     // File fields: check for either new File or existing URL
@@ -242,9 +242,12 @@ function updateReviewPage() {
     (!validation.storeName ? renderIncompleteBadge() : "") +
     `<span class="reviewValue ${!validation.storeName ? "empty" : ""}">${vendorData.storeName || "-"}</span>`;
 
+  const locText = vendorData.storeLocation?.name
+    ? `${vendorData.storeLocation.name}${vendorData.storeLocation.address ? " — " + vendorData.storeLocation.address : ""}`
+    : "-";
   document.getElementById("reviewLocation").innerHTML =
     (!validation.storeLocation ? renderIncompleteBadge() : "") +
-    `<span class="reviewValue ${!validation.storeLocation ? "empty" : ""}">${vendorData.storeLocation || "-"}</span>`;
+    `<span class="reviewValue ${!validation.storeLocation ? "empty" : ""}">${locText}</span>`;
 
   document.getElementById("reviewUnit").innerHTML =
     (!validation.unitNumber ? renderIncompleteBadge() : "") +
@@ -388,8 +391,7 @@ function collectStepData(stepId) {
     case "stall-details":
       vendorData.storeName =
         document.getElementById("storeName")?.value.trim() || "";
-      vendorData.storeLocation =
-        document.getElementById("storeLocation")?.value.trim() || "";
+      // storeLocation is managed by the map picker, not collected from input
       vendorData.unitNumber =
         document.getElementById("unitNumber")?.value.trim() || "";
       break;
@@ -518,12 +520,8 @@ async function completeOnboarding() {
   }
 
   // Validate storeLocation before proceeding
-  if (
-    !vendorData.storeLocation ||
-    typeof vendorData.storeLocation !== "string" ||
-    !vendorData.storeLocation.trim()
-  ) {
-    alert("Please enter a valid hawker centre location.");
+  if (!vendorData.storeLocation?.name) {
+    alert("Please select a hawker centre location on the map.");
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = "Open stall";
@@ -563,14 +561,17 @@ async function completeOnboarding() {
   try {
     // Step 1: Create hawker centre if needed
     if (submitBtn) submitBtn.textContent = "Setting up location...";
-    console.log(
-      "Creating hawker centre with:",
-      vendorData.storeLocation.trim(),
-    );
-    hawkerCentre = await findOrCreateHawkerCentre(
-      vendorData.storeLocation.trim(),
-      { address: vendorData.storeLocation.trim() },
-    );
+    const loc = vendorData.storeLocation;
+    console.log("Creating hawker centre with:", loc.name);
+    hawkerCentre = await findOrCreateHawkerCentre(loc.name, {
+      address: loc.address || "",
+      postalCode: loc.postalCode || "",
+      location: {
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+      },
+      placeId: loc.placeId || "",
+    });
 
     if (!hawkerCentre || !hawkerCentre.id) {
       throw new Error("Failed to create or find hawker centre");
@@ -667,7 +668,6 @@ async function completeOnboarding() {
 function populateFormFromData() {
   const fields = {
     storeName: vendorData.storeName,
-    storeLocation: vendorData.storeLocation,
     unitNumber: vendorData.unitNumber,
     uen: vendorData.uen,
     contactPerson: vendorData.contactPerson,
@@ -679,11 +679,199 @@ function populateFormFromData() {
     if (el && value) el.value = value;
   });
 
+  // Map location is restored inside initVendorMapLocationPicker()
+
   // Cuisines - pass true to skip duplicate check since data is already loaded
   vendorData.cuisines.forEach((cuisine) => addCuisineTag(cuisine, true));
 
   // Update suggestion states after populating cuisines
   updateCuisineSuggestionStates();
+}
+
+// ============================================
+// MAP LOCATION PICKER
+// ============================================
+
+let vendorMapInstance = null;
+let vendorMapMarker = null;
+
+async function initVendorMapLocationPicker() {
+  const mapEl = document.getElementById("vendorMap");
+  const addressInput = document.getElementById("storeLocation");
+
+  if (!mapEl || !addressInput) return;
+
+  // Load libraries via importLibrary
+  const { Map } = await google.maps.importLibrary("maps");
+  const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+  const { PlaceAutocompleteElement } =
+    await google.maps.importLibrary("places");
+  const { Geocoder } = await google.maps.importLibrary("geocoding");
+
+  // Initialize map centered on Singapore
+  vendorMapInstance = new Map(mapEl, {
+    center: { lat: 1.3521, lng: 103.8198 },
+    zoom: 12,
+    mapId: "hawkr-onboarding",
+    disableDefaultUI: true,
+    zoomControl: true,
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: false,
+    clickableIcons: false,
+  });
+
+  // Create PlaceAutocompleteElement
+  const placeAutocomplete = new PlaceAutocompleteElement({
+    includedRegionCodes: ["sg"],
+    locationBias: { lat: 1.3521, lng: 103.8198 },
+  });
+
+  // Replace the text input with the autocomplete element
+  addressInput.parentNode.replaceChild(placeAutocomplete, addressInput);
+
+  // Listen for place selection
+  placeAutocomplete.addEventListener(
+    "gmp-select",
+    async ({ placePrediction }) => {
+      const place = placePrediction.toPlace();
+      await place.fetchFields({
+        fields: [
+          "displayName",
+          "formattedAddress",
+          "location",
+          "addressComponents",
+          "id",
+        ],
+      });
+
+      const pos = {
+        lat: place.location.lat(),
+        lng: place.location.lng(),
+      };
+
+      vendorMapInstance.setCenter(pos);
+      vendorMapInstance.setZoom(17);
+      placeVendorMapMarker(pos, AdvancedMarkerElement);
+
+      const postalCode = extractVendorPostalCode(place.addressComponents);
+
+      vendorData.storeLocation = {
+        name: place.displayName || "",
+        address: place.formattedAddress || "",
+        postalCode: postalCode,
+        latitude: pos.lat,
+        longitude: pos.lng,
+        placeId: place.id || "",
+      };
+
+      showVendorSelectedLocation(vendorData.storeLocation);
+    },
+  );
+
+  // Click on map to drop pin
+  vendorMapInstance.addListener("click", (e) => {
+    const pos = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+    placeVendorMapMarker(pos, AdvancedMarkerElement);
+    vendorReverseGeocode(pos, Geocoder);
+  });
+
+  // Clear button
+  document.getElementById("clearLocation")?.addEventListener("click", () => {
+    clearVendorMapSelection();
+  });
+
+  // Restore saved location if available
+  if (vendorData.storeLocation?.latitude) {
+    const pos = {
+      lat: vendorData.storeLocation.latitude,
+      lng: vendorData.storeLocation.longitude,
+    };
+    vendorMapInstance.setCenter(pos);
+    vendorMapInstance.setZoom(17);
+    placeVendorMapMarker(pos, AdvancedMarkerElement);
+    showVendorSelectedLocation(vendorData.storeLocation);
+  }
+}
+
+function placeVendorMapMarker(pos, AdvancedMarkerElement) {
+  if (vendorMapMarker) {
+    vendorMapMarker.position = pos;
+  } else {
+    vendorMapMarker = new AdvancedMarkerElement({
+      position: pos,
+      map: vendorMapInstance,
+      gmpDraggable: true,
+    });
+
+    vendorMapMarker.addListener("dragend", () => {
+      const newPos = {
+        lat: vendorMapMarker.position.lat,
+        lng: vendorMapMarker.position.lng,
+      };
+      vendorReverseGeocode(newPos);
+    });
+  }
+}
+
+function vendorReverseGeocode(pos, GeocoderClass) {
+  const geocoder = GeocoderClass
+    ? new GeocoderClass()
+    : new google.maps.Geocoder();
+  geocoder.geocode({ location: pos }, (results, status) => {
+    if (status === "OK" && results[0]) {
+      const result = results[0];
+      const postalCode = extractVendorPostalCode(result.address_components);
+
+      vendorData.storeLocation = {
+        name: result.formatted_address.split(",")[0] || "",
+        address: result.formatted_address || "",
+        postalCode: postalCode,
+        latitude: pos.lat,
+        longitude: pos.lng,
+        placeId: result.place_id || "",
+      };
+
+      showVendorSelectedLocation(vendorData.storeLocation);
+    }
+  });
+}
+
+function extractVendorPostalCode(addressComponents) {
+  if (!addressComponents) return "";
+  const postal = addressComponents.find(
+    (c) => c.types?.includes("postal_code") || c.types?.includes("postal_code"),
+  );
+  return postal?.longText || postal?.long_name || "";
+}
+
+function showVendorSelectedLocation(loc) {
+  const container = document.getElementById("selectedLocation");
+  const nameEl = document.getElementById("selectedLocationName");
+  const addressEl = document.getElementById("selectedLocationAddress");
+
+  if (!container) return;
+
+  nameEl.textContent = loc.name || "Dropped pin";
+  addressEl.textContent = loc.address || "";
+  container.style.display = "flex";
+}
+
+function clearVendorMapSelection() {
+  vendorData.storeLocation = null;
+
+  if (vendorMapMarker) {
+    vendorMapMarker.map = null;
+    vendorMapMarker = null;
+  }
+
+  const container = document.getElementById("selectedLocation");
+  if (container) container.style.display = "none";
+
+  if (vendorMapInstance) {
+    vendorMapInstance.setCenter({ lat: 1.3521, lng: 103.8198 });
+    vendorMapInstance.setZoom(12);
+  }
 }
 
 // ============================================
@@ -1250,7 +1438,7 @@ function initTelegram() {
   if (!connectBtn) return;
 
   connectBtn.addEventListener("click", () => {
-    const botUsername = "HawkrBot";
+    const botUsername = "hawkrOrgBot";
     const startParam = currentUser?.uid || "";
     window.open(`https://t.me/${botUsername}?start=${startParam}`, "_blank");
   });
@@ -1501,6 +1689,7 @@ function initializeForm() {
 
   // Initialize components
   initLiquidGlassTopBar();
+  initVendorMapLocationPicker();
   initCuisineInput();
   initOperatingHours();
   initFileUploads();
@@ -1537,11 +1726,22 @@ onAuthStateChanged(auth, async (user) => {
         vendorData[key] = data[key];
       }
     });
+
+    // Handle migration from old string storeLocation
+    if (typeof vendorData.storeLocation === "string") {
+      vendorData.storeLocation = null;
+    }
+
+    if (data.onboardingStep) {
+      currentStep = data.onboardingStep;
+    }
+
+    initializeForm();
     populateFormFromData();
   } else {
     window.location.href = "select-role.html";
+    return;
   }
 
-  initializeForm();
   navigateToStep(currentStep);
 });

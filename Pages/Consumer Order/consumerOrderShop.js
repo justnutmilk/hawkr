@@ -31,20 +31,34 @@ const api = {
       }
 
       // Fetch reviews and rating stats from feedback collection
-      const [feedbackResult, feedbackStats] = await Promise.all([
-        getFeedbackByStall(stallId, { limitCount: 10, publicOnly: true }).catch(
-          () => ({ feedback: [] }),
-        ),
-        getStallFeedbackStats(stallId).catch(() => ({
-          averageRating: 0,
-          totalReviews: 0,
-        })),
-      ]);
+      let feedbackResult;
+      let feedbackStats;
+
+      try {
+        // Fetch without publicOnly filter and filter client-side
+        // (existing docs may not have isPublic field set)
+        const [rawResult, stats] = await Promise.all([
+          getFeedbackByStall(stallId, { limitCount: 50, publicOnly: false }),
+          getStallFeedbackStats(stallId),
+        ]);
+        feedbackResult = {
+          feedback: (rawResult.feedback || []).filter(
+            (f) => f.isPublic !== false,
+          ),
+          lastDoc: rawResult.lastDoc,
+        };
+        feedbackStats = stats;
+      } catch (feedbackError) {
+        console.error("Error loading feedback:", feedbackError);
+        feedbackResult = { feedback: [] };
+        feedbackStats = { averageRating: 0, totalReviews: 0 };
+      }
 
       // Transform Firebase data to match expected format
       return {
         id: stallData.id,
         name: stallData.name,
+        operatorName: stallData.operatorName || "",
         cuisines: stallData.cuisineNames || [],
         rating: {
           average: feedbackStats.averageRating || stallData.rating || 0,
@@ -53,7 +67,7 @@ const api = {
         reviews: (feedbackResult.feedback || []).map((review) => ({
           id: review.id,
           title: review.title || "Review",
-          content: review.content || review.comment || "",
+          content: review.content || review.comment || review.text || "",
           rating: review.rating || 5,
           date: formatReviewDate(review.createdAt),
           author: review.customerName || review.authorName || "Anonymous",
@@ -252,6 +266,7 @@ function renderShopHeader(shop) {
         <section class="shopHeaderSection">
             <span class="nowBrowsingLabel">Now Browsing:</span>
             <h1 class="shopName">${shop.name}</h1>
+            ${shop.operatorName ? `<span class="shopOperatorName">${shop.operatorName}</span>` : ""}
             <div class="cuisineTags">
                 ${cuisineTagsHTML}
             </div>

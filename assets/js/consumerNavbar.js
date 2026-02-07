@@ -15,6 +15,15 @@ import {
   getDocs,
   onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  initNotificationBadge,
+  cleanupNotificationBadge,
+} from "./notificationBadge.js";
+import {
+  initToastContainer,
+  subscribeToNewNotifications,
+  cleanupToastNotifications,
+} from "./toastNotifications.js";
 
 // ============================================
 // NAVBAR CONFIGURATION
@@ -95,16 +104,16 @@ function injectCartBadgeStyles() {
     .cartBadge,
     .navCartBadge {
       position: absolute;
-      top: -6px;
-      right: -6px;
-      min-width: 18px;
-      height: 18px;
-      padding: 0 5px;
+      top: -8px;
+      right: -8px;
+      width: 22px;
+      height: 22px;
+      padding: 0;
       border-radius: 50%;
       background: #913b9f;
       color: #fff;
       font-family: Aptos, system-ui, sans-serif;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 600;
       display: flex;
       align-items: center;
@@ -112,12 +121,6 @@ function injectCartBadgeStyles() {
       line-height: 1;
       border: 2px solid #fff;
       box-sizing: content-box;
-    }
-    /* When count is single digit, keep it perfectly circular */
-    .cartBadge:not(.multi-digit),
-    .navCartBadge:not(.multi-digit) {
-      width: 18px;
-      padding: 0;
     }
   `;
   document.head.appendChild(style);
@@ -392,6 +395,15 @@ export function initConsumerNavbar() {
 
       await updateUserDisplay(user);
       await initCartBadge(user.uid);
+      initNotificationBadge(`customers/${user.uid}/notifications`);
+
+      // Only show browser toast notifications if the user has them enabled
+      const browserNotifsEnabled =
+        userTypeInfo?.data?.browserNotifications !== false;
+      if (browserNotifsEnabled) {
+        initToastContainer();
+        subscribeToNewNotifications(`customers/${user.uid}/notifications`);
+      }
     } else {
       // Still show cart badge for guests (from localStorage)
       await initCartBadge(null);

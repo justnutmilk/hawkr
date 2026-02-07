@@ -28,6 +28,7 @@ let isLoading = false;
 let feedbackData = {
   rating: 0,
   tags: [],
+  title: "",
   text: "",
   confirmed: false,
   contactMe: false,
@@ -346,6 +347,18 @@ function renderRateExperience() {
       ${renderQuickTags()}
     </div>
 
+    <div class="feedbackTitleSection">
+      <h2 class="sectionHeader">Title your review</h2>
+      <input
+        type="text"
+        class="feedbackTitleInput"
+        id="feedbackTitle"
+        placeholder="Summarise your experience in a few words"
+        maxlength="100"
+        value="${feedbackData.title}"
+      />
+    </div>
+
     <div class="feedbackTextareaSection">
       <h2 class="sectionHeader">Tell us what happened</h2>
       <textarea
@@ -439,6 +452,10 @@ function renderReviewSummary() {
       <div class="reviewSummaryRow">
         <span class="reviewSummaryLabel">Rating</span>
         <div class="reviewStars">${starsHTML}</div>
+      </div>
+      <div class="reviewSummaryRow">
+        <span class="reviewSummaryLabel">Title</span>
+        <span class="reviewSummaryValue">${feedbackData.title.trim() || '<span style="color: #808080;">No title</span>'}</span>
       </div>
       <div class="reviewSummaryRow">
         <span class="reviewSummaryLabel">Tags</span>
@@ -623,6 +640,13 @@ function attachEventListeners() {
     });
   });
 
+  const feedbackTitle = document.getElementById("feedbackTitle");
+  if (feedbackTitle) {
+    feedbackTitle.addEventListener("input", (e) => {
+      feedbackData.title = e.target.value;
+    });
+  }
+
   const feedbackText = document.getElementById("feedbackText");
   if (feedbackText) {
     feedbackText.addEventListener("input", (e) => {
@@ -696,9 +720,14 @@ function attachEventListeners() {
             const customer = await getCustomer(currentUser.uid);
             if (customer && customer.name) {
               customerName = customer.name;
+            } else if (currentUser.displayName) {
+              customerName = currentUser.displayName;
             }
           } catch (e) {
             console.warn("Could not fetch customer name:", e);
+            if (currentUser.displayName) {
+              customerName = currentUser.displayName;
+            }
           }
 
           // Submit feedback to Firebase
@@ -712,6 +741,7 @@ function attachEventListeners() {
               "",
             rating: feedbackData.rating,
             tags: feedbackData.tags,
+            title: feedbackData.title,
             text: feedbackData.text,
             contactMe: feedbackData.contactMe,
             customerName: customerName,

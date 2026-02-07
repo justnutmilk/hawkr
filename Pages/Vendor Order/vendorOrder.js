@@ -3,28 +3,39 @@
  * Queries Firestore for vendor info and orders
  */
 
-import { auth, db } from "../../firebase/config.js";
+import { auth, db, app } from "../../firebase/config.js";
 import {
   onAuthStateChanged,
   signOut,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFunctions,
+  httpsCallable,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 import { initVendorNavbar } from "../../assets/js/vendorNavbar.js";
+import { updateOrderStatus } from "../../firebase/services/orders.js";
 import {
   doc,
   getDoc,
+  updateDoc,
   collection,
   query,
   where,
   orderBy,
   limit,
   getDocs,
+  onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const functions = getFunctions(app, "asia-southeast1");
 
 // State
 let currentVendor = null;
 let currentStall = null;
 let orders = [];
 let currentTab = "preparing";
+let isAnimating = false;
+let pendingSnapshot = null;
 
 /**
  * Initialize page when DOM is ready
@@ -129,60 +140,141 @@ function updateVendorName(name) {
 /**
  * Load orders for a stall
  */
-async function loadOrders(stallId) {
-  try {
-    const ordersQuery = query(
-      collection(db, "orders"),
-      where("stallId", "==", stallId),
-      orderBy("createdAt", "desc"),
-      limit(50),
-    );
+let ordersUnsubscribe = null;
 
-    const ordersSnapshot = await getDocs(ordersQuery);
+function loadOrders(stallId) {
+  const ordersQuery = query(
+    collection(db, "orders"),
+    where("stallId", "==", stallId),
+    orderBy("createdAt", "desc"),
+    limit(50),
+  );
 
-    orders = ordersSnapshot.docs.map((doc) => {
-      const data = doc.data();
-      const createdAt = data.createdAt?.toDate?.() || new Date();
+  let previousRenderedIds = new Set();
+  let isFirstSnapshot = true;
 
-      return {
-        id: doc.id,
-        orderNumber: data.orderNumber || doc.id.slice(-4).toUpperCase(),
-        customerName: data.customerName || "Customer",
-        date: formatDate(createdAt),
-        time: formatTime(createdAt),
-        type: data.orderType || "Takeaway",
-        status: mapStatus(data.status),
-        items: (data.items || []).map((item) => ({
-          qty: item.quantity || 1,
-          name: item.name || "Item",
-          price: item.totalPrice || item.unitPrice || 0,
-          customizations: item.customizations || [],
-          note: item.notes || null,
-        })),
-        total: data.total || 0,
-        transactionId: data.hawkrTransactionId || data.transactionId || doc.id,
+  ordersUnsubscribe = onSnapshot(
+    ordersQuery,
+    (snapshot) => {
+      const processSnapshot = () => {
+        const newOrders = snapshot.docs
+          .filter((d) => !d.data().archived)
+          .map((d) => {
+            const data = d.data();
+            const createdAt = data.createdAt?.toDate?.() || new Date();
+
+            return {
+              id: d.id,
+              orderNumber: data.orderNumber || d.id.slice(-4).toUpperCase(),
+              customerName: data.customerName || "Customer",
+              date: formatDate(createdAt),
+              time: formatTime(createdAt),
+              type: data.orderType || "Takeaway",
+              status: mapStatus(data.status),
+              items: (data.items || []).map((item) => ({
+                qty: item.quantity || 1,
+                name: item.name || "Item",
+                price: item.totalPrice || item.unitPrice || 0,
+                customizations: item.customizations || [],
+                note: item.notes || null,
+              })),
+              total: data.total || 0,
+              transactionId:
+                data.hawkrTransactionId || data.transactionId || d.id,
+            };
+          });
+
+        orders = newOrders;
+
+        // Detect orders now visible on the current tab that weren't before
+        const visibleStatuses =
+          currentTab === "preparing" ? ["preparing"] : ["complete"];
+        const currentRenderedIds = new Set(
+          newOrders
+            .filter((o) => visibleStatuses.includes(o.status))
+            .map((o) => o.id),
+        );
+        const newlyRendered = isFirstSnapshot
+          ? []
+          : newOrders.filter(
+              (o) =>
+                visibleStatuses.includes(o.status) &&
+                !previousRenderedIds.has(o.id),
+            );
+
+        renderOrders(currentTab);
+
+        // Animate slide-in for new order cards
+        if (newlyRendered.length > 0) {
+          isAnimating = true;
+          let totalCards = 0;
+          let finishedCards = 0;
+
+          newlyRendered.forEach((o) => {
+            document.querySelectorAll(".orderLineItem").forEach((el) => {
+              const numEl = el.querySelector(".orderItemNumber");
+              if (numEl && numEl.textContent === `#${o.orderNumber}`) {
+                totalCards++;
+                el.classList.add("orderLineItemSlideIn");
+                let animCount = 0;
+                el.addEventListener("animationend", () => {
+                  animCount++;
+                  if (animCount >= 2) {
+                    el.classList.remove("orderLineItemSlideIn");
+                    finishedCards++;
+                    if (finishedCards >= totalCards) {
+                      isAnimating = false;
+                      if (pendingSnapshot) {
+                        const fn = pendingSnapshot;
+                        pendingSnapshot = null;
+                        fn();
+                      }
+                    }
+                  }
+                });
+              }
+            });
+          });
+
+          // Safety fallback: unlock after 1.5s even if animationend doesn't fire
+          setTimeout(() => {
+            if (isAnimating) {
+              isAnimating = false;
+              if (pendingSnapshot) {
+                const fn = pendingSnapshot;
+                pendingSnapshot = null;
+                fn();
+              }
+            }
+          }, 1500);
+        }
+
+        previousRenderedIds = currentRenderedIds;
+        isFirstSnapshot = false;
       };
-    });
 
-    renderOrders(currentTab);
-  } catch (error) {
-    console.error("Error loading orders:", error);
-    orders = [];
-    renderOrders(currentTab);
-  }
+      // If an animation is in progress, defer this snapshot
+      if (isAnimating) {
+        pendingSnapshot = processSnapshot;
+      } else {
+        processSnapshot();
+      }
+    },
+    (error) => {
+      console.error("Error loading orders:", error);
+      orders = [];
+      renderOrders(currentTab);
+    },
+  );
 }
 
 /**
  * Map database status to UI status
  */
 function mapStatus(status) {
-  const preparingStatuses = ["pending", "confirmed", "preparing", "ready"];
-  const completeStatuses = ["completed", "cancelled"];
-
-  if (completeStatuses.includes(status)) {
-    return "complete";
-  }
-  return "preparing";
+  if (status === "ready" || status === "completed") return "complete";
+  if (status === "confirmed") return "preparing";
+  return status; // pending, cancelled, etc.
 }
 
 /**
@@ -243,8 +335,17 @@ function renderOrderEntry(item) {
  * Render order line item
  */
 function renderOrderLineItem(order) {
+  const isReady = order.status === "complete";
+  const actionBtn = isReady
+    ? `<div class="orderReadyTag">Ready</div>`
+    : `<button class="orderReadyBtn" data-order-id="${order.id}" title="Mark as ready">
+        <img src="../../assets/icons/orderConfirmed.svg" alt="Ready" width="20" height="20" />
+        Mark Ready
+      </button>`;
+
   return `
-    <div class="orderLineItem">
+    <div class="orderLineItem ${isReady ? "orderLineItemReady" : ""}">
+      ${actionBtn}
       <div class="orderItemNumber">#${order.orderNumber}</div>
       <div class="orderLineImportant">
         <div class="orderItemCustomerName">${order.customerName}</div>
@@ -294,37 +395,193 @@ function renderEmptyOrderState(tab) {
  */
 function renderOrders(tab) {
   const container = document.getElementById("orderContent");
-  const filtered = orders.filter((o) => o.status === tab);
+  const isMac = window.navigator.userAgentData
+    ? window.navigator.userAgentData.platform === "macOS"
+    : /Mac/i.test(window.navigator.userAgent);
+  const modKey = isMac ? "\u2318" : "CTRL";
+
+  const filtered = orders.filter((o) =>
+    tab === "preparing" ? o.status === "preparing" : o.status === "complete",
+  );
 
   const orderContent =
     filtered.length > 0
       ? filtered.map(renderOrderLineItem).join("")
       : renderEmptyOrderState(tab);
 
+  const clearBtn =
+    tab === "complete"
+      ? `<button class="clearOrderLineBtn">Clear Order Line <kbd class="clearOrderLineKbd">${modKey}</kbd><kbd class="clearOrderLineKbd">${isMac ? "\u232B" : "DEL"}</kbd></button>`
+      : "";
+
   container.innerHTML = `
     <div class="orderLineHeader">
       <span class="sectionLabel">Order Line</span>
-      <a class="newOrderButton" href="vendorCreateOrder.html">
-        New order
-        <kbd>n</kbd>
-      </a>
+      <div class="orderLineActions">
+        ${clearBtn}
+        <a class="newOrderButton" href="vendorCreateOrder.html">
+          New order
+          <kbd>n</kbd>
+        </a>
+      </div>
     </div>
     <div class="orderLineCards">
       ${orderContent}
     </div>
   `;
+
+  bindCompleteOrderButtons();
+  bindClearOrderLine();
+}
+
+/**
+ * Bind complete order button click handlers (event delegation)
+ */
+let orderReadyDelegated = false;
+
+function bindCompleteOrderButtons() {
+  if (orderReadyDelegated) return;
+  const container = document.getElementById("orderContent");
+  if (!container) return;
+  orderReadyDelegated = true;
+
+  container.addEventListener("click", (e) => {
+    const btn = e.target.closest(".orderReadyBtn");
+    if (!btn) return;
+
+    const orderId = btn.dataset.orderId;
+    const card = btn.closest(".orderLineItem");
+    btn.disabled = true;
+
+    // Update local state immediately
+    const order = orders.find((o) => o.id === orderId);
+    if (order) order.status = "complete";
+
+    // Fire API calls in background (non-blocking)
+    updateOrderStatus(orderId, "ready")
+      .then(() => {
+        const sendNotification = httpsCallable(
+          functions,
+          "sendOrderNotification",
+        );
+        return sendNotification({ orderId, status: "ready" });
+      })
+      .catch((err) => console.error("Order update/notification error:", err));
+
+    // Animate card out then re-render
+    if (card) {
+      isAnimating = true;
+      card.style.setProperty("--card-width", card.offsetWidth + "px");
+      card.classList.add("orderLineItemSwipeUp");
+      card.addEventListener(
+        "animationend",
+        () => {
+          card.classList.remove("orderLineItemSwipeUp");
+          card.classList.add("orderLineItemCollapse");
+          card.addEventListener(
+            "animationend",
+            () => {
+              isAnimating = false;
+              renderOrders(currentTab);
+              if (pendingSnapshot) {
+                const fn = pendingSnapshot;
+                pendingSnapshot = null;
+                fn();
+              }
+            },
+            { once: true },
+          );
+        },
+        { once: true },
+      );
+    } else {
+      renderOrders(currentTab);
+    }
+  });
+}
+
+/**
+ * Bind clear order line button
+ */
+function clearOrderLineWithAnimation() {
+  const cards = document.querySelectorAll(".orderLineItem");
+  if (cards.length === 0) return;
+
+  isAnimating = true;
+
+  // Archive in Firestore and remove from local data immediately
+  const completedOrders = orders.filter((o) => o.status === "complete");
+  orders = orders.filter((o) => o.status !== "complete");
+  completedOrders.forEach((o) => {
+    updateDoc(doc(db, "orders", o.id), { archived: true }).catch((err) =>
+      console.error("Archive error:", err),
+    );
+  });
+
+  // Play wave animation, then re-render when done
+  let finished = 0;
+  cards.forEach((card, i) => {
+    card.style.setProperty("--card-width", card.offsetWidth + "px");
+    setTimeout(() => {
+      card.classList.add("orderLineItemSwipeUp");
+      card.addEventListener(
+        "animationend",
+        () => {
+          card.classList.remove("orderLineItemSwipeUp");
+          card.classList.add("orderLineItemCollapse");
+          card.addEventListener(
+            "animationend",
+            () => {
+              finished++;
+              if (finished === cards.length) {
+                isAnimating = false;
+                renderOrders(currentTab);
+                if (pendingSnapshot) {
+                  const fn = pendingSnapshot;
+                  pendingSnapshot = null;
+                  fn();
+                }
+              }
+            },
+            { once: true },
+          );
+        },
+        { once: true },
+      );
+    }, i * 80);
+  });
+}
+
+function bindClearOrderLine() {
+  const btn = document.querySelector(".clearOrderLineBtn");
+  if (!btn) return;
+  btn.addEventListener("click", clearOrderLineWithAnimation);
 }
 
 /**
  * Setup tab switching
  */
 function setupTabSwitching() {
-  document.querySelectorAll('input[name="orderTab"]').forEach((radio) => {
+  const segmented = document.querySelector(".segmentedControl");
+  const radios = document.querySelectorAll('input[name="orderTab"]');
+  const radioArr = Array.from(radios);
+
+  radios.forEach((radio) => {
     radio.addEventListener("change", () => {
       currentTab = radio.value;
+      if (segmented) {
+        segmented.style.setProperty("--active-index", radioArr.indexOf(radio));
+      }
       renderOrders(currentTab);
     });
   });
+
+  // Set initial index
+  if (segmented) {
+    const checkedIdx = radioArr.findIndex((r) => r.checked);
+    if (checkedIdx >= 0)
+      segmented.style.setProperty("--active-index", checkedIdx);
+  }
 }
 
 /**
@@ -347,6 +604,13 @@ function setupKeyboardShortcuts() {
       const searchInput = document.getElementById("searchInput");
       if (searchInput) {
         searchInput.focus();
+      }
+    }
+    // Ctrl+Delete (Win) / Cmd+Backspace (Mac) clears completed orders
+    if (modifier && (e.key === "Delete" || (isMac && e.key === "Backspace"))) {
+      e.preventDefault();
+      if (currentTab === "complete") {
+        clearOrderLineWithAnimation();
       }
     }
     // "n" key navigates to create order page (only when not typing in an input)

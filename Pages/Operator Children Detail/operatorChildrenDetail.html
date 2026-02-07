@@ -172,6 +172,7 @@
                 <div class="topBarActions">
                     <a
                         href="../Operator Notifications/operatorNotifications.html"
+                        data-notification-bell
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -220,6 +221,61 @@
             </div>
         </div>
 
-        <script src="operatorChildrenDetail.js" defer></script>
+        <!-- Resolve Feedback Modal -->
+        <div class="resolveModalOverlay" id="resolveModal" hidden>
+            <div class="resolveModalContainer">
+                <div class="resolveModalHeader">
+                    <h2 class="resolveModalTitle">Resolve Feedback</h2>
+                    <button class="resolveModalClose" id="closeResolveModal">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="resolveModalBody">
+                    <div
+                        class="resolveReviewSummary"
+                        id="resolveReviewSummary"
+                    ></div>
+                    <div class="resolveResponseSection">
+                        <label class="resolveLabel" for="resolveResponseText"
+                            >Your Response
+                            <span class="resolveRequired">*</span></label
+                        >
+                        <textarea
+                            class="resolveTextarea"
+                            id="resolveResponseText"
+                            placeholder="Write a response to the customer..."
+                            maxlength="1000"
+                            required
+                        ></textarea>
+                        <span class="resolveCharCount"
+                            ><span id="resolveCharCount">0</span>/1000</span
+                        >
+                    </div>
+                </div>
+                <div class="resolveModalFooter">
+                    <button class="resolveButtonSecondary" id="cancelResolve">
+                        Cancel
+                    </button>
+                    <button class="resolveButtonPrimary" id="submitResolve">
+                        Resolve Feedback
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script type="module" src="operatorChildrenDetail.js"></script>
     </body>
 </html>

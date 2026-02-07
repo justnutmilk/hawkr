@@ -16,6 +16,7 @@ import {
   deleteDoc,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { findOrCreateHawkerCentre } from "../../firebase/services/hawkerCentres.js";
 import { initLiquidGlassToggle } from "../../assets/js/liquidGlassToggle.js";
 
 // ============================================
@@ -50,7 +51,7 @@ const operatorData = {
   contactPerson: "",
   contactNumber: "",
   contactEmail: "",
-  managedLocations: [],
+  managedLocation: null,
   browserNotifications: false,
   telegramConnected: false,
   telegramChatId: null,
@@ -83,7 +84,7 @@ function getFieldValidation() {
     contactPerson: isFieldFilled(operatorData.contactPerson),
     contactNumber: isFieldFilled(operatorData.contactNumber),
     contactEmail: isFieldFilled(operatorData.contactEmail),
-    managedLocations: isFieldFilled(operatorData.managedLocations),
+    managedLocation: isFieldFilled(operatorData.managedLocation?.name),
   };
 }
 
@@ -139,9 +140,13 @@ function updateReviewPage() {
     `<span class="reviewValue ${!validation.contactEmail ? "empty" : ""}">${operatorData.contactEmail || "-"}</span>`;
 
   // Managed locations
+  const loc = operatorData.managedLocation;
+  const locationText = loc?.name
+    ? `${loc.name}${loc.address ? " — " + loc.address : ""}`
+    : "-";
   document.getElementById("reviewLocations").innerHTML =
-    (!validation.managedLocations ? renderIncompleteBadge() : "") +
-    `<span class="reviewValue ${!validation.managedLocations ? "empty" : ""}">${operatorData.managedLocations.length > 0 ? operatorData.managedLocations.join(", ") : "-"}</span>`;
+    (!validation.managedLocation ? renderIncompleteBadge() : "") +
+    `<span class="reviewValue ${!validation.managedLocation ? "empty" : ""}">${locationText}</span>`;
 
   // Update submit button state
   updateSubmitButton();
@@ -281,7 +286,7 @@ async function saveProgress() {
       contactPerson: operatorData.contactPerson,
       contactNumber: operatorData.contactNumber,
       contactEmail: operatorData.contactEmail,
-      managedLocations: operatorData.managedLocations,
+      managedLocation: operatorData.managedLocation,
       browserNotifications: operatorData.browserNotifications,
       telegramConnected: operatorData.telegramConnected,
       telegramChatId: operatorData.telegramChatId,
@@ -318,6 +323,27 @@ async function completeOnboarding() {
   }
 
   try {
+    // Find or create the hawker centre and set operatorId on it
+    const loc = operatorData.managedLocation;
+    let hawkerCentreId = null;
+    if (loc?.name) {
+      const centre = await findOrCreateHawkerCentre(loc.name, {
+        address: loc.address || "",
+        postalCode: loc.postalCode || "",
+        placeId: loc.placeId || "",
+        location: loc.latitude
+          ? { latitude: loc.latitude, longitude: loc.longitude }
+          : null,
+      });
+      hawkerCentreId = centre.id;
+
+      // Set operatorId on the hawker centre document
+      await updateDoc(doc(db, "hawkerCentres", centre.id), {
+        operatorId: currentUser.uid,
+        updatedAt: serverTimestamp(),
+      });
+    }
+
     // Update operator profile
     await updateDoc(doc(db, "operators", currentUser.uid), {
       companyName: operatorData.companyName,
@@ -326,7 +352,8 @@ async function completeOnboarding() {
       contactPerson: operatorData.contactPerson,
       contactNumber: operatorData.contactNumber,
       contactEmail: operatorData.contactEmail,
-      managedLocations: operatorData.managedLocations,
+      managedLocation: operatorData.managedLocation,
+      hawkerCentreId: hawkerCentreId,
       browserNotifications: operatorData.browserNotifications,
       telegramConnected: operatorData.telegramConnected,
       telegramChatId: operatorData.telegramChatId,
@@ -369,72 +396,195 @@ function populateFormFromData() {
     if (el && value) el.value = value;
   });
 
-  // Populate locations
-  renderLocationsList();
+  // Map location is restored inside initMapLocationPicker()
 }
 
 // ============================================
-// MANAGED LOCATIONS
+// MAP LOCATION PICKER
 // ============================================
 
-function initManagedLocations() {
-  const addBtn = document.getElementById("addLocationBtn");
-  const input = document.getElementById("locationInput");
+let mapInstance = null;
+let mapMarker = null;
 
-  if (!addBtn || !input) return;
+async function initMapLocationPicker() {
+  const mapEl = document.getElementById("map");
+  const addressInput = document.getElementById("addressInput");
 
-  const addLocation = () => {
-    const location = input.value.trim();
-    if (location && !operatorData.managedLocations.includes(location)) {
-      operatorData.managedLocations.push(location);
-      renderLocationsList();
-      input.value = "";
-    }
-  };
+  if (!mapEl || !addressInput) return;
 
-  addBtn.addEventListener("click", addLocation);
+  // Load libraries via importLibrary
+  const { Map } = await google.maps.importLibrary("maps");
+  const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+  const { PlaceAutocompleteElement } =
+    await google.maps.importLibrary("places");
+  const { Geocoder } = await google.maps.importLibrary("geocoding");
 
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addLocation();
+  // Initialize map centered on Singapore
+  mapInstance = new Map(mapEl, {
+    center: { lat: 1.3521, lng: 103.8198 },
+    zoom: 12,
+    mapId: "hawkr-onboarding",
+    disableDefaultUI: true,
+    zoomControl: true,
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: false,
+    clickableIcons: false,
+  });
+
+  // Create PlaceAutocompleteElement
+  const placeAutocomplete = new PlaceAutocompleteElement({
+    includedRegionCodes: ["sg"],
+    locationBias: { lat: 1.3521, lng: 103.8198 },
+  });
+
+  // Replace the text input with the autocomplete element
+  addressInput.parentNode.replaceChild(placeAutocomplete, addressInput);
+
+  // Listen for place selection
+  placeAutocomplete.addEventListener(
+    "gmp-select",
+    async ({ placePrediction }) => {
+      const place = placePrediction.toPlace();
+      await place.fetchFields({
+        fields: [
+          "displayName",
+          "formattedAddress",
+          "location",
+          "addressComponents",
+          "id",
+        ],
+      });
+
+      const pos = {
+        lat: place.location.lat(),
+        lng: place.location.lng(),
+      };
+
+      mapInstance.setCenter(pos);
+      mapInstance.setZoom(17);
+      placeMapMarker(pos, AdvancedMarkerElement);
+
+      const postalCode = extractPostalCode(place.addressComponents);
+
+      operatorData.managedLocation = {
+        name: place.displayName || "",
+        address: place.formattedAddress || "",
+        postalCode: postalCode,
+        latitude: pos.lat,
+        longitude: pos.lng,
+        placeId: place.id || "",
+      };
+
+      showSelectedLocation(operatorData.managedLocation);
+    },
+  );
+
+  // Click on map to drop pin
+  mapInstance.addListener("click", (e) => {
+    const pos = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+    placeMapMarker(pos, AdvancedMarkerElement);
+    reverseGeocode(pos, Geocoder);
+  });
+
+  // Clear button
+  document.getElementById("clearLocation")?.addEventListener("click", () => {
+    clearMapSelection();
+  });
+
+  // Restore saved location if available
+  if (operatorData.managedLocation?.latitude) {
+    const pos = {
+      lat: operatorData.managedLocation.latitude,
+      lng: operatorData.managedLocation.longitude,
+    };
+    mapInstance.setCenter(pos);
+    mapInstance.setZoom(17);
+    placeMapMarker(pos, AdvancedMarkerElement);
+    showSelectedLocation(operatorData.managedLocation);
+  }
+}
+
+function placeMapMarker(pos, AdvancedMarkerElement) {
+  if (mapMarker) {
+    mapMarker.position = pos;
+  } else {
+    mapMarker = new AdvancedMarkerElement({
+      position: pos,
+      map: mapInstance,
+      gmpDraggable: true,
+    });
+
+    mapMarker.addListener("dragend", () => {
+      const newPos = {
+        lat: mapMarker.position.lat,
+        lng: mapMarker.position.lng,
+      };
+      reverseGeocode(newPos);
+    });
+  }
+}
+
+function reverseGeocode(pos, GeocoderClass) {
+  const geocoder = GeocoderClass
+    ? new GeocoderClass()
+    : new google.maps.Geocoder();
+  geocoder.geocode({ location: pos }, (results, status) => {
+    if (status === "OK" && results[0]) {
+      const result = results[0];
+      const postalCode = extractPostalCode(result.address_components);
+
+      operatorData.managedLocation = {
+        name: result.formatted_address.split(",")[0] || "",
+        address: result.formatted_address || "",
+        postalCode: postalCode,
+        latitude: pos.lat,
+        longitude: pos.lng,
+        placeId: result.place_id || "",
+      };
+
+      showSelectedLocation(operatorData.managedLocation);
     }
   });
 }
 
-function renderLocationsList() {
-  const container = document.getElementById("locationsList");
+function extractPostalCode(addressComponents) {
+  if (!addressComponents) return "";
+  // Support both old format (types/long_name) and new format (types/longText)
+  const postal = addressComponents.find(
+    (c) => c.types?.includes("postal_code") || c.types?.includes("postal_code"),
+  );
+  return postal?.longText || postal?.long_name || "";
+}
+
+function showSelectedLocation(loc) {
+  const container = document.getElementById("selectedLocation");
+  const nameEl = document.getElementById("selectedLocationName");
+  const addressEl = document.getElementById("selectedLocationAddress");
+
   if (!container) return;
 
-  if (operatorData.managedLocations.length === 0) {
-    container.innerHTML = `<p class="emptyLocations">No locations added yet</p>`;
-    return;
+  nameEl.textContent = loc.name || "Dropped pin";
+  addressEl.textContent = loc.address || "";
+  container.style.display = "flex";
+}
+
+function clearMapSelection() {
+  operatorData.managedLocation = null;
+
+  if (mapMarker) {
+    mapMarker.map = null;
+    mapMarker = null;
   }
 
-  container.innerHTML = operatorData.managedLocations
-    .map(
-      (location, idx) => `
-      <div class="locationItem">
-        <span class="locationName">${location}</span>
-        <button class="locationRemove" data-index="${idx}" type="button">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      </div>
-    `,
-    )
-    .join("");
+  const container = document.getElementById("selectedLocation");
+  if (container) container.style.display = "none";
 
-  // Add remove event listeners
-  container.querySelectorAll(".locationRemove").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const idx = parseInt(btn.dataset.index);
-      operatorData.managedLocations.splice(idx, 1);
-      renderLocationsList();
-    });
-  });
+  // Reset map view
+  if (mapInstance) {
+    mapInstance.setCenter({ lat: 1.3521, lng: 103.8198 });
+    mapInstance.setZoom(12);
+  }
 }
 
 // ============================================
@@ -470,7 +620,7 @@ function initTelegram() {
   if (!connectBtn) return;
 
   connectBtn.addEventListener("click", () => {
-    const botUsername = "HawkrBot";
+    const botUsername = "hawkrOrgBot";
     const startParam = currentUser?.uid || "";
     window.open(`https://t.me/${botUsername}?start=${startParam}`, "_blank");
   });
@@ -721,7 +871,7 @@ function initializeForm() {
 
   // Initialize components
   initLiquidGlassTopBar();
-  initManagedLocations();
+  initMapLocationPicker();
   initBrowserNotifications();
   initTelegram();
 }
@@ -752,17 +902,26 @@ onAuthStateChanged(auth, async (user) => {
     // Load existing data
     Object.keys(operatorData).forEach((key) => {
       if (data[key] !== undefined) {
-        if (Array.isArray(data[key]) && data[key].length === 0) {
-          return;
-        }
         operatorData[key] = data[key];
       }
     });
+
+    // Handle migration from old managedLocations array
+    if (data.managedLocations && !data.managedLocation) {
+      // Old format — user will re-select on map
+      operatorData.managedLocation = null;
+    }
+
+    if (data.onboardingStep) {
+      currentStep = data.onboardingStep;
+    }
+
+    initializeForm();
     populateFormFromData();
   } else {
     window.location.href = "select-role.html";
+    return;
   }
 
-  initializeForm();
   navigateToStep(currentStep);
 });

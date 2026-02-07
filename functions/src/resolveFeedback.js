@@ -30,7 +30,10 @@ async function verifyResolutionAuth(db, userId, stallId) {
   if (stallDoc.exists) {
     const hawkerCentreId = stallDoc.data().hawkerCentreId;
     const operatorDoc = await db.collection("operators").doc(userId).get();
-    if (operatorDoc.exists && operatorDoc.data().hawkerCentreId === hawkerCentreId) {
+    if (
+      operatorDoc.exists &&
+      operatorDoc.data().hawkerCentreId === hawkerCentreId
+    ) {
       return { authorized: true, type: "operator" };
     }
   }
@@ -56,25 +59,36 @@ async function processRefund(db, orderId, refundType, partialAmount) {
   const paymentIntentId = orderData.paymentIntentId;
 
   if (!paymentIntentId) {
-    throw new HttpsError("failed-precondition", "No payment found for this order");
+    throw new HttpsError(
+      "failed-precondition",
+      "No payment found for this order",
+    );
   }
 
   // Calculate refund amount in cents
-  const amount = refundType === "full"
-    ? Math.round(orderData.total * 100)
-    : Math.round(partialAmount * 100);
+  const amount =
+    refundType === "full"
+      ? Math.round(orderData.total * 100)
+      : Math.round(partialAmount * 100);
 
   // Call Stripe refund
-  const refund = await createRefund(paymentIntentId, amount, "requested_by_customer");
+  const refund = await createRefund(
+    paymentIntentId,
+    amount,
+    "requested_by_customer",
+  );
 
   // Update order with refund info
-  await db.collection("orders").doc(orderId).update({
-    refundStatus: refundType,
-    refundAmount: amount / 100,
-    refundId: refund.id,
-    refundedAt: admin.firestore.FieldValue.serverTimestamp(),
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-  });
+  await db
+    .collection("orders")
+    .doc(orderId)
+    .update({
+      refundStatus: refundType,
+      refundAmount: amount / 100,
+      refundId: refund.id,
+      refundedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
 
   return {
     status: refund.status === "succeeded" ? "completed" : "processing",
@@ -98,11 +112,13 @@ async function createNotification(db, feedbackData, feedbackId, resolution) {
     ? ` A refund of $${resolution.refund.amount.toFixed(2)} has been processed.`
     : "";
 
-  const responsePreview = resolution.response.length > 100
-    ? `${resolution.response.substring(0, 100)}...`
-    : resolution.response;
+  const responsePreview =
+    resolution.response.length > 100
+      ? `${resolution.response.substring(0, 100)}...`
+      : resolution.response;
 
-  await db.collection("customers")
+  await db
+    .collection("customers")
     .doc(feedbackData.customerId)
     .collection("notifications")
     .add({
@@ -129,7 +145,10 @@ async function createNotification(db, feedbackData, feedbackId, resolution) {
  */
 async function sendTelegramNotification(db, feedbackData, resolution) {
   // Get customer's Telegram chat ID
-  const customerDoc = await db.collection("customers").doc(feedbackData.customerId).get();
+  const customerDoc = await db
+    .collection("customers")
+    .doc(feedbackData.customerId)
+    .get();
   if (!customerDoc.exists) return false;
 
   const telegramChatId = customerDoc.data().telegramChatId;
@@ -173,7 +192,7 @@ async function resolveFeedback(request) {
     feedbackId,
     response,
     refundType = "none", // "none" | "full" | "partial"
-    refundAmount = 0,    // For partial refunds
+    refundAmount = 0, // For partial refunds
   } = request.data;
 
   const auth = request.auth;
@@ -182,11 +201,17 @@ async function resolveFeedback(request) {
   }
 
   if (!feedbackId || !response) {
-    throw new HttpsError("invalid-argument", "Feedback ID and response are required");
+    throw new HttpsError(
+      "invalid-argument",
+      "Feedback ID and response are required",
+    );
   }
 
   if (response.length > 1000) {
-    throw new HttpsError("invalid-argument", "Response must be 1000 characters or less");
+    throw new HttpsError(
+      "invalid-argument",
+      "Response must be 1000 characters or less",
+    );
   }
 
   const db = admin.firestore();
@@ -203,14 +228,32 @@ async function resolveFeedback(request) {
 
   // Check if already resolved
   if (feedbackData.resolution) {
-    throw new HttpsError("already-exists", "This feedback has already been resolved");
+    throw new HttpsError(
+      "already-exists",
+      "This feedback has already been resolved",
+    );
   }
 
   // 2. Verify authorization
-  const authResult = await verifyResolutionAuth(db, auth.uid, feedbackData.stallId);
+  const authResult = await verifyResolutionAuth(
+    db,
+    auth.uid,
+    feedbackData.stallId,
+  );
 
   if (!authResult.authorized) {
-    throw new HttpsError("permission-denied", "Not authorized to resolve this feedback");
+    throw new HttpsError(
+      "permission-denied",
+      "Not authorized to resolve this feedback",
+    );
+  }
+
+  // Operators cannot initiate refunds
+  if (authResult.type === "operator" && refundType !== "none") {
+    throw new HttpsError(
+      "permission-denied",
+      "Operators cannot initiate refunds",
+    );
   }
 
   // 3. Process refund if requested
@@ -219,22 +262,40 @@ async function resolveFeedback(request) {
     // Validate partial refund amount
     if (refundType === "partial") {
       if (!refundAmount || refundAmount <= 0) {
-        throw new HttpsError("invalid-argument", "Partial refund amount must be greater than 0");
+        throw new HttpsError(
+          "invalid-argument",
+          "Partial refund amount must be greater than 0",
+        );
       }
       // Get order to validate amount
-      const orderDoc = await db.collection("orders").doc(feedbackData.orderId).get();
+      const orderDoc = await db
+        .collection("orders")
+        .doc(feedbackData.orderId)
+        .get();
       if (orderDoc.exists && refundAmount > orderDoc.data().total) {
-        throw new HttpsError("invalid-argument", "Refund amount cannot exceed order total");
+        throw new HttpsError(
+          "invalid-argument",
+          "Refund amount cannot exceed order total",
+        );
       }
     }
 
-    refundResult = await processRefund(db, feedbackData.orderId, refundType, refundAmount);
+    refundResult = await processRefund(
+      db,
+      feedbackData.orderId,
+      refundType,
+      refundAmount,
+    );
   }
 
   // 4. Build resolution object
   const resolution = {
-    type: refundType === "none" ? "response_only" :
-          refundType === "full" ? "full_refund" : "partial_refund",
+    type:
+      refundType === "none"
+        ? "response_only"
+        : refundType === "full"
+          ? "full_refund"
+          : "partial_refund",
     response: response,
     resolvedBy: auth.uid,
     resolvedByType: authResult.type,
@@ -254,9 +315,63 @@ async function resolveFeedback(request) {
   await createNotification(db, feedbackData, feedbackId, resolution);
 
   // 7. Send Telegram notification
-  const telegramSent = await sendTelegramNotification(db, feedbackData, resolution);
+  const telegramSent = await sendTelegramNotification(
+    db,
+    feedbackData,
+    resolution,
+  );
 
-  // 8. Update notification tracking
+  // 8. Create vendor notification confirming resolution
+  try {
+    const resolverName =
+      authResult.type === "operator" ? "your operator" : "you";
+    const orderNumber = feedbackData.orderId
+      ? (await db.collection("orders").doc(feedbackData.orderId).get()).data()
+          ?.orderNumber || feedbackData.orderId.slice(-4).toUpperCase()
+      : "N/A";
+
+    let vendorMessage = `Feedback for order #${orderNumber} has been resolved by ${resolverName}.`;
+    if (resolution.refund) {
+      vendorMessage += ` Refund of S$${resolution.refund.amount.toFixed(2)} processed.`;
+    }
+    if (authResult.type === "operator") {
+      vendorMessage +=
+        " Organisations do not have permissions to initiate refunds on your behalf.";
+    }
+
+    // Find the vendor for this stall
+    const vendorStallDoc = await db
+      .collection("foodStalls")
+      .doc(feedbackData.stallId)
+      .get();
+    const feedbackVendorId = vendorStallDoc.exists
+      ? vendorStallDoc.data().vendorId
+      : null;
+
+    if (feedbackVendorId) {
+      await db
+        .collection("vendors")
+        .doc(feedbackVendorId)
+        .collection("notifications")
+        .add({
+          type: "feedback_resolved",
+          title: "Feedback Resolved",
+          message: vendorMessage,
+          feedbackId: feedbackId,
+          orderId: feedbackData.orderId || null,
+          stallId: feedbackData.stallId,
+          isRead: false,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+    }
+  } catch (vendorNotifErr) {
+    console.error(
+      "Error creating vendor feedback resolution notification:",
+      vendorNotifErr,
+    );
+  }
+
+  // 9. Update notification tracking
   await feedbackRef.update({
     notificationSent: {
       inApp: true,

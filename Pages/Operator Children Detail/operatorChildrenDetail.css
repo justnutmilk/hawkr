@@ -1165,3 +1165,314 @@ body {
     font-weight: 400;
     padding: 24px 0;
 }
+
+/* ============================================
+   SENTIMENT TAGS
+   ============================================ */
+
+.sentimentTag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.sentimentAiIcon {
+    width: 16px;
+    height: 16px;
+}
+
+.sentimentPositive {
+    background: rgba(46, 125, 50, 0.1);
+    color: #2e7d32;
+}
+
+.sentimentNegative {
+    background: rgba(211, 47, 47, 0.1);
+    color: #d32f2f;
+}
+
+.sentimentNeutral {
+    background: rgba(128, 128, 128, 0.1);
+    color: #666;
+}
+
+/* ============================================
+   REVIEW RESOLVE BUTTON & BADGE
+   ============================================ */
+
+.reviewResolveBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+.reviewResolveBtn:hover {
+    opacity: 1;
+}
+
+.reviewResolvedBadge {
+    margin-left: auto;
+    padding: 4px 12px;
+    border-radius: 16px;
+    background: rgba(46, 125, 50, 0.1);
+    color: #2e7d32;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.reviewsEmpty {
+    color: #808080;
+    font-family: "Geist Mono", monospace;
+    font-size: 16px;
+}
+
+/* ============================================
+   RESOLVE MODAL
+   ============================================ */
+
+.resolveModalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+        opacity 0.3s ease,
+        visibility 0.3s ease;
+}
+
+.resolveModalOverlay:not([hidden]) {
+    opacity: 1;
+    visibility: visible;
+}
+
+.resolveModalContainer {
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    margin: 24px;
+    background: #fff;
+    border-radius: 24px;
+    box-shadow: 0 24px 48px rgba(52, 21, 57, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+}
+
+.resolveModalOverlay:not([hidden]) .resolveModalContainer {
+    transform: translateY(0);
+}
+
+.resolveModalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.resolveModalTitle {
+    font-family: Aptos, sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: #341539;
+    margin: 0;
+}
+
+.resolveModalClose {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: #808080;
+    transition: color 0.2s ease;
+}
+
+.resolveModalClose:hover {
+    color: #341539;
+}
+
+.resolveModalBody {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+}
+
+.resolveModalFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 24px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.resolveReviewSummary {
+    padding: 16px;
+    background: #f4f1f6;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.resolveCustomerName {
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #341539;
+}
+
+.resolveReviewStars {
+    display: flex;
+    gap: 2px;
+}
+
+.resolveReviewText {
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    color: #341539;
+    line-height: 1.5;
+}
+
+.resolveLabel {
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #341539;
+}
+
+.resolveRequired {
+    color: #d32f2f;
+}
+
+.resolveTextarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 16px;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    color: #341539;
+    background: #f4f1f6;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    resize: vertical;
+    transition: border-color 0.2s ease;
+}
+
+.resolveTextarea:focus {
+    outline: none;
+    border-color: #913b9f;
+}
+
+.resolveTextarea::placeholder {
+    color: #808080;
+}
+
+.resolveCharCount {
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    color: #808080;
+    text-align: right;
+}
+
+.resolveResponseSection {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.resolveButtonSecondary {
+    padding: 12px 24px;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: #341539;
+    background: transparent;
+    border: 2px solid #341539;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.resolveButtonSecondary:hover {
+    background: rgba(52, 21, 57, 0.05);
+}
+
+.resolveButtonPrimary {
+    padding: 12px 24px;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: #fff;
+    background: #341539;
+    border: 2px solid #341539;
+    border-radius: 8px;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.resolveButtonPrimary:hover {
+    background: #913b9f;
+    border-color: #913b9f;
+}
+
+.resolveButtonPrimary:disabled {
+    background: #808080;
+    border-color: #808080;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   TOAST
+   ============================================ */
+
+.toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    padding: 12px 24px;
+    background: #341539;
+    color: #fff;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease;
+    z-index: 2000;
+}
+
+.toast.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}

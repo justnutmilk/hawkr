@@ -418,7 +418,7 @@ body {
     gap: 16px;
     padding: 8px;
     border-radius: 8px;
-    align-items: center;
+    align-items: flex-start;
     transition: background 0.15s ease;
 }
 
@@ -535,6 +535,16 @@ body {
     font-size: 14px;
     color: #341539;
     letter-spacing: 1.76px;
+}
+
+.refundTransactionId {
+    color: #eb001b;
+}
+
+.transactionCellTransactionId {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .transactionCustomer {

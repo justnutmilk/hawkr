@@ -14,12 +14,21 @@ function formatOrderId(orderId) {
 }
 
 /**
- * Format currency for Singapore
+ * Escape special characters for Telegram MarkdownV2
+ * @param {string} text - Text to escape
+ * @returns {string} - Escaped text
+ */
+function escapeMarkdown(text) {
+  return String(text).replace(/[_*[\]()~`>#+\-=|{}.!]/g, "\\$&");
+}
+
+/**
+ * Format currency for Singapore (MarkdownV2 safe)
  * @param {number} amount - Amount in dollars
  * @returns {string} - Formatted currency string
  */
 function formatCurrency(amount) {
-  return `S$${amount.toFixed(2)}`;
+  return escapeMarkdown(`S$${amount.toFixed(2)}`);
 }
 
 /**
@@ -39,11 +48,13 @@ function formatTime(timestamp) {
     date = new Date(timestamp);
   }
 
-  return date.toLocaleTimeString("en-SG", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
+  return escapeMarkdown(
+    date.toLocaleTimeString("en-SG", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }),
+  );
 }
 
 /**
@@ -53,8 +64,10 @@ function formatTime(timestamp) {
  * @returns {object} - { title, message } for the notification
  */
 function getOrderStatusMessage(status, orderData) {
-  const orderId = formatOrderId(orderData.id || orderData.orderId);
-  const stallName = orderData.stallName || "the stall";
+  const orderId = orderData.orderNumber
+    ? String(orderData.orderNumber)
+    : formatOrderId(orderData.id || orderData.orderId);
+  const stallName = escapeMarkdown(orderData.stallName || "the stall");
   const total = orderData.total ? formatCurrency(orderData.total) : "";
   const estimatedTime = formatTime(orderData.estimatedReadyTime);
 
@@ -64,17 +77,8 @@ function getOrderStatusMessage(status, orderData) {
       message:
         `*Order Confirmed* \\#${orderId}\n\n` +
         `Your order from *${stallName}* has been confirmed\\!\n\n` +
-        `*Total:* ${total}\n` +
-        `*Estimated Ready:* ${estimatedTime}\n\n` +
+        `*Total:* ${total}\n\n` +
         `We'll notify you when your order is ready for collection\\.`,
-    },
-
-    preparing: {
-      title: "Order Being Prepared",
-      message:
-        `*Now Preparing* \\#${orderId}\n\n` +
-        `Your order from *${stallName}* is now being prepared\\!\n\n` +
-        `Please head to the hawker centre soon\\.`,
     },
 
     ready: {
@@ -83,26 +87,6 @@ function getOrderStatusMessage(status, orderData) {
         `*Order Ready\\!* \\#${orderId}\n\n` +
         `Your order from *${stallName}* is ready for collection\\!\n\n` +
         `Please collect your order now\\.`,
-    },
-
-    completed: {
-      title: "Order Complete",
-      message:
-        `*Order Complete* \\#${orderId}\n\n` +
-        `Your order from *${stallName}* is complete\\.\n\n` +
-        `*Please collect within 15 minutes to avoid wastage\\.*\n\n` +
-        `Thank you for using Hawkr\\!`,
-    },
-
-    cancelled: {
-      title: "Order Cancelled",
-      message:
-        `*Order Cancelled* \\#${orderId}\n\n` +
-        `Unfortunately, your order from *${stallName}* has been cancelled\\.\n\n` +
-        (orderData.cancellationReason
-          ? `*Reason:* ${orderData.cancellationReason}\n\n`
-          : "") +
-        `If you were charged, a refund will be processed shortly\\.`,
     },
   };
 
@@ -243,6 +227,7 @@ function getHelpMessage() {
 }
 
 module.exports = {
+  escapeMarkdown,
   formatOrderId,
   formatCurrency,
   formatTime,

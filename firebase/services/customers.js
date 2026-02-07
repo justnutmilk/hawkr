@@ -17,6 +17,7 @@ import {
   where,
   orderBy,
   serverTimestamp,
+  increment,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { analyzeSentiment } from "./gemini.js";
 
@@ -643,6 +644,18 @@ export async function addToFavourites(customerId, item) {
       createdAt: serverTimestamp(),
     });
 
+    // Increment like counter on the menu item
+    if (item.stallId && item.menuItemId) {
+      try {
+        await updateDoc(
+          doc(db, "foodStalls", item.stallId, "menuItems", item.menuItemId),
+          { likesCount: increment(1) },
+        );
+      } catch (e) {
+        console.warn("Could not update like count:", e);
+      }
+    }
+
     return docRef.id;
   } catch (error) {
     console.error("Error adding to favourites:", error);
@@ -657,9 +670,35 @@ export async function addToFavourites(customerId, item) {
  */
 export async function removeFromFavourites(customerId, favouriteId) {
   try {
-    await deleteDoc(
-      doc(db, "customers", customerId, "favourites", favouriteId),
+    const favDocRef = doc(
+      db,
+      "customers",
+      customerId,
+      "favourites",
+      favouriteId,
     );
+    const favSnap = await getDoc(favDocRef);
+    const favData = favSnap.exists() ? favSnap.data() : null;
+
+    await deleteDoc(favDocRef);
+
+    // Decrement like counter on the menu item
+    if (favData && favData.stallId && favData.menuItemId) {
+      try {
+        await updateDoc(
+          doc(
+            db,
+            "foodStalls",
+            favData.stallId,
+            "menuItems",
+            favData.menuItemId,
+          ),
+          { likesCount: increment(-1) },
+        );
+      } catch (e) {
+        console.warn("Could not update like count:", e);
+      }
+    }
   } catch (error) {
     console.error("Error removing from favourites:", error);
     throw error;
@@ -677,8 +716,23 @@ export async function removeFromFavouritesByMenuItemId(customerId, menuItemId) {
     const q = query(favouritesRef, where("menuItemId", "==", menuItemId));
     const snapshot = await getDocs(q);
 
-    const deletePromises = snapshot.docs.map((doc) => deleteDoc(doc.ref));
+    // Collect stallIds before deleting for counter decrement
+    const stallIds = snapshot.docs.map((d) => d.data().stallId).filter(Boolean);
+
+    const deletePromises = snapshot.docs.map((d) => deleteDoc(d.ref));
     await Promise.all(deletePromises);
+
+    // Decrement counter for each deleted favourite
+    for (const stallId of stallIds) {
+      try {
+        await updateDoc(
+          doc(db, "foodStalls", stallId, "menuItems", menuItemId),
+          { likesCount: increment(-1) },
+        );
+      } catch (e) {
+        console.warn("Could not update like count:", e);
+      }
+    }
   } catch (error) {
     console.error("Error removing from favourites:", error);
     throw error;
@@ -719,6 +773,19 @@ export async function toggleFavourite(customerId, item) {
     if (!snapshot.empty) {
       // Remove from favourites
       await deleteDoc(snapshot.docs[0].ref);
+
+      // Decrement like counter
+      if (item.stallId && item.menuItemId) {
+        try {
+          await updateDoc(
+            doc(db, "foodStalls", item.stallId, "menuItems", item.menuItemId),
+            { likesCount: increment(-1) },
+          );
+        } catch (e) {
+          console.warn("Could not update like count:", e);
+        }
+      }
+
       return { isFavourite: false, favouriteId: null };
     } else {
       // Add to favourites
@@ -763,6 +830,7 @@ export async function submitFeedback(customerId, feedbackData) {
         {
           rating: feedbackData.rating,
           tags: feedbackData.tags || [],
+          title: feedbackData.title || "",
           text: feedbackData.text || "",
           contactMe: feedbackData.contactMe || false,
           sentiment: sentiment,
@@ -780,6 +848,7 @@ export async function submitFeedback(customerId, feedbackData) {
       venueName: feedbackData.venueName || "",
       rating: feedbackData.rating,
       tags: feedbackData.tags || [],
+      title: feedbackData.title || "",
       text: feedbackData.text || "",
       contactMe: feedbackData.contactMe || false,
       sentiment: sentiment,
@@ -797,8 +866,11 @@ export async function submitFeedback(customerId, feedbackData) {
       venueName: feedbackData.venueName || "",
       rating: feedbackData.rating,
       tags: feedbackData.tags || [],
+      title: feedbackData.title || "",
       text: feedbackData.text || "",
+      comment: feedbackData.text || "",
       contactMe: feedbackData.contactMe || false,
+      isPublic: true,
       sentiment: sentiment,
       createdAt: serverTimestamp(),
     });

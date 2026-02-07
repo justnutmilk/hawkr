@@ -269,16 +269,15 @@ function initTelegram() {
   if (!connectBtn) return;
 
   connectBtn.addEventListener("click", () => {
-    const botUsername = "HawkrBot";
+    const botUsername = "hawkrOrgBot";
     const startParam = currentUser?.uid || "";
     window.open(`https://t.me/${botUsername}?start=${startParam}`, "_blank");
 
-    // Show connected state after delay (in production, use webhook)
+    // Show connected state after delay — actual telegramChatId is set by the bot webhook
     setTimeout(() => {
       connectBtn.parentElement.style.display = "none";
       if (connectedState) connectedState.style.display = "flex";
       consumerData.preferences.telegramConnected = true;
-      consumerData.preferences.telegramChatId = "connected_" + Date.now();
     }, 3000);
   });
 

@@ -438,8 +438,15 @@ function renderPaymentDetails() {
       .join("");
   } else {
     savedCardsHTML = `
-      <div class="noPaymentMethods">
-        <p>No saved payment methods</p>
+      <div class="paymentEmptyState">
+        <img src="../../images/noCards.svg" alt="No payment methods" class="paymentEmptyStateImage" />
+        <span class="paymentEmptyStateTitle">No payment methods</span>
+        <span class="paymentEmptyStateDescription">Add a card to make checkout faster and easier.</span>
+        <button class="addNewCardBtn paymentEmptyStateBtn" id="emptyAddNewCardBtn">
+            <img src="../../assets/icons/add.svg" alt="" />
+            <span>Add new card</span>
+        </button>
+        <span class="paymentEmptyStateBadge">Powered by <svg class="stripeLogo" width="36" height="15" viewBox="0 0 360 150" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M360 77.4C360 51.8 347.6 31.6 323.9 31.6C300.1 31.6 285.7 51.8 285.7 77.2C285.7 107.3 302.7 122.5 327.1 122.5C339 122.5 348 119.8 354.8 116V96C348 99.4 340.2 101.5 330.3 101.5C320.6 101.5 312 98.1 310.9 86.3H359.8C359.8 85 360 79.8 360 77.4ZM310.6 67.9C310.6 56.6 317.5 51.9 323.8 51.9C329.9 51.9 336.4 56.6 336.4 67.9H310.6Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M247.1 31.6C237.3 31.6 231 36.2 227.5 39.4L226.2 33.2H204.2V149.8L229.2 144.5L229.3 116.2C232.9 118.8 238.2 122.5 247 122.5C264.9 122.5 281.2 108.1 281.2 76.4C281.1 47.4 264.6 31.6 247.1 31.6ZM241.1 100.5C235.2 100.5 231.7 98.4 229.3 95.8L229.2 58.7C231.8 55.8 235.4 53.8 241.1 53.8C250.2 53.8 256.5 64 256.5 77.1C256.5 90.5 250.3 100.5 241.1 100.5Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M169.8 25.7L194.9 20.3V0L169.8 5.3V25.7Z" fill="currentColor"/><path d="M194.9 33.3H169.8V120.8H194.9V33.3Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M142.9 40.7L141.3 33.3H119.7V120.8H144.7V61.5C150.6 53.8 160.6 55.2 163.7 56.3V33.3C160.5 32.1 148.8 29.9 142.9 40.7Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M92.9 11.6L68.5 16.8L68.4 96.9C68.4 111.7 79.5 122.6 94.3 122.6C102.5 122.6 108.5 121.1 111.8 119.3V99C108.6 100.3 92.8 104.9 92.8 90.1V54.6H111.8V33.3H92.8L92.9 11.6Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M25.3 58.7C25.3 54.8 28.5 53.3 33.8 53.3C41.4 53.3 51 55.6 58.6 59.7V36.2C50.3 32.9 42.1 31.6 33.8 31.6C13.5 31.6 0 42.2 0 59.9C0 87.5 38 83.1 38 95C38 99.6 34 101.1 28.4 101.1C20.1 101.1 9.5 97.7 1.1 93.1V116.9C10.4 120.9 19.8 122.6 28.4 122.6C49.2 122.6 63.5 112.3 63.5 94.4C63.4 64.6 25.3 69.9 25.3 58.7Z" fill="currentColor"/></svg></span>
       </div>
     `;
   }
@@ -452,13 +459,6 @@ function renderPaymentDetails() {
                 ${savedCardsHTML}
             </div>
 
-            <button class="addNewCardBtn" id="addNewCardBtn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 5V19M5 12H19" stroke="#913b9f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <span>Add new card</span>
-            </button>
-
             <div class="paymentDivider">
                 <span class="paymentDividerLine"></span>
                 <span class="paymentDividerText">or pay with</span>
@@ -467,15 +467,17 @@ function renderPaymentDetails() {
 
             <div class="digitalWallets">
                 <div id="paymentRequestButton"></div>
-                <button class="walletBtn" data-wallet="grabpay">
-                    <img src="../../images/GrabPay logo.svg" alt="GrabPay" />
-                </button>
-                <button class="walletBtn" data-wallet="alipay">
-                    <img src="../../images/AliPay logo.svg" alt="AliPay" />
-                </button>
-                <button class="walletBtn" data-wallet="paynow">
-                    <img src="../../images/PayNow logo.svg" alt="PayNow" />
-                </button>
+                <div class="digitalWalletsRow">
+                    <button class="walletBtn" data-wallet="grabpay">
+                        <img src="../../images/GrabPay logo.svg" alt="GrabPay" />
+                    </button>
+                    <button class="walletBtn" data-wallet="alipay">
+                        <img src="../../images/AliPay logo.svg" alt="AliPay" />
+                    </button>
+                    <button class="walletBtn" data-wallet="paynow">
+                        <img src="../../images/PayNow logo.svg" alt="PayNow" />
+                    </button>
+                </div>
             </div>
         </section>
     `;
@@ -612,11 +614,20 @@ function attachEventListeners() {
     addNewCardBtn.addEventListener("click", handleAddNewCard);
   }
 
+  // Add new card button (empty state)
+  const emptyAddNewCardBtn = document.getElementById("emptyAddNewCardBtn");
+  if (emptyAddNewCardBtn) {
+    emptyAddNewCardBtn.addEventListener("click", handleAddNewCard);
+  }
+
   // Digital wallet buttons
   const walletBtns = document.querySelectorAll(".walletBtn");
   walletBtns.forEach((btn) => {
     btn.addEventListener("click", handleWalletSelect);
   });
+
+  // Initialize Payment Request Button (Apple Pay / Google Pay)
+  initPaymentRequestButton();
 }
 
 function handleEditBtnMouseMove(e) {
@@ -1380,6 +1391,11 @@ function attachPaymentEventListeners() {
     addNewCardBtn.addEventListener("click", handleAddNewCard);
   }
 
+  const emptyAddNewCardBtn = document.getElementById("emptyAddNewCardBtn");
+  if (emptyAddNewCardBtn) {
+    emptyAddNewCardBtn.addEventListener("click", handleAddNewCard);
+  }
+
   const walletBtns = document.querySelectorAll(".walletBtn");
   walletBtns.forEach((btn) => {
     btn.addEventListener("click", handleWalletSelect);
@@ -1404,11 +1420,7 @@ async function initPaymentRequestButton() {
       await createPaymentRequest(stripeInstance, total, "sgd", "Hawkr Order");
 
     if (!canMakePayment) {
-      // Hide the container if no wallet payment is available
       container.style.display = "none";
-      console.log(
-        "Apple Pay / Google Pay not available on this device/browser",
-      );
       return;
     }
 
@@ -1463,13 +1475,14 @@ async function initPaymentRequestButton() {
 
         // Determine wallet type (Apple Pay or Google Pay)
         const walletBrand = ev.paymentMethod.card?.brand || "wallet";
+        const walletLast4 = ev.paymentMethod.card?.last4 || "";
         const walletType = ev.walletName || "wallet"; // "applePay" or "googlePay"
 
         // Create order in Firebase
         const orderId = await createOrderInFirebase(
           paymentIntentId,
           walletType,
-          { type: walletType, brand: walletBrand },
+          { type: walletType, brand: walletBrand, lastFour: walletLast4 },
         );
 
         // Validate orderId before redirect

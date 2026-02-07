@@ -5,6 +5,10 @@
 
 import { db, app } from "../config.js";
 import {
+  getFunctions,
+  httpsCallable,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
+import {
   collection,
   doc,
   addDoc,
@@ -21,10 +25,6 @@ import {
   runTransaction,
   increment,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import {
-  getFunctions,
-  httpsCallable,
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 
 /**
  * Submit new feedback
@@ -116,6 +116,20 @@ export async function submitFeedback(feedbackData) {
 
       return feedbackRef.id;
     });
+
+    // Notify vendor of new feedback (non-blocking)
+    try {
+      const fns = getFunctions(app, "asia-southeast1");
+      const notifyVendor = httpsCallable(fns, "notifyVendorFeedback");
+      notifyVendor({
+        feedbackId,
+        stallId: feedbackData.stallId,
+        customerName: feedbackData.customerName || "A customer",
+        message: feedbackData.comment || "",
+      });
+    } catch (err) {
+      console.error("Vendor feedback notification failed:", err);
+    }
 
     return feedbackId;
   } catch (error) {
@@ -449,7 +463,7 @@ export async function resolveFeedbackWithResponse(
   refundAmount = 0,
 ) {
   try {
-    const functions = getFunctions(app);
+    const functions = getFunctions(app, "asia-southeast1");
     const resolveFn = httpsCallable(functions, "resolveFeedback");
 
     const result = await resolveFn({

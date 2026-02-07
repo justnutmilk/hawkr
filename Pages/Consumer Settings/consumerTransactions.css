@@ -276,6 +276,16 @@ body {
     line-height: normal;
 }
 
+.refundTransactionId {
+    color: #eb001b;
+}
+
+.transactionIds {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
 .transactionVenue {
     color: #595959;
     font-family: Aptos, sans-serif;

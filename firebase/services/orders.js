@@ -3,7 +3,13 @@
  * Handles all order-related Firestore operations
  */
 
-import { db, auth } from "../config.js";
+import { db, auth, app } from "../config.js";
+import {
+  getFunctions,
+  httpsCallable,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
+
+const functions = getFunctions(app, "asia-southeast1");
 import {
   collection,
   doc,
@@ -130,6 +136,33 @@ export async function createOrder(orderData) {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+
+  // If payment is already confirmed, update status and send notification
+  if (orderData.paymentStatus === "paid") {
+    await updateDoc(orderRef, {
+      status: "confirmed",
+      updatedAt: serverTimestamp(),
+    });
+
+    // Send Telegram + in-app notification via callable function
+    try {
+      const sendNotification = httpsCallable(
+        functions,
+        "sendOrderNotification",
+      );
+      await sendNotification({ orderId: orderRef.id, status: "confirmed" });
+    } catch (err) {
+      console.error("Notification send failed (non-blocking):", err);
+    }
+
+    // Notify vendor of new order
+    try {
+      const notifyVendor = httpsCallable(functions, "notifyVendorNewOrder");
+      await notifyVendor({ orderId: orderRef.id });
+    } catch (err) {
+      console.error("Vendor notification failed (non-blocking):", err);
+    }
+  }
 
   return orderRef.id;
 }

@@ -9,8 +9,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 import app from "../config.js";
 
-// Initialize Firebase Functions
-const functions = getFunctions(app);
+// Initialize Firebase Functions (Singapore region)
+const functions = getFunctions(app, "asia-southeast1");
 
 // Stripe publishable key (safe to expose in frontend)
 const STRIPE_PUBLISHABLE_KEY =
@@ -400,7 +400,7 @@ export function mountPaymentRequestButton(stripe, paymentRequest, elementId) {
       paymentRequestButton: {
         type: "default",
         theme: "dark",
-        height: "48px",
+        height: "60px",
       },
     },
   });

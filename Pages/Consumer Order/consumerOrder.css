@@ -197,6 +197,13 @@ body {
     align-self: stretch;
 }
 
+.stallOperatorName {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+}
+
 /* Cuisine Tags */
 .cuisineTags {
     display: flex;

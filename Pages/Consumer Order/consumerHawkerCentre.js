@@ -45,6 +45,7 @@ const api = {
         stalls: (centreData.stalls || []).map((stall) => ({
           id: stall.id,
           name: stall.name,
+          operatorName: stall.operatorName || "",
           image:
             stall.imageUrl ||
             `../../mock-data/Consumer Dashboard/hawker-center/${centreData.name}.png`,
@@ -209,6 +210,7 @@ function renderStallCard(stall) {
             </div>
             <div class="stallCardInfo">
                 <h3 class="stallName">${stall.name}</h3>
+                ${stall.operatorName ? `<span class="stallOperatorName">${stall.operatorName}</span>` : ""}
                 <div class="cuisineTags">
                     ${cuisineTagsHTML}
                 </div>

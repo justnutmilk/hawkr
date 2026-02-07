@@ -253,45 +253,72 @@ body {
 
 .segmentedControl {
     --padding: 0.15rem;
+    --btn-count: 2;
     display: flex;
     position: relative;
     padding: var(--padding);
     border-radius: 9999px;
     background: #f0f0f0;
     align-self: center;
-    anchor-name: --segmented-button-hover;
 }
 
-.segmentedControl::before,
+/* Fallback: translateX-based sliding pill (Safari & all browsers) */
 .segmentedControl::after {
     content: "";
     position: absolute;
+    top: var(--padding);
+    left: var(--padding);
+    width: calc((100% - var(--padding) * 2) / var(--btn-count));
+    height: calc(100% - var(--padding) * 2);
     border-radius: inherit;
-    transition: inset 250ms cubic-bezier(0.4, 0, 0.2, 1);
-    inset: calc(anchor(start) + var(--padding))
-        calc(anchor(end) + var(--padding)) calc(anchor(end) + var(--padding))
-        calc(anchor(start) + var(--padding));
-}
-
-.segmentedControl::before {
-    background-color: #e4e4e4;
-    position-anchor: --segmented-button-hover;
-    opacity: 0;
-    transition:
-        inset 250ms cubic-bezier(0.4, 0, 0.2, 1),
-        opacity 150ms ease;
-}
-
-.segmentedControl:hover::before {
-    opacity: 1;
-}
-
-.segmentedControl::after {
     background-color: #fff;
-    position-anchor: --segmented-button-checked;
     box-shadow:
         0 1px 3px 0 rgb(0 0 0 / 0.08),
         0 1px 2px -1px rgb(0 0 0 / 0.06);
+    transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(calc(var(--active-index, 0) * 100%));
+}
+
+/* Enhanced: anchor-positioned pill + hover ghost (Chrome/Edge) */
+@supports (anchor-name: --a) {
+    .segmentedControl {
+        anchor-name: --segmented-button-hover;
+    }
+
+    .segmentedControl::before {
+        content: "";
+        position: absolute;
+        border-radius: inherit;
+        background-color: #e4e4e4;
+        position-anchor: --segmented-button-hover;
+        opacity: 0;
+        transition:
+            inset 250ms cubic-bezier(0.4, 0, 0.2, 1),
+            opacity 150ms ease;
+        inset: calc(anchor(start) + var(--padding))
+            calc(anchor(end) + var(--padding))
+            calc(anchor(end) + var(--padding))
+            calc(anchor(start) + var(--padding));
+    }
+
+    .segmentedControl:hover::before {
+        opacity: 1;
+    }
+
+    .segmentedControl::after {
+        position: absolute;
+        top: unset;
+        left: unset;
+        width: unset;
+        height: unset;
+        transform: none;
+        position-anchor: --segmented-button-checked;
+        inset: calc(anchor(start) + var(--padding))
+            calc(anchor(end) + var(--padding))
+            calc(anchor(end) + var(--padding))
+            calc(anchor(start) + var(--padding));
+        transition: inset 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
 }
 
 .segmentedButton {
@@ -311,15 +338,20 @@ body {
     color: #341539;
     cursor: pointer;
     z-index: 1;
-    anchor-name: var(--anchor-name-1, --a), var(--anchor-name-2, --b);
 }
 
-.segmentedButton:hover {
-    --anchor-name-1: --segmented-button-hover;
-}
+@supports (anchor-name: --a) {
+    .segmentedButton {
+        anchor-name: var(--anchor-name-1, --a), var(--anchor-name-2, --b);
+    }
 
-.segmentedButton:has(:checked) {
-    --anchor-name-2: --segmented-button-checked;
+    .segmentedButton:hover {
+        --anchor-name-1: --segmented-button-hover;
+    }
+
+    .segmentedButton:has(:checked) {
+        --anchor-name-2: --segmented-button-checked;
+    }
 }
 
 .segmentedButton:has(:focus-visible) {
@@ -338,6 +370,21 @@ body {
     border-width: 0;
 }
 
+/* Safari fallback: anchor positioning is not supported */
+@supports not (anchor-name: --a) {
+    .segmentedControl::before,
+    .segmentedControl::after {
+        display: none;
+    }
+
+    .segmentedButton:has(:checked) {
+        background-color: #fff;
+        box-shadow:
+            0 1px 3px 0 rgb(0 0 0 / 0.08),
+            0 1px 2px -1px rgb(0 0 0 / 0.06);
+    }
+}
+
 /* ============================================
    ORDER CONTENT
    ============================================ */
@@ -354,6 +401,51 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.orderLineActions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.clearOrderLineBtn {
+    display: flex;
+    padding: 4px 16px;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    border-radius: 8px;
+    border: 1px solid #913b9f;
+    background: #fffafa;
+    color: #913b9f;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.clearOrderLineBtn:hover {
+    background: #f4f1f6;
+}
+
+.clearOrderLineKbd {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 19px;
+    height: 19px;
+    padding: 0 6px;
+    border-radius: 4px;
+    background: rgba(145, 59, 159, 0.12);
+    box-shadow: 0 2px 0 rgba(145, 59, 159, 0.2);
+    color: #913b9f;
+    font-family: Aptos, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 4px;
 }
 
 .sectionLabel {
@@ -512,6 +604,67 @@ body {
     font-weight: 300;
     line-height: 24px;
     white-space: nowrap;
+}
+
+/* Ready Button */
+.orderReadyBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    align-self: flex-end;
+    padding: 6px 16px;
+    border-radius: 8px;
+    border: 1px solid #cee6cc;
+    background: #eaf5e9;
+    color: #2e7d32;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        transform 0.15s ease;
+}
+
+.orderReadyBtn:hover {
+    background: #dceeda;
+    transform: scale(1.02);
+}
+
+.orderReadyBtn:active {
+    transform: scale(0.98);
+}
+
+.orderReadyBtn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.orderReadyBtn img {
+    width: 20px;
+    height: 20px;
+}
+
+/* Ready Tag */
+.orderReadyTag {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: flex-end;
+    padding: 4px 12px;
+    border-radius: 8px;
+    background: #eaf5e9;
+    color: #2e7d32;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 24px;
+}
+
+.orderLineItemReady {
+    opacity: 0.6;
+    border-color: #c0c0c0;
 }
 
 /* ============================================
@@ -760,4 +913,99 @@ body {
 
 .settingsDropdownLogout svg {
     stroke: #eb001b;
+}
+
+/* ============================================
+   ORDER CARD ANIMATIONS
+   ============================================ */
+
+@keyframes swipeUp {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    60% {
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(-120%);
+        opacity: 0;
+    }
+}
+
+@keyframes collapseWidth {
+    from {
+        width: var(--card-width);
+        min-width: var(--card-width);
+        padding: 24px;
+        border-width: 1px;
+        gap: 32px;
+        opacity: 0;
+    }
+    to {
+        width: 0;
+        min-width: 0;
+        padding: 0;
+        border-width: 0;
+        gap: 0;
+        margin-right: -24px;
+        opacity: 0;
+        overflow: hidden;
+    }
+}
+
+@keyframes slideInExpand {
+    0% {
+        max-width: 0;
+        min-width: 0;
+        padding: 0;
+        border-width: 0;
+        margin-right: -24px;
+        opacity: 0;
+        overflow: hidden;
+    }
+    50% {
+        max-width: 380px;
+        min-width: 380px;
+        padding: 24px;
+        border-width: 1px;
+        margin-right: 0;
+        opacity: 0;
+        overflow: hidden;
+    }
+    100% {
+        max-width: 380px;
+        min-width: 380px;
+        padding: 24px;
+        border-width: 1px;
+        margin-right: 0;
+        opacity: 1;
+        overflow: visible;
+    }
+}
+
+@keyframes slideInReveal {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.orderLineItemSlideIn {
+    animation:
+        slideInExpand 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards,
+        slideInReveal 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s forwards;
+    opacity: 0;
+}
+
+.orderLineItemSwipeUp {
+    animation: swipeUp 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.orderLineItemCollapse {
+    animation: collapseWidth 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }

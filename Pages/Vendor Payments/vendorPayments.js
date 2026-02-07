@@ -43,8 +43,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const mapping = {
       card: () => {
-        const brand = (details.cardBrand || "visa").toLowerCase();
-        const last4 = details.cardLast4 || "****";
+        const brand = (
+          details.brand ||
+          details.cardBrand ||
+          "visa"
+        ).toLowerCase();
+        const last4 = details.lastFour || details.cardLast4 || "****";
         const brandLogos = {
           visa: "Visa.svg",
           mastercard: "MasterCard.svg",
@@ -92,6 +96,44 @@ document.addEventListener("DOMContentLoaded", () => {
         paymentBrand: "Alipay",
         paymentSub: "",
       }),
+      applePay: () => {
+        const brand = (details.brand || "visa").toLowerCase();
+        const last4 = details.lastFour || "";
+        const brandLogos = {
+          visa: "Visa.svg",
+          mastercard: "MasterCard.svg",
+          amex: "Amex.svg",
+        };
+        return {
+          logos: ["Apple Pay.svg", brandLogos[brand] || "Visa.svg"],
+          methodLabel: last4
+            ? `\u2022\u2022\u2022\u2022 ${last4}`
+            : "Apple Pay",
+          paymentBrand: "Apple Pay",
+          paymentSub: last4
+            ? `${capitalize(brand)} ${last4}`
+            : capitalize(brand),
+        };
+      },
+      googlePay: () => {
+        const brand = (details.brand || "visa").toLowerCase();
+        const last4 = details.lastFour || "";
+        const brandLogos = {
+          visa: "Visa.svg",
+          mastercard: "MasterCard.svg",
+          amex: "Amex.svg",
+        };
+        return {
+          logos: ["Google Pay.svg", brandLogos[brand] || "Visa.svg"],
+          methodLabel: last4
+            ? `\u2022\u2022\u2022\u2022 ${last4}`
+            : "Google Pay",
+          paymentBrand: "Google Pay",
+          paymentSub: last4
+            ? `${capitalize(brand)} ${last4}`
+            : capitalize(brand),
+        };
+      },
       cash: () => ({
         logos: ["Cash.png"],
         methodLabel: "Cash",
@@ -158,6 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
       paymentBrand: paymentDisplay.paymentBrand,
       paymentSub: paymentDisplay.paymentSub,
       txnId: order.hawkrTransactionId || "—",
+      refundTxnId: order.refundTransactionId || null,
       customer: order.customerName || "Customer",
       type,
       items: (order.items || []).map((item) => ({
@@ -425,6 +468,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
                 <div class="transactionCell transactionCellTransactionId">
                     <span class="transactionId">${transaction.txnId}</span>
+                    ${transaction.refundTxnId ? `<span class="transactionId refundTransactionId">${transaction.refundTxnId}</span>` : ""}
                 </div>
                 <div class="transactionCell transactionCellCustomer">
                     <span class="transactionCustomer">${transaction.customer}</span>

@@ -3,12 +3,17 @@
  * Queries Firestore for vendor info and orders
  */
 
-import { auth, db } from "../../firebase/config.js";
+import { auth, db, app } from "../../firebase/config.js";
 import {
   onAuthStateChanged,
   signOut,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFunctions,
+  httpsCallable,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 import { initVendorNavbar } from "../../assets/js/vendorNavbar.js";
+import { updateOrderStatus } from "../../firebase/services/orders.js";
 import {
   doc,
   getDoc,
@@ -18,12 +23,27 @@ import {
   orderBy,
   limit,
   getDocs,
+  onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const functions = getFunctions(app, "asia-southeast1");
 
 // State
 let currentVendor = null;
 let currentStall = null;
 let orders = [];
+let completedOrders = [];
+let chartData = null;
+let topItems = [];
+let topItemsByLikes = [];
+let currentTimeframe = "month";
+let chartsReady = false;
+const ITEMS_INITIAL = 3;
+const ITEMS_PER_LOAD = 3;
+let visibleTopItems = ITEMS_INITIAL;
+let visibleTopItemsByLikes = ITEMS_INITIAL;
+let isAnimating = false;
+let pendingSnapshot = null;
 
 // Search Module State
 const VENDOR_SEARCH_HISTORY_KEY = "hawkr_vendor_search_history";
@@ -119,6 +139,23 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize search module
   initializeVendorSearchModule();
 
+  // Load Google Charts (wait for script to be available)
+  function initGoogleCharts() {
+    if (typeof google !== "undefined" && google.charts) {
+      google.charts.load("current", { packages: ["corechart"] });
+      google.charts.setOnLoadCallback(() => {
+        chartsReady = true;
+        if (chartData) {
+          drawAllCharts();
+          bindTimeframeTabs();
+        }
+      });
+    } else {
+      setTimeout(initGoogleCharts, 100);
+    }
+  }
+  initGoogleCharts();
+
   // Check auth state for loading orders
   onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -175,8 +212,14 @@ async function loadVendorData(userId) {
         currentStall = stallDoc;
         console.log("Found stall:", currentStall.id, currentStall.name);
 
-        // Load orders for this stall
-        await loadOrders(currentStall.id);
+        // Load recent orders (for order line) and all completed orders (for stats) in parallel
+        await Promise.all([
+          loadOrders(currentStall.id),
+          loadAllCompletedOrders(currentStall.id),
+          loadMenuItemLikes(currentStall.id),
+        ]);
+        // Re-render now that orders, chart data, and likes are ready
+        renderDashboard();
       } else {
         // No stall found - render with empty orders
         orders = [];
@@ -210,44 +253,125 @@ function updateVendorName(name) {
 /**
  * Load orders for a stall
  */
-async function loadOrders(stallId) {
+let ordersUnsubscribe = null;
+
+function loadOrders(stallId) {
   console.log("Loading orders for stallId:", stallId);
-  try {
-    // Get recent orders (preparing, ready, or recent completed)
-    const ordersQuery = query(
-      collection(db, "orders"),
-      where("stallId", "==", stallId),
-      orderBy("createdAt", "desc"),
-      limit(10),
-    );
 
-    const ordersSnapshot = await getDocs(ordersQuery);
-    console.log("Orders found:", ordersSnapshot.size);
+  const ordersQuery = query(
+    collection(db, "orders"),
+    where("stallId", "==", stallId),
+    orderBy("createdAt", "desc"),
+    limit(10),
+  );
 
-    orders = ordersSnapshot.docs.map((doc) => {
-      const data = doc.data();
-      const createdAt = data.createdAt?.toDate?.() || new Date();
+  // Track previously rendered (confirmed) order IDs to detect new arrivals
+  let previousRenderedIds = new Set();
+  let isFirstSnapshot = true;
 
-      return {
-        id: doc.id,
-        orderNumber: data.orderNumber || doc.id.slice(-4).toUpperCase(),
-        customerName: data.customerName || "Customer",
-        date: formatDate(createdAt),
-        time: formatTime(createdAt),
-        type: data.orderType || "Takeaway",
-        itemCount: data.items?.length || 0,
-        total: data.total || 0,
-        transactionId: data.hawkrTransactionId || data.transactionId || doc.id,
-        status: data.status || "pending",
+  ordersUnsubscribe = onSnapshot(
+    ordersQuery,
+    (snapshot) => {
+      const processSnapshot = () => {
+        const newOrders = snapshot.docs
+          .filter((doc) => !doc.data().archived)
+          .map((doc) => {
+            const data = doc.data();
+            const createdAt = data.createdAt?.toDate?.() || new Date();
+
+            return {
+              id: doc.id,
+              orderNumber: data.orderNumber || doc.id.slice(-4).toUpperCase(),
+              customerName: data.customerName || "Customer",
+              date: formatDate(createdAt),
+              time: formatTime(createdAt),
+              type: data.orderType || "Takeaway",
+              itemCount: data.items?.length || 0,
+              total: data.total || 0,
+              transactionId:
+                data.hawkrTransactionId || data.transactionId || doc.id,
+              refundTransactionId: data.refundTransactionId || null,
+              paymentStatus: data.paymentStatus || null,
+              status: data.status || "pending",
+            };
+          });
+
+        orders = newOrders;
+
+        // Detect confirmed orders not previously rendered
+        const currentRenderedIds = new Set(
+          newOrders.filter((o) => o.status === "confirmed").map((o) => o.id),
+        );
+        const newlyRendered = isFirstSnapshot
+          ? []
+          : newOrders.filter(
+              (o) => o.status === "confirmed" && !previousRenderedIds.has(o.id),
+            );
+
+        renderDashboard();
+
+        // Animate slide-in for new order cards
+        if (newlyRendered.length > 0) {
+          isAnimating = true;
+          let totalCards = 0;
+          let finishedCards = 0;
+
+          newlyRendered.forEach((o) => {
+            document.querySelectorAll(".orderLineItem").forEach((el) => {
+              const numEl = el.querySelector(".orderItemNumber");
+              if (numEl && numEl.textContent === `#${o.orderNumber}`) {
+                totalCards++;
+                el.classList.add("orderLineItemSlideIn");
+                let animCount = 0;
+                el.addEventListener("animationend", () => {
+                  animCount++;
+                  if (animCount >= 2) {
+                    el.classList.remove("orderLineItemSlideIn");
+                    finishedCards++;
+                    if (finishedCards >= totalCards) {
+                      isAnimating = false;
+                      if (pendingSnapshot) {
+                        const fn = pendingSnapshot;
+                        pendingSnapshot = null;
+                        fn();
+                      }
+                    }
+                  }
+                });
+              }
+            });
+          });
+
+          // Safety fallback
+          setTimeout(() => {
+            if (isAnimating) {
+              isAnimating = false;
+              if (pendingSnapshot) {
+                const fn = pendingSnapshot;
+                pendingSnapshot = null;
+                fn();
+              }
+            }
+          }, 1500);
+        }
+
+        // Update rendered IDs for next snapshot
+        previousRenderedIds = currentRenderedIds;
+        isFirstSnapshot = false;
       };
-    });
 
-    renderDashboard();
-  } catch (error) {
-    console.error("Error loading orders:", error);
-    orders = [];
-    renderDashboard();
-  }
+      if (isAnimating) {
+        pendingSnapshot = processSnapshot;
+      } else {
+        processSnapshot();
+      }
+    },
+    (error) => {
+      console.error("Error loading orders:", error);
+      orders = [];
+      renderDashboard();
+    },
+  );
 }
 
 /**
@@ -276,8 +400,17 @@ function formatTime(date) {
  * Render order line item
  */
 function renderOrderLineItem(order) {
+  const isReady = order.status === "ready";
+  const actionBtn = isReady
+    ? `<div class="orderReadyTag">Ready</div>`
+    : `<button class="orderReadyBtn" data-order-id="${order.id}" title="Mark as ready">
+        <img src="../../assets/icons/orderConfirmed.svg" alt="Ready" width="20" height="20" />
+        Mark Ready
+      </button>`;
+
   return `
-    <div class="orderLineItem">
+    <div class="orderLineItem ${isReady ? "orderLineItemReady" : ""}">
+      ${actionBtn}
       <div class="orderItemNumber">#${order.orderNumber}</div>
       <div class="orderLineImportant">
         <div class="orderItemCustomerName">${order.customerName}</div>
@@ -293,9 +426,83 @@ function renderOrderLineItem(order) {
         <div class="orderItemTransaction">
           <span class="orderItemTransactionLabel">Transaction ID: </span><span class="orderItemTransactionId">${order.transactionId}</span>
         </div>
+        ${
+          order.refundTransactionId
+            ? `<div class="orderItemTransaction orderItemRefundTransaction">
+          <span class="orderItemTransactionLabel">Refund ID: </span><span class="orderItemTransactionId">${order.refundTransactionId}</span>
+        </div>`
+            : ""
+        }
       </div>
     </div>
   `;
+}
+
+/**
+ * Bind complete order button click handlers
+ */
+// Event delegation: attach once to container, survives innerHTML rebuilds
+let orderReadyDelegated = false;
+
+function bindCompleteOrderButtons() {
+  if (orderReadyDelegated) return;
+  const container = document.getElementById("dashboardContent");
+  if (!container) return;
+  orderReadyDelegated = true;
+
+  container.addEventListener("click", (e) => {
+    const btn = e.target.closest(".orderReadyBtn");
+    if (!btn) return;
+
+    const orderId = btn.dataset.orderId;
+    const card = btn.closest(".orderLineItem");
+    btn.disabled = true;
+
+    // Update local state immediately
+    const order = orders.find((o) => o.id === orderId);
+    if (order) order.status = "ready";
+
+    // Fire API calls in background (non-blocking)
+    updateOrderStatus(orderId, "ready")
+      .then(() => {
+        const sendNotification = httpsCallable(
+          functions,
+          "sendOrderNotification",
+        );
+        return sendNotification({ orderId, status: "ready" });
+      })
+      .catch((err) => console.error("Order update/notification error:", err));
+
+    // Animate card out then re-render
+    if (card) {
+      isAnimating = true;
+      card.style.setProperty("--card-width", card.offsetWidth + "px");
+      card.classList.add("orderLineItemSwipeUp");
+      card.addEventListener(
+        "animationend",
+        () => {
+          card.classList.remove("orderLineItemSwipeUp");
+          card.classList.add("orderLineItemCollapse");
+          card.addEventListener(
+            "animationend",
+            () => {
+              isAnimating = false;
+              renderDashboard();
+              if (pendingSnapshot) {
+                const fn = pendingSnapshot;
+                pendingSnapshot = null;
+                fn();
+              }
+            },
+            { once: true },
+          );
+        },
+        { once: true },
+      );
+    } else {
+      renderDashboard();
+    }
+  });
 }
 
 /**
@@ -321,9 +528,12 @@ function renderEmptyOrderState() {
 function renderDashboard() {
   const container = document.getElementById("dashboardContent");
 
+  // Only show confirmed orders — ready orders are removed by swipe animation
+  const activeOrders = orders.filter((o) => o.status === "confirmed");
+
   const orderLineContent =
-    orders.length > 0
-      ? orders.map(renderOrderLineItem).join("")
+    activeOrders.length > 0
+      ? activeOrders.map(renderOrderLineItem).join("")
       : renderEmptyOrderState();
 
   container.innerHTML = `
@@ -334,24 +544,24 @@ function renderDashboard() {
       </div>
     </div>
 
-    <div class="quickStatsSection">
-      <span class="sectionLabel">QUICK STATS</span>
-      <div class="quickStatsBlocks">
-        <div class="statBlock">
-          <span class="statBlockLabel">Today</span>
-          <span class="statBlockValue">$${calculateTodayRevenue().toFixed(2)}</span>
-        </div>
-        <div class="statBlock">
-          <span class="statBlockLabel">This Month</span>
-          <span class="statBlockValue">$${calculateMonthRevenue().toFixed(2)}</span>
-        </div>
-        <div class="statBlock">
-          <span class="statBlockLabel">Customer Satisfaction</span>
-          <span class="statBlockPlaceholder">Graph coming soon</span>
-        </div>
-      </div>
-    </div>
+    ${renderStoreInfoSection()}
+
+    ${renderTopItemSection()}
+
+    ${renderTopItemByLikesSection()}
   `;
+
+  // After rendering, bind all event handlers
+  try {
+    if (chartsReady && chartData) {
+      drawAllCharts();
+      bindTimeframeTabs();
+    }
+  } catch (err) {
+    console.error("Error drawing charts:", err);
+  }
+  bindLoadMoreButtons();
+  bindCompleteOrderButtons();
 }
 
 /**
@@ -397,6 +607,545 @@ function parseOrderDate(dateStr) {
     return new Date(year, month, day);
   }
   return new Date();
+}
+
+// ============================================
+// STATS: Data Loading & Aggregation
+// ============================================
+
+/**
+ * Load ALL completed orders for a stall (for charts & top items)
+ */
+async function loadAllCompletedOrders(stallId) {
+  try {
+    const q = query(
+      collection(db, "orders"),
+      where("stallId", "==", stallId),
+      where("status", "==", "ready"),
+    );
+    const snapshot = await getDocs(q);
+
+    completedOrders = snapshot.docs.map((d) => {
+      const data = d.data();
+      return {
+        id: d.id,
+        total: data.total || 0,
+        items: data.items || [],
+        createdAt: data.createdAt?.toDate?.() || new Date(data.createdAt),
+      };
+    });
+
+    // Build chart data and top items
+    chartData = aggregateChartData(completedOrders);
+    topItems = buildTopItemsBySales(completedOrders);
+  } catch (error) {
+    console.error("Error loading completed orders:", error);
+    completedOrders = [];
+    chartData = aggregateChartData([]);
+    topItems = [];
+  }
+}
+
+/**
+ * Load menu items with their like counts for the stall
+ */
+async function loadMenuItemLikes(stallId) {
+  try {
+    const menuRef = collection(db, "foodStalls", stallId, "menuItems");
+    const snapshot = await getDocs(menuRef);
+
+    topItemsByLikes = snapshot.docs
+      .map((d) => ({
+        id: d.id,
+        name: d.data().name || "Unknown Item",
+        imageUrl: d.data().imageUrl || "",
+        unitPrice: d.data().price || 0,
+        likesCount: d.data().likesCount || 0,
+      }))
+      .filter((item) => item.likesCount > 0)
+      .sort((a, b) => b.likesCount - a.likesCount);
+  } catch (error) {
+    console.error("Error loading menu item likes:", error);
+    topItemsByLikes = [];
+  }
+}
+
+/**
+ * Aggregate order data into chart-ready format for day/month/year views
+ */
+function aggregateChartData(orders) {
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  // Day view: group by hour (today only)
+  const todayStart = new Date(currentYear, now.getMonth(), now.getDate());
+  const hourLabels = [
+    "12am",
+    "1am",
+    "2am",
+    "3am",
+    "4am",
+    "5am",
+    "6am",
+    "7am",
+    "8am",
+    "9am",
+    "10am",
+    "11am",
+    "12pm",
+    "1pm",
+    "2pm",
+    "3pm",
+    "4pm",
+    "5pm",
+    "6pm",
+    "7pm",
+    "8pm",
+    "9pm",
+    "10pm",
+    "11pm",
+  ];
+  const dayRevenue = new Array(24).fill(0);
+  const dayQty = new Array(24).fill(0);
+  let hasDayData = false;
+
+  // Month view: group by month (current year)
+  const monthLabels = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  const monthRevenue = new Array(12).fill(0);
+  const monthQty = new Array(12).fill(0);
+  let hasMonthData = false;
+
+  // Year view: group by year
+  const yearMap = {};
+
+  orders.forEach((order) => {
+    const d = order.createdAt;
+    const itemQty = order.items.reduce(
+      (sum, item) => sum + (item.quantity || 0),
+      0,
+    );
+
+    // Day: only today's orders
+    if (d >= todayStart) {
+      const hour = d.getHours();
+      dayRevenue[hour] += order.total;
+      dayQty[hour] += itemQty;
+      hasDayData = true;
+    }
+
+    // Month: only current year
+    if (d.getFullYear() === currentYear) {
+      const month = d.getMonth();
+      monthRevenue[month] += order.total;
+      monthQty[month] += itemQty;
+      hasMonthData = true;
+    }
+
+    // Year: all years
+    const year = d.getFullYear();
+    if (!yearMap[year]) yearMap[year] = { revenue: 0, qty: 0 };
+    yearMap[year].revenue += order.total;
+    yearMap[year].qty += itemQty;
+  });
+
+  // Convert day arrays: null for future hours, 0 for past hours with no sales
+  const dayRevenueChart = hourLabels.map((_, i) =>
+    i > currentHour ? null : Math.round(dayRevenue[i] * 100) / 100,
+  );
+  const dayQtyChart = hourLabels.map((_, i) =>
+    i > currentHour ? null : dayQty[i],
+  );
+
+  // Convert month arrays: null for future months
+  const monthRevenueChart = monthLabels.map((_, i) =>
+    i > currentMonth ? null : Math.round(monthRevenue[i] * 100) / 100,
+  );
+  const monthQtyChart = monthLabels.map((_, i) =>
+    i > currentMonth ? null : monthQty[i],
+  );
+
+  // Year view: sort by year
+  const sortedYears = Object.keys(yearMap).sort();
+  const yearLabels =
+    sortedYears.length > 0 ? sortedYears : [String(currentYear)];
+  const yearRevenueChart = yearLabels.map(
+    (y) => Math.round((yearMap[y]?.revenue || 0) * 100) / 100,
+  );
+  const yearQtyChart = yearLabels.map((y) => yearMap[y]?.qty || 0);
+
+  return {
+    day: { labels: hourLabels, revenue: dayRevenueChart, qty: dayQtyChart },
+    month: {
+      labels: monthLabels,
+      revenue: monthRevenueChart,
+      qty: monthQtyChart,
+    },
+    year: { labels: yearLabels, revenue: yearRevenueChart, qty: yearQtyChart },
+  };
+}
+
+/**
+ * Build top items sorted by sales quantity
+ */
+function buildTopItemsBySales(orders) {
+  const itemMap = {};
+  orders.forEach((order) => {
+    order.items.forEach((item) => {
+      const key = item.menuItemId || item.name;
+      if (!itemMap[key]) {
+        itemMap[key] = {
+          name: item.name || "Unknown Item",
+          imageUrl: item.imageUrl || "",
+          unitPrice: item.unitPrice || 0,
+          count: 0,
+          revenue: 0,
+        };
+      }
+      itemMap[key].count += item.quantity || 0;
+      itemMap[key].revenue += item.totalPrice || 0;
+    });
+  });
+
+  return Object.values(itemMap).sort((a, b) => b.count - a.count);
+}
+
+// ============================================
+// STATS: Chart Rendering (Google Charts)
+// ============================================
+
+function getChartOptions(color) {
+  return {
+    curveType: "function",
+    legend: { position: "none" },
+    chartArea: {
+      left: 60,
+      top: 20,
+      right: 20,
+      bottom: 40,
+      width: "100%",
+      height: "100%",
+    },
+    hAxis: {
+      textStyle: { fontName: "Aptos", fontSize: 13, color: "#808080" },
+      gridlines: { color: "transparent" },
+    },
+    vAxis: {
+      textStyle: { fontName: "Aptos", fontSize: 13, color: "#808080" },
+      gridlines: { color: "#e0e0e0" },
+      minorGridlines: { count: 0 },
+    },
+    colors: [color],
+    lineWidth: 2,
+    pointSize: 5,
+    backgroundColor: "transparent",
+    fontName: "Aptos",
+    tooltip: { textStyle: { fontName: "Aptos", fontSize: 13 } },
+  };
+}
+
+function drawLineChart(labels, values, color, elementId) {
+  const header = [["Label", "Value"]];
+  const rows = labels.map((label, i) => [label, values[i]]);
+  const data = google.visualization.arrayToDataTable(header.concat(rows));
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const chart = new google.visualization.LineChart(el);
+  chart.draw(data, getChartOptions(color));
+}
+
+function drawBarChart(labels, values, color, elementId) {
+  const header = [["Label", "Value"]];
+  const rows = labels.map((label, i) => [label, values[i]]);
+  const data = google.visualization.arrayToDataTable(header.concat(rows));
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const options = { ...getChartOptions(color), bar: { groupWidth: "60%" } };
+  const chart = new google.visualization.ColumnChart(el);
+  chart.draw(data, options);
+}
+
+function drawAllCharts() {
+  if (!chartData || !chartsReady) return;
+
+  const tf = chartData[currentTimeframe];
+  const rent = getRent();
+
+  // Chart 1: Revenue — purple line
+  drawLineChart(tf.labels, tf.revenue, "#913b9f", "chartRevenue");
+
+  // Chart 2: Sales by Qty — dark red bar
+  drawBarChart(tf.labels, tf.qty, "#6b1d1d", "chartSalesQty");
+
+  // Chart 3: Profit after Rent — cumulative revenue minus rent
+  const profitData = [];
+  let cumulative = 0;
+  for (let i = 0; i < tf.revenue.length; i++) {
+    if (tf.revenue[i] === null) {
+      profitData.push(null);
+    } else {
+      cumulative += tf.revenue[i];
+      profitData.push(Math.round((cumulative - rent) * 100) / 100);
+    }
+  }
+  drawLineChart(tf.labels, profitData, "#e67e22", "chartProfit");
+}
+
+function updateChartTotals() {
+  if (!chartData) return;
+
+  const tf = chartData[currentTimeframe];
+  const rent = getRent();
+  const totalRevenue = tf.revenue.reduce((sum, v) => sum + (v || 0), 0);
+  const totalQty = tf.qty.reduce((sum, v) => sum + (v || 0), 0);
+
+  const totals = document.querySelectorAll(".chartTotal");
+  if (totals.length >= 3) {
+    totals[0].textContent = `$${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    totals[1].textContent = `${totalQty.toLocaleString()} items`;
+    totals[2].textContent = `$${(totalRevenue - rent).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+}
+
+function getRent() {
+  if (currentStall && currentStall.rent) {
+    return currentStall.rent[currentTimeframe] || 0;
+  }
+  return 0;
+}
+
+function bindTimeframeTabs() {
+  const segmented = document.querySelector(".chartSegmented");
+  const radios = document.querySelectorAll('input[name="timeframeTab"]');
+  const radioArr = Array.from(radios);
+
+  radios.forEach((radio) => {
+    radio.addEventListener("change", (e) => {
+      currentTimeframe = e.target.value;
+      if (segmented) {
+        segmented.style.setProperty("--active-index", radioArr.indexOf(radio));
+      }
+      updateChartTotals();
+      drawAllCharts();
+    });
+  });
+
+  // Set initial index
+  if (segmented) {
+    const checkedIdx = radioArr.findIndex((r) => r.checked);
+    if (checkedIdx >= 0)
+      segmented.style.setProperty("--active-index", checkedIdx);
+  }
+}
+
+// ============================================
+// STATS: Top Items Rendering
+// ============================================
+
+const medalBadge = `<img class="topItemIcon" src="../../assets/icons/medal.svg" alt="Medal" />`;
+
+const loadingIcon = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M8 1.5V4M8 12v2.5M3.05 3.05L4.93 4.93M11.07 11.07l1.88 1.88M1.5 8H4M12 8h2.5M3.05 12.95l1.88-1.88M11.07 4.93l1.88-1.88" stroke="#595959" stroke-width="1.5" stroke-linecap="round"/>
+</svg>`;
+
+function renderTopItemCard(item) {
+  const imgSrc = item.imageUrl || "";
+  const imgHTML = imgSrc
+    ? `<img class="topItemImage" src="${imgSrc}" alt="${item.name}" />`
+    : `<div class="topItemImage"></div>`;
+  return `
+    <div class="topItemCard">
+      ${imgHTML}
+      <span class="topItemName">${item.name}</span>
+      <span class="topItemPrice">$${item.unitPrice.toFixed(1)}</span>
+      <span class="topItemStat">${item.count} sold</span>
+    </div>
+  `;
+}
+
+function renderTopItemSection() {
+  if (topItems.length === 0) {
+    return `
+      <div class="topItemSection">
+        <div class="topItemHeader">
+          ${medalBadge}
+          <span class="topItemTitle">Top Item by Sales</span>
+        </div>
+        <div class="emptyStatsState">
+          <span class="emptyStatsTitle">No sales data yet</span>
+          <span class="emptyStatsDescription">Completed orders will populate your top items.</span>
+        </div>
+      </div>
+    `;
+  }
+
+  const visible = topItems.slice(0, visibleTopItems);
+  const hasMore = visibleTopItems < topItems.length;
+  const loadMoreBtn = hasMore
+    ? `<button class="loadMoreButton" data-type="topItems">${loadingIcon} Load next ${ITEMS_PER_LOAD}</button>`
+    : "";
+
+  return `
+    <div class="topItemSection">
+      <div class="topItemHeader">
+        ${medalBadge}
+        <span class="topItemTitle">Top Item by Sales</span>
+      </div>
+      ${visible.map(renderTopItemCard).join("")}
+      ${loadMoreBtn}
+    </div>
+  `;
+}
+
+// ============================================
+// STATS: Top Items by Likes Rendering
+// ============================================
+
+const heartBadge = `<img class="topItemIcon" src="../../assets/icons/heart.svg" alt="Heart" />`;
+
+function renderTopItemByLikesCard(item) {
+  const imgSrc = item.imageUrl || "";
+  const imgHTML = imgSrc
+    ? `<img class="topItemImage" src="${imgSrc}" alt="${item.name}" />`
+    : `<div class="topItemImage"></div>`;
+  return `
+    <div class="topItemCard">
+      ${imgHTML}
+      <span class="topItemName">${item.name}</span>
+      <span class="topItemPrice">$${item.unitPrice.toFixed(1)}</span>
+      <span class="topItemStat">${item.likesCount} like${item.likesCount !== 1 ? "s" : ""}</span>
+    </div>
+  `;
+}
+
+function renderTopItemByLikesSection() {
+  if (topItemsByLikes.length === 0) {
+    return `
+      <div class="topItemSection">
+        <div class="topItemHeader">
+          ${heartBadge}
+          <span class="topItemTitle">Top Item by Likes</span>
+        </div>
+        <div class="emptyStatsState">
+          <span class="emptyStatsTitle">No likes data yet</span>
+          <span class="emptyStatsDescription">When customers favourite your items, they'll appear here.</span>
+        </div>
+      </div>
+    `;
+  }
+
+  const visible = topItemsByLikes.slice(0, visibleTopItemsByLikes);
+  const hasMore = visibleTopItemsByLikes < topItemsByLikes.length;
+  const loadMoreBtn = hasMore
+    ? `<button class="loadMoreButton" data-type="topItemsByLikes">${loadingIcon} Load next ${ITEMS_PER_LOAD}</button>`
+    : "";
+
+  return `
+    <div class="topItemSection">
+      <div class="topItemHeader">
+        ${heartBadge}
+        <span class="topItemTitle">Top Item by Likes</span>
+      </div>
+      ${visible.map(renderTopItemByLikesCard).join("")}
+      ${loadMoreBtn}
+    </div>
+  `;
+}
+
+function bindLoadMoreButtons() {
+  document.querySelectorAll(".loadMoreButton").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (btn.dataset.type === "topItemsByLikes") {
+        visibleTopItemsByLikes += ITEMS_PER_LOAD;
+      } else {
+        visibleTopItems += ITEMS_PER_LOAD;
+      }
+      renderDashboard();
+      if (chartsReady && chartData) {
+        drawAllCharts();
+        bindTimeframeTabs();
+      }
+      bindLoadMoreButtons();
+    });
+  });
+}
+
+// ============================================
+// STATS: Chart Section HTML
+// ============================================
+
+function renderStoreInfoSection() {
+  if (!chartData) {
+    return "";
+  }
+
+  const tf = chartData[currentTimeframe];
+  const rent = getRent();
+  const totalRevenue = tf.revenue.reduce((sum, v) => sum + (v || 0), 0);
+  const totalQty = tf.qty.reduce((sum, v) => sum + (v || 0), 0);
+
+  return `
+    <div class="section">
+      <div class="sectionHeader">
+        <span class="sectionTitle">Store Information</span>
+        <div class="chartSegmented">
+          <label class="segmentedButton">
+            <input type="radio" name="timeframeTab" value="day" ${currentTimeframe === "day" ? "checked" : ""} />
+            Day
+          </label>
+          <label class="segmentedButton">
+            <input type="radio" name="timeframeTab" value="month" ${currentTimeframe === "month" ? "checked" : ""} />
+            Month
+          </label>
+          <label class="segmentedButton">
+            <input type="radio" name="timeframeTab" value="year" ${currentTimeframe === "year" ? "checked" : ""} />
+            Year
+          </label>
+        </div>
+      </div>
+
+      <div class="chartBlock">
+        <div class="chartBlockHeader">
+          <span class="chartTotal">$${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          <span class="chartLabel">Revenue</span>
+        </div>
+        <div class="chartContainer" id="chartRevenue"></div>
+      </div>
+
+      <div class="chartBlock">
+        <div class="chartBlockHeader">
+          <span class="chartTotal">${totalQty.toLocaleString()} items</span>
+          <span class="chartLabel">Sales by Product Qty</span>
+        </div>
+        <div class="chartContainer" id="chartSalesQty"></div>
+      </div>
+
+      <div class="chartBlock">
+        <div class="chartBlockHeader">
+          <span class="chartTotal">$${(totalRevenue - rent).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          <div class="chartLabelGroup">
+            <span class="chartLabel">Profit after Rent</span>
+            <span class="chartMicrocopy">Not including vendor ingredients</span>
+          </div>
+        </div>
+        <div class="chartContainer" id="chartProfit"></div>
+      </div>
+    </div>
+  `;
 }
 
 /**
@@ -522,12 +1271,7 @@ function buildSearchableItems() {
 
   // Add orders to searchable items
   orders.forEach((order) => {
-    // Mask transaction ID (show first 3 chars, mask middle, show last 4)
     const txnId = order.transactionId || order.id;
-    const maskedTxnId =
-      txnId.length > 10
-        ? `${txnId.slice(0, 3)}-${"*".repeat(8)}-${txnId.slice(-4).toUpperCase()}`
-        : txnId;
 
     searchableItems.push({
       id: order.id,
@@ -563,7 +1307,7 @@ function buildSearchableItems() {
       type: "payment",
       name: "Transaction",
       dateTime: `${order.date}, ${order.time}`,
-      transactionId: maskedTxnId,
+      transactionId: txnId,
       customerName: order.customerName,
       keywords:
         `payment transaction ${order.transactionId} ${order.total} ${order.customerName}`.toLowerCase(),

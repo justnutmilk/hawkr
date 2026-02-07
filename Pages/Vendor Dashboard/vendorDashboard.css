@@ -365,17 +365,17 @@ body {
 
 .searchResultToggleThumb {
     position: absolute;
-    top: 2px;
+    top: 3px;
     left: 2px;
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 14px;
     background: #fff;
-    border-radius: 50%;
+    border-radius: 9999px;
     transition: left 0.2s ease;
 }
 
 .searchResultToggle.on .searchResultToggleThumb {
-    left: 18px;
+    left: 14px;
 }
 
 .searchResultToggleLabel {
@@ -413,6 +413,15 @@ body {
     display: flex;
     flex-direction: column;
     gap: 24px;
+    position: relative;
+}
+
+.orderLineSection > .sectionLabel {
+    position: sticky;
+    top: 80px;
+    z-index: 5;
+    background: #fff;
+    padding-bottom: 8px;
 }
 
 .orderLineCards {
@@ -671,6 +680,72 @@ body {
     max-width: 200px;
 }
 
+/* Ready Button */
+.orderReadyBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    align-self: stretch;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid #cee6cc;
+    background: #eaf5e9;
+    color: #2e7d32;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        transform 0.15s ease;
+}
+
+.orderReadyBtn:hover {
+    background: #dceeda;
+    transform: scale(1.02);
+}
+
+.orderReadyBtn:active {
+    transform: scale(0.98);
+}
+
+.orderReadyBtn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.orderReadyBtn img {
+    width: 20px;
+    height: 20px;
+}
+
+/* Ready order tag */
+.orderReadyTag {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 16px;
+    border-radius: 8px;
+    background: #eaf5e9;
+    color: #2e7d32;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 24px;
+}
+
+/* Ready order card styling */
+.orderLineItemReady {
+    opacity: 0.6;
+    border-color: #cee6cc;
+}
+
+/* Refund transaction ID */
+.orderItemRefundTransaction {
+    color: #eb001b;
+}
+
 /* ============================================
    SETTINGS DROPDOWN - Glassy Purple Style
    ============================================ */
@@ -753,4 +828,437 @@ body {
 
 .settingsDropdownLogout svg {
     stroke: #eb001b;
+}
+
+/* ============================================
+   SECTION (for charts/stats)
+   ============================================ */
+
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.sectionHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sectionTitle {
+    color: #913b9f;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+/* ============================================
+   TIMEFRAME SEGMENTED CONTROL (Day/Month/Year)
+   ============================================ */
+
+.chartSegmented {
+    --padding: 0.15rem;
+    --btn-count: 3;
+    display: flex;
+    position: relative;
+    padding: var(--padding);
+    border-radius: 9999px;
+    background: #f0f0f0;
+}
+
+/* Fallback: translateX-based sliding pill (Safari & all browsers) */
+.chartSegmented::after {
+    content: "";
+    position: absolute;
+    top: var(--padding);
+    left: var(--padding);
+    width: calc((100% - var(--padding) * 2) / var(--btn-count));
+    height: calc(100% - var(--padding) * 2);
+    border-radius: inherit;
+    background-color: #fff;
+    box-shadow:
+        0 1px 3px 0 rgb(0 0 0 / 0.08),
+        0 1px 2px -1px rgb(0 0 0 / 0.06);
+    transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(calc(var(--active-index, 1) * 100%));
+}
+
+/* Enhanced: anchor-positioned pill + hover ghost (Chrome/Edge) */
+@supports (anchor-name: --a) {
+    .chartSegmented {
+        anchor-name: --segmented-button-hover;
+    }
+
+    .chartSegmented::before {
+        content: "";
+        position: absolute;
+        border-radius: inherit;
+        background-color: #e4e4e4;
+        position-anchor: --segmented-button-hover;
+        opacity: 0;
+        transition:
+            inset 250ms cubic-bezier(0.4, 0, 0.2, 1),
+            opacity 150ms ease;
+        inset: calc(anchor(start) + var(--padding))
+            calc(anchor(end) + var(--padding))
+            calc(anchor(end) + var(--padding))
+            calc(anchor(start) + var(--padding));
+    }
+
+    .chartSegmented:hover::before {
+        opacity: 1;
+    }
+
+    .chartSegmented::after {
+        position: absolute;
+        top: unset;
+        left: unset;
+        width: unset;
+        height: unset;
+        transform: none;
+        position-anchor: --segmented-button-checked;
+        inset: calc(anchor(start) + var(--padding))
+            calc(anchor(end) + var(--padding))
+            calc(anchor(end) + var(--padding))
+            calc(anchor(start) + var(--padding));
+        transition: inset 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+}
+
+.chartSegmented .segmentedButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: none;
+    border-radius: inherit;
+    width: 150px;
+    height: 38px;
+    padding: 0;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    color: #341539;
+    cursor: pointer;
+    z-index: 1;
+}
+
+@supports (anchor-name: --a) {
+    .chartSegmented .segmentedButton {
+        anchor-name: var(--anchor-name-1, --a), var(--anchor-name-2, --b);
+    }
+
+    .chartSegmented .segmentedButton:hover {
+        --anchor-name-1: --segmented-button-hover;
+    }
+
+    .chartSegmented .segmentedButton:has(:checked) {
+        --anchor-name-2: --segmented-button-checked;
+    }
+}
+
+.chartSegmented .segmentedButton:has(:focus-visible) {
+    outline: 2px solid #913b9f;
+}
+
+.chartSegmented .segmentedButton input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* ============================================
+   CHART BLOCKS
+   ============================================ */
+
+.chartBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.chartBlockHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.chartTotal {
+    color: #913b9f;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 23px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.chartLabelGroup {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.chartLabel {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.chartMicrocopy {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.chartContainer {
+    width: 100%;
+    height: 380px;
+}
+
+/* ============================================
+   TOP ITEM CARDS
+   ============================================ */
+
+.topItemSection {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.topItemHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.topItemIcon {
+    width: 36px;
+    height: 36px;
+}
+
+.topItemTitle {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 23px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.topItemCard {
+    display: flex;
+    align-items: flex-start;
+}
+
+.topItemCard .topItemImage {
+    margin-right: 48px;
+}
+
+.topItemCard .topItemPrice {
+    margin-left: auto;
+}
+
+.topItemCard .topItemStat {
+    margin-left: auto;
+}
+
+.topItemImage {
+    width: 100px;
+    height: 100px;
+    border-radius: 16px;
+    object-fit: cover;
+    background: #f0f0f0;
+    flex-shrink: 0;
+}
+
+.topItemName {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 23px;
+    font-weight: 600;
+    line-height: normal;
+    width: 300px;
+    flex-shrink: 0;
+}
+
+.topItemPrice {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 23px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.topItemStat {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 23px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.loadMoreButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #cee6cc;
+    background: #eaf5e9;
+    color: #595959;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.loadMoreButton:hover {
+    background: #dceeda;
+}
+
+/* ============================================
+   EMPTY STATS STATE
+   ============================================ */
+
+.emptyStatsState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    border-radius: 8px;
+    border: 1px dashed #c0c0c0;
+    background: #fafafa;
+    text-align: center;
+    gap: 8px;
+}
+
+.emptyStatsTitle {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.emptyStatsDescription {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    max-width: 300px;
+}
+
+/* ============================================
+   ORDER CARD ANIMATIONS
+   ============================================ */
+
+.orderLineItem {
+    transition: opacity 0.3s ease;
+}
+
+@keyframes swipeUp {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    60% {
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(-120%);
+        opacity: 0;
+    }
+}
+
+@keyframes collapseWidth {
+    from {
+        width: var(--card-width);
+        min-width: var(--card-width);
+        padding: 24px;
+        border-width: 1px;
+        gap: 32px;
+        opacity: 0;
+    }
+    to {
+        width: 0;
+        min-width: 0;
+        padding: 0;
+        border-width: 0;
+        gap: 0;
+        margin-right: -24px;
+        opacity: 0;
+        overflow: hidden;
+    }
+}
+
+@keyframes slideInExpand {
+    0% {
+        max-width: 0;
+        min-width: 0;
+        padding: 0;
+        border-width: 0;
+        margin-right: -24px;
+        opacity: 0;
+        overflow: hidden;
+    }
+    50% {
+        max-width: 260px;
+        min-width: 260px;
+        padding: 24px;
+        border-width: 1px;
+        margin-right: 0;
+        opacity: 0;
+        overflow: hidden;
+    }
+    100% {
+        max-width: 260px;
+        min-width: 260px;
+        padding: 24px;
+        border-width: 1px;
+        margin-right: 0;
+        opacity: 1;
+        overflow: visible;
+    }
+}
+
+@keyframes slideInReveal {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.orderLineItemSlideIn {
+    animation:
+        slideInExpand 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards,
+        slideInReveal 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s forwards;
+    opacity: 0;
+}
+
+.orderLineItemSwipeUp {
+    animation: swipeUp 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.orderLineItemCollapse {
+    animation: collapseWidth 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }

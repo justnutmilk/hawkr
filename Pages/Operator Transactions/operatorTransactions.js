@@ -1,4 +1,26 @@
+import { db, auth } from "../../firebase/config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  doc,
+  getDoc,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
 document.addEventListener("DOMContentLoaded", () => {
+  // Firebase Auth — check onboarding before initialising page
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      // Check onboarding status
+      const operatorDoc = await getDoc(doc(db, "operators", user.uid));
+      if (!operatorDoc.exists() || !operatorDoc.data().onboardingComplete) {
+        window.location.href = "../Auth/onboarding-operator.html";
+        return;
+      }
+    } else {
+      window.location.href = "../Auth/login.html";
+      return;
+    }
+  });
+
   // Search key modifier
   const isMac =
     navigator.platform.toUpperCase().indexOf("MAC") >= 0 ||

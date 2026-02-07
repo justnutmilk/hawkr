@@ -11,12 +11,14 @@
  */
 
 const admin = require("firebase-admin");
+const { setGlobalOptions } = require("firebase-functions/v2");
 const {
   onRequest,
   onCall,
   HttpsError,
 } = require("firebase-functions/v2/https");
-const { onDocumentUpdated } = require("firebase-functions/v2/firestore");
+// Set all functions to Singapore region
+setGlobalOptions({ region: "asia-southeast1" });
 
 // Initialize Firebase Admin
 admin.initializeApp();
@@ -47,101 +49,112 @@ const {
 const { resolveFeedback } = require("./src/resolveFeedback");
 
 // ============================================
-// FIRESTORE TRIGGERS
+// ORDER NOTIFICATION (callable)
 // ============================================
 
 /**
- * Trigger: Order status change
- * Sends Telegram notification when order status changes
+ * Send order notification to customer via Telegram and in-app
+ * Called by client after order creation or status change
  */
-exports.onOrderStatusChange = onDocumentUpdated(
-  "orders/{orderId}",
-  async (event) => {
-    const beforeData = event.data.before.data();
-    const afterData = event.data.after.data();
-    const orderId = event.params.orderId;
+exports.sendOrderNotification = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "User must be logged in");
+  }
 
-    // Check if status changed
-    if (beforeData.status === afterData.status) {
-      return null;
+  const { orderId, status } = request.data;
+
+  if (!orderId || !status) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Order ID and status are required",
+    );
+  }
+
+  // Only allow notifications for confirmed and ready
+  const allowedStatuses = ["confirmed", "ready"];
+  if (!allowedStatuses.includes(status)) {
+    return { success: false, reason: `Status ${status} not notifiable` };
+  }
+
+  try {
+    // Get order data
+    const orderDoc = await admin
+      .firestore()
+      .collection("orders")
+      .doc(orderId)
+      .get();
+
+    if (!orderDoc.exists) {
+      throw new HttpsError("not-found", "Order not found");
     }
 
-    const oldStatus = beforeData.status;
-    const newStatus = afterData.status;
-    const customerId = afterData.customerId;
-
-    console.log(
-      `Order ${orderId} status changed: ${oldStatus} -> ${newStatus}`,
-    );
+    const orderData = { id: orderId, ...orderDoc.data() };
+    const customerId = orderData.customerId;
 
     if (!customerId) {
-      console.log("No customerId found in order");
-      return null;
+      return { success: false, reason: "No customer ID on order" };
     }
 
-    try {
-      // Get customer to find their Telegram chat ID
-      const customerDoc = await admin
-        .firestore()
-        .collection("customers")
-        .doc(customerId)
-        .get();
+    // Get customer data
+    const customerDoc = await admin
+      .firestore()
+      .collection("customers")
+      .doc(customerId)
+      .get();
 
-      if (!customerDoc.exists) {
-        console.log(`Customer ${customerId} not found`);
-        return null;
-      }
+    if (!customerDoc.exists) {
+      return { success: false, reason: "Customer not found" };
+    }
 
-      const customerData = customerDoc.data();
-      const telegramChatId = customerData.telegramChatId;
+    const customerData = customerDoc.data();
+    const telegramChatId = customerData.telegramChatId;
 
-      // Get notification content
-      const orderDataWithId = { ...afterData, id: orderId };
-      const notificationContent = getOrderStatusMessage(
-        newStatus,
-        orderDataWithId,
+    // Get notification content
+    const notificationContent = getOrderStatusMessage(status, orderData);
+
+    if (!notificationContent) {
+      return { success: false, reason: `No template for status: ${status}` };
+    }
+
+    // Create in-app notification
+    await admin
+      .firestore()
+      .collection("customers")
+      .doc(customerId)
+      .collection("notifications")
+      .add({
+        type: "order_status",
+        title: notificationContent.title,
+        message: notificationContent.message
+          .replace(/\\/g, "")
+          .replace(/\*/g, ""),
+        orderId: orderId,
+        status: status,
+        isRead: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+    // Send Telegram if linked
+    if (telegramChatId) {
+      const result = await sendMessage(
+        telegramChatId,
+        notificationContent.message,
+        { parse_mode: "MarkdownV2" },
       );
-
-      if (!notificationContent) {
-        console.log(`No notification template for status: ${newStatus}`);
-        return null;
-      }
-
-      // Create in-app notification
-      await admin
-        .firestore()
-        .collection("customers")
-        .doc(customerId)
-        .collection("notifications")
-        .add({
-          type: "order_status",
-          title: notificationContent.title,
-          message: notificationContent.message
-            .replace(/\\/g, "")
-            .replace(/\*/g, ""),
-          orderId: orderId,
-          status: newStatus,
-          isRead: false,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-
-      // Send Telegram notification if linked
-      if (telegramChatId) {
-        await sendMessage(telegramChatId, notificationContent.message, {
-          parse_mode: "MarkdownV2",
-        });
-        console.log(`Telegram notification sent to ${telegramChatId}`);
-      } else {
-        console.log(`Customer ${customerId} has no Telegram linked`);
-      }
-
-      return null;
-    } catch (error) {
-      console.error("Error processing order status change:", error);
-      return null;
+      console.log(
+        `Order ${orderId}: Telegram sent to ${telegramChatId}`,
+        result.ok ? "OK" : result,
+      );
+      return { success: true, telegram: true };
     }
-  },
-);
+
+    console.log(`Order ${orderId}: No Telegram for customer ${customerId}`);
+    return { success: true, telegram: false };
+  } catch (error) {
+    console.error(`sendOrderNotification error:`, error);
+    throw new HttpsError("internal", error.message);
+  }
+});
 
 // ============================================
 // HTTP ENDPOINTS
@@ -323,7 +336,7 @@ async function handleUnlinkCommand(chatId) {
  */
 exports.setupTelegramWebhook = onRequest(async (req, res) => {
   const projectId = process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT;
-  const region = "us-central1";
+  const region = "asia-southeast1";
   const webhookUrl = `https://${region}-${projectId}.cloudfunctions.net/telegramWebhook`;
 
   console.log(`Setting up Telegram webhook: ${webhookUrl}`);
@@ -807,7 +820,57 @@ exports.initiateRefund = onCall(async (request) => {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-  // 10. Send Telegram notification if linked
+  // 10. Create vendor notification for the refund
+  try {
+    const stallDoc = await db
+      .collection("foodStalls")
+      .doc(orderData.stallId)
+      .get();
+    const refundVendorId = stallDoc.exists ? stallDoc.data().vendorId : null;
+
+    if (refundVendorId) {
+      await db
+        .collection("vendors")
+        .doc(refundVendorId)
+        .collection("notifications")
+        .add({
+          type: "refund_processed",
+          title: `Refund of S$${refundAmountDisplay} processed`,
+          message: `A ${refundType} refund of S$${refundAmountDisplay} for order #${orderData.orderNumber} has been processed. Secure your account now if this isn't you.`,
+          orderId: orderId,
+          stallId: orderData.stallId,
+          isRead: false,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+      // Send Telegram to vendor if linked
+      const refundVendorDoc = await db
+        .collection("vendors")
+        .doc(refundVendorId)
+        .get();
+      if (refundVendorDoc.exists) {
+        const vendorTgChatId = refundVendorDoc.data().telegramChatId;
+        if (vendorTgChatId) {
+          const escMd = (text) =>
+            text.replace(/[_*[\]()~`>#+=|{}.!-]/g, "\\$&");
+          const vendorTgMsg =
+            `*Refund Processed*\n\n` +
+            `A ${escMd(refundType === "full" ? "full" : "partial")} refund of S\\$${escMd(refundAmountDisplay)} for order \\#${escMd(String(orderData.orderNumber))} has been processed\\.\n\n` +
+            `Secure your account now if this isn't you\\.`;
+          await sendMessage(vendorTgChatId, vendorTgMsg, {
+            parse_mode: "MarkdownV2",
+          });
+        }
+      }
+    }
+  } catch (vendorNotifError) {
+    console.error(
+      "Error sending vendor refund notification:",
+      vendorNotifError,
+    );
+  }
+
+  // 11. Send Telegram notification to customer if linked
   try {
     const customerDoc = await db
       .collection("customers")
@@ -818,9 +881,10 @@ exports.initiateRefund = onCall(async (request) => {
       if (telegramChatId) {
         const escapeMarkdown = (text) =>
           text.replace(/[_*[\]()~`>#+=|{}.!-]/g, "\\$&");
+        const escapedAmount = escapeMarkdown(refundAmountDisplay);
         const message =
           `*Refund Processed* from *${escapeMarkdown(orderData.stallName || "Hawkr")}*\n\n` +
-          `Amount: S\\$${refundAmountDisplay}\n` +
+          `Amount: S\\$${escapedAmount}\n` +
           `Type: ${escapeMarkdown(refundType === "full" ? "Full Refund" : "Partial Refund")}\n` +
           `Transaction: \`${refundTransactionId}\`` +
           (reason ? `\nReason: "${escapeMarkdown(reason)}"` : "");
@@ -843,6 +907,297 @@ exports.initiateRefund = onCall(async (request) => {
     refundTransactionId: refundTransactionId,
   };
 });
+
+// ============================================
+// VENDOR NEW ORDER NOTIFICATION (callable)
+// ============================================
+
+/**
+ * Notify vendor of a new order via in-app notification and Telegram.
+ * Called by client after order is created with confirmed status.
+ */
+exports.notifyVendorNewOrder = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "User must be logged in");
+  }
+
+  const { orderId } = request.data;
+  if (!orderId) {
+    throw new HttpsError("invalid-argument", "Order ID is required");
+  }
+
+  const db = admin.firestore();
+
+  try {
+    // Get order data
+    const orderDoc = await db.collection("orders").doc(orderId).get();
+    if (!orderDoc.exists) {
+      throw new HttpsError("not-found", "Order not found");
+    }
+    const orderData = orderDoc.data();
+
+    // Get stall to find vendor
+    const stallDoc = await db
+      .collection("foodStalls")
+      .doc(orderData.stallId)
+      .get();
+    if (!stallDoc.exists) {
+      return { success: false, reason: "Stall not found" };
+    }
+    const vendorId = stallDoc.data().vendorId;
+    if (!vendorId) {
+      return { success: false, reason: "No vendor linked to stall" };
+    }
+
+    // Build item summary
+    const items = orderData.items || [];
+    const itemSummary = items
+      .map((item) => {
+        let line = `${item.quantity}x ${item.name}`;
+        if (item.selectedVariants && item.selectedVariants.length > 0) {
+          const variants = item.selectedVariants
+            .map((v) => v.option || v.name || v)
+            .join(", ");
+          line += ` (${variants})`;
+        }
+        return line;
+      })
+      .join(", ");
+
+    const specialRequest =
+      items
+        .filter((i) => i.specialRequest)
+        .map((i) => i.specialRequest)
+        .join("; ") || "";
+
+    const total = (orderData.total || 0).toFixed(2);
+    const paymentMethod = orderData.paymentMethod || "Unknown";
+    const orderNumber =
+      orderData.orderNumber || orderId.slice(-4).toUpperCase();
+
+    const now = new Date();
+    const datetimeSGT = now.toLocaleString("en-SG", {
+      timeZone: "Asia/Singapore",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+    // Build message
+    let message = `${orderData.customerName || "Customer"} — ${itemSummary}.`;
+    if (specialRequest) {
+      message += ` Special request: ${specialRequest}.`;
+    }
+    message += ` Total: S$${total}. Payment: ${paymentMethod}. ${datetimeSGT}.`;
+
+    // Create in-app notification for vendor
+    await db
+      .collection("vendors")
+      .doc(vendorId)
+      .collection("notifications")
+      .add({
+        type: "new_order",
+        title: `New Order #${orderNumber}`,
+        message: message,
+        orderId: orderId,
+        stallId: orderData.stallId,
+        customerName: orderData.customerName || "Customer",
+        isRead: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+    // Send Telegram to vendor if linked
+    const vendorDoc = await db.collection("vendors").doc(vendorId).get();
+    if (vendorDoc.exists) {
+      const vendorTelegramChatId = vendorDoc.data().telegramChatId;
+      if (vendorTelegramChatId) {
+        const escapeMarkdown = (text) =>
+          text.replace(/[_*[\]()~`>#+=|{}.!-]/g, "\\$&");
+
+        const tgItems = items
+          .map((item) => {
+            let line = `${item.quantity}x ${escapeMarkdown(item.name)}`;
+            if (item.selectedVariants && item.selectedVariants.length > 0) {
+              const variants = item.selectedVariants
+                .map((v) => escapeMarkdown(v.option || v.name || String(v)))
+                .join(", ");
+              line += ` \\(${variants}\\)`;
+            }
+            return line;
+          })
+          .join("\n");
+
+        let tgMessage =
+          `*New Order \\#${escapeMarkdown(String(orderNumber))}*\n\n` +
+          `${tgItems}\n\n`;
+
+        if (specialRequest) {
+          tgMessage += `*Special Request:* ${escapeMarkdown(specialRequest)}\n`;
+        }
+
+        tgMessage +=
+          `*Total:* S\\$${escapeMarkdown(total)}\n` +
+          `*Payment:* ${escapeMarkdown(paymentMethod)}\n` +
+          `*Time:* ${escapeMarkdown(datetimeSGT)}`;
+
+        try {
+          await sendMessage(vendorTelegramChatId, tgMessage, {
+            parse_mode: "MarkdownV2",
+          });
+        } catch (tgErr) {
+          console.error("Vendor Telegram notification failed:", tgErr);
+        }
+
+        return { success: true, telegram: true };
+      }
+    }
+
+    return { success: true, telegram: false };
+  } catch (error) {
+    console.error("notifyVendorNewOrder error:", error);
+    throw new HttpsError("internal", error.message);
+  }
+});
+
+// ============================================
+// CARD EVENT NOTIFICATION (callable)
+// ============================================
+
+/**
+ * Notify customer when a card is added or removed.
+ * Creates in-app notification and sends Telegram.
+ */
+exports.notifyCardEvent = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "User must be logged in");
+  }
+
+  const { eventType, cardBrand, cardLast4 } = request.data;
+  if (!eventType || !["card_added", "card_removed"].includes(eventType)) {
+    throw new HttpsError("invalid-argument", "Valid eventType required");
+  }
+
+  const userId = request.auth.uid;
+  const db = admin.firestore();
+
+  const now = new Date();
+  const datetimeSGT = now.toLocaleString("en-SG", {
+    timeZone: "Asia/Singapore",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  const brand = cardBrand || "Card";
+  const last4 = cardLast4 || "****";
+  const action = eventType === "card_added" ? "added" : "removed";
+  const title = eventType === "card_added" ? "Card Added" : "Card Removed";
+  const message = `${brand} card ending ${last4} has been ${action} at ${datetimeSGT}.`;
+
+  // Create in-app notification
+  await db.collection("customers").doc(userId).collection("notifications").add({
+    type: eventType,
+    title: title,
+    message: message,
+    isRead: false,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  // Send Telegram if linked
+  try {
+    const customerDoc = await db.collection("customers").doc(userId).get();
+    if (customerDoc.exists) {
+      const telegramChatId = customerDoc.data().telegramChatId;
+      if (telegramChatId) {
+        const escapeMarkdown = (text) =>
+          text.replace(/[_*[\]()~`>#+=|{}.!-]/g, "\\$&");
+
+        const tgMessage = `*${escapeMarkdown(title)}*\n\n${escapeMarkdown(message)}`;
+
+        await sendMessage(telegramChatId, tgMessage, {
+          parse_mode: "MarkdownV2",
+        });
+        return { success: true, telegram: true };
+      }
+    }
+  } catch (tgErr) {
+    console.error("Card event Telegram notification failed:", tgErr);
+  }
+
+  return { success: true, telegram: false };
+});
+
+// ============================================
+// VENDOR FEEDBACK NOTIFICATION (callable)
+// ============================================
+
+/**
+ * Notify vendor when a customer submits feedback for their stall.
+ */
+exports.notifyVendorFeedback = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "User must be logged in");
+  }
+
+  const { feedbackId, stallId, customerName, message } = request.data;
+  if (!feedbackId || !stallId) {
+    throw new HttpsError(
+      "invalid-argument",
+      "feedbackId and stallId are required",
+    );
+  }
+
+  const db = admin.firestore();
+
+  try {
+    // Get stall to find vendor
+    const stallDoc = await db.collection("foodStalls").doc(stallId).get();
+    if (!stallDoc.exists) {
+      return { success: false, reason: "Stall not found" };
+    }
+    const vendorId = stallDoc.data().vendorId;
+    if (!vendorId) {
+      return { success: false, reason: "No vendor linked to stall" };
+    }
+
+    const name = customerName || "A customer";
+    const preview = message
+      ? message.length > 100
+        ? `${message.substring(0, 100)}...`
+        : message
+      : "No comment provided";
+
+    // Create in-app notification
+    await db
+      .collection("vendors")
+      .doc(vendorId)
+      .collection("notifications")
+      .add({
+        type: "customer_feedback",
+        title: "New Feedback Received",
+        message: `${name} left feedback: "${preview}"`,
+        feedbackId: feedbackId,
+        stallId: stallId,
+        isRead: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+    return { success: true };
+  } catch (error) {
+    console.error("notifyVendorFeedback error:", error);
+    throw new HttpsError("internal", error.message);
+  }
+});
+
+// ============================================
+// STRIPE WEBHOOK
+// ============================================
 
 /**
  * Stripe webhook handler for payment events
@@ -880,6 +1235,7 @@ exports.stripeWebhook = onRequest(async (req, res) => {
           .collection("orders")
           .doc(paymentIntent.metadata.orderId)
           .update({
+            status: "confirmed",
             paymentStatus: "paid",
             paymentIntentId: paymentIntent.id,
             paidAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -909,4 +1265,86 @@ exports.stripeWebhook = onRequest(async (req, res) => {
   }
 
   res.json({ received: true });
+});
+
+// ============================================
+// GEMINI SENTIMENT ANALYSIS (callable)
+// ============================================
+
+/**
+ * Analyze review sentiment using Gemini API.
+ * Keeps the API key server-side only.
+ */
+exports.analyzeSentiment = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "User must be logged in");
+  }
+
+  const { reviewText, rating } = request.data;
+
+  // If no text, fallback to rating-based sentiment
+  if (!reviewText || reviewText.trim() === "") {
+    if (rating >= 4) return { sentiment: "positive" };
+    if (rating <= 2) return { sentiment: "negative" };
+    return { sentiment: "neutral" };
+  }
+
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    console.error("GEMINI_API_KEY not configured");
+    // Fallback to rating
+    if (rating >= 4) return { sentiment: "positive" };
+    if (rating <= 2) return { sentiment: "negative" };
+    return { sentiment: "neutral" };
+  }
+
+  try {
+    const prompt = `Analyze the sentiment of this food stall review text. Focus ONLY on what the text says, ignore the star rating. Respond with ONLY one word: "positive", "negative", or "neutral".
+
+Review text: "${reviewText}"
+
+Response (one word only):`;
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0, maxOutputTokens: 10 },
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      console.error(
+        "Gemini API error:",
+        response.status,
+        await response.text(),
+      );
+      if (rating >= 4) return { sentiment: "positive" };
+      if (rating <= 2) return { sentiment: "negative" };
+      return { sentiment: "neutral" };
+    }
+
+    const data = await response.json();
+    const result = data.candidates?.[0]?.content?.parts?.[0]?.text
+      ?.toLowerCase()
+      .trim();
+
+    if (result?.includes("positive")) return { sentiment: "positive" };
+    if (result?.includes("negative")) return { sentiment: "negative" };
+    if (result?.includes("neutral")) return { sentiment: "neutral" };
+
+    // Fallback
+    if (rating >= 4) return { sentiment: "positive" };
+    if (rating <= 2) return { sentiment: "negative" };
+    return { sentiment: "neutral" };
+  } catch (error) {
+    console.error("Gemini sentiment analysis error:", error);
+    if (rating >= 4) return { sentiment: "positive" };
+    if (rating <= 2) return { sentiment: "negative" };
+    return { sentiment: "neutral" };
+  }
 });

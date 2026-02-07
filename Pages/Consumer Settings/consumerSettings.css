@@ -249,6 +249,9 @@ body {
 .actionButton.addCard {
     border: 1px solid #cee6cc;
     background: #eaf5e9;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 16px;
+    font-weight: 600;
     transition:
         background 0.2s ease,
         border-color 0.2s ease;
@@ -473,33 +476,59 @@ body {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 8px;
 }
 
-.telegramStatus.connected {
+.telegramConnectedInfo {
     display: flex;
-    align-items: center;
-    gap: 6px;
-    color: #22c55e;
-    font-weight: 600;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
-.telegramUnlinkButton {
-    padding: 6px 16px;
-    border-radius: 6px;
-    border: 1px solid #e5e5e5;
-    background: #fff;
-    color: #666;
+.telegramConnectedLabel {
+    color: #808080;
     font-family: Aptos, sans-serif;
     font-size: 13px;
+    font-weight: 300;
+    line-height: 24px;
+    letter-spacing: 0.4px;
+}
+
+.telegramConnectedAccount {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.telegramHandle {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    letter-spacing: 0.4px;
+}
+
+.telegramDisconnectButton {
+    display: flex;
+    padding: 0 12px;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    border-radius: 8px;
+    border: 1px solid #ffdde1;
+    background: #fff0f2;
+    color: #eb001b;
+    font-family: Aptos, sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 24px;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
-.telegramUnlinkButton:hover {
-    border-color: #dc2626;
-    color: #dc2626;
-    background: #fef2f2;
+.telegramDisconnectButton:hover {
+    border-color: #eb001b;
+    background: #ffe8eb;
 }
 
 /* Telegram Linking State */
@@ -1485,9 +1514,10 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 48px 24px;
+    padding: 48px 24px 0;
     text-align: center;
     gap: 16px;
+    width: 100%;
 }
 
 .emptyStateImage {
@@ -1512,4 +1542,227 @@ body {
     font-weight: 400;
     line-height: 20px;
     white-space: nowrap;
+}
+
+.addCardCtaBtn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    padding: 14px 20px;
+    width: 100%;
+    border-radius: 48px;
+    border: 1px solid #cee6cc;
+    background: #eaf5e9;
+    color: #341539;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        transform 0.15s ease;
+}
+
+.addCardCtaBtn img {
+    width: 13px;
+    height: 13px;
+}
+
+.addCardCtaBtn:hover {
+    background: #d9ecd7;
+    border-color: #b8d9b5;
+    transform: scale(1.02);
+}
+
+.addCardCtaBtn:active {
+    transform: scale(0.98);
+}
+
+.stripeBadge {
+    margin-top: 8px;
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.stripeBadge svg {
+    vertical-align: middle;
+}
+
+/* ============================================
+   ADD CARD MODAL (STRIPE ELEMENTS)
+   ============================================ */
+
+.cardModalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+        opacity 0.3s ease,
+        visibility 0.3s ease;
+}
+
+.cardModalOverlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.cardModal {
+    width: 90%;
+    max-width: 440px;
+    background: #fff;
+    border-radius: 24px;
+    overflow: hidden;
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+}
+
+.cardModalOverlay.active .cardModal {
+    transform: translateY(0);
+}
+
+.cardModalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.cardModalTitle {
+    color: #341539;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.cardModalClose {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: #f4f4f5;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.cardModalClose:hover {
+    background: #e8e8e9;
+    transform: scale(1.05);
+}
+
+.cardModalContent {
+    padding: 24px;
+}
+
+.cardInputWrapper {
+    padding: 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    background: #fff;
+    transition: border-color 0.2s ease;
+}
+
+.cardInputWrapper:focus-within {
+    border-color: #913b9f;
+}
+
+#cardElement {
+    min-height: 24px;
+}
+
+.cardModalError {
+    color: #eb001b;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    margin: 12px 0 0 0;
+    min-height: 20px;
+}
+
+.cardModalSecure {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding: 12px;
+    background: #f9f9f9;
+    border-radius: 8px;
+}
+
+.cardModalSecure span {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+}
+
+.cardModalFooter {
+    display: flex;
+    gap: 12px;
+    padding: 16px 24px 24px;
+}
+
+.cardModalCancelBtn {
+    flex: 1;
+    padding: 14px 24px;
+    border: 2px solid #e0e0e0;
+    border-radius: 48px;
+    background: #fff;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+.cardModalCancelBtn:hover {
+    border-color: #c9a0d0;
+    background: #faf8fb;
+}
+
+.cardModalSaveBtn {
+    flex: 1;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 48px;
+    background: #913b9f;
+    color: #fff;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.cardModalSaveBtn:hover {
+    background: #7a3287;
+}
+
+.cardModalSaveBtn:disabled {
+    background: #c9a0d0;
+    cursor: not-allowed;
 }

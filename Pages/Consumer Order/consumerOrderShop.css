@@ -174,7 +174,7 @@ body {
 .shopHeaderSection {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 24px;
     width: 100%;
     max-width: 1920px;
     padding-left: 15%;
@@ -201,12 +201,18 @@ body {
     line-height: normal;
 }
 
+.shopOperatorName {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+}
+
 /* Cuisine Tags */
 .cuisineTags {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
-    margin-top: 4px;
 }
 
 .cuisineTag {
@@ -474,7 +480,7 @@ body {
 
 .ratingsOverview {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     gap: 16px;
 }
 
@@ -486,6 +492,7 @@ body {
     font-weight: 700;
     line-height: 1;
     letter-spacing: -3px;
+    align-self: flex-end;
 }
 
 .storeStars {
@@ -496,20 +503,35 @@ body {
     flex-shrink: 0;
 }
 
+.storeStars svg {
+    width: 24px;
+    height: auto;
+}
+
 .ratingCount {
     color: #341539;
     font-family: Aptos, sans-serif;
     font-size: 19px;
     font-style: normal;
     font-weight: 300;
-    line-height: 36px;
+    line-height: normal;
+    align-self: flex-end;
 }
 
 /* Review Card */
 .reviewsList {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: flex-start;
     gap: 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 4px;
+}
+
+.reviewsList::-webkit-scrollbar {
+    display: none;
 }
 
 .reviewCard {
@@ -519,7 +541,9 @@ body {
     padding: 24px 32px;
     background: #f4f1f6;
     border-radius: 16px;
-    max-width: 480px;
+    min-width: 340px;
+    max-width: 340px;
+    flex-shrink: 0;
 }
 
 .reviewTitle {
@@ -530,6 +554,10 @@ body {
     font-weight: 600;
     line-height: normal;
     align-self: stretch;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    overflow: hidden;
 }
 
 .reviewContent {
@@ -538,7 +566,11 @@ body {
     font-size: 16px;
     font-style: normal;
     font-weight: 400;
-    line-height: normal;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
 }
 
 .reviewMeta {

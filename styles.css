@@ -626,17 +626,19 @@ h1 {
     display: inline-flex;
 }
 
-.cartBadge {
+.cartBadge,
+.notifBadge {
     position: absolute;
-    top: -6px;
-    right: -6px;
-    width: 20px;
-    height: 20px;
+    top: -8px;
+    right: -8px;
+    width: 22px;
+    height: 22px;
+    padding: 0;
     border-radius: 50%;
     background: #913b9f;
     color: #fff;
     font-family: Aptos, system-ui, sans-serif;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
     display: flex;
     align-items: center;
@@ -644,6 +646,7 @@ h1 {
     line-height: 1;
     border: 2px solid #fff;
     box-sizing: content-box;
+    pointer-events: none;
 }
 
 /* ============================================

@@ -10,6 +10,7 @@ import {
   getDoc,
   getDocs,
   addDoc,
+  updateDoc,
   query,
   where,
   orderBy,
@@ -308,7 +309,12 @@ export async function createHawkerCentre(centreData) {
     address: centreData.address || "",
     postalCode: centreData.postalCode || "",
     region: centreData.region || "",
-    location: centreData.location || null,
+    location: centreData.location?.latitude
+      ? new GeoPoint(
+          centreData.location.latitude,
+          centreData.location.longitude,
+        )
+      : null,
     imageUrl: centreData.imageUrl || "",
     coverImageUrl: centreData.coverImageUrl || "",
     operatingHours: centreData.operatingHours || {
@@ -343,7 +349,29 @@ export async function findOrCreateHawkerCentre(name, additionalData = {}) {
   const existing = await getHawkerCentreByName(name);
 
   if (existing) {
-    return { ...existing, isNew: false };
+    // Backfill missing location data if we now have it
+    const updates = {};
+    if (!existing.location && additionalData.location?.latitude) {
+      updates.location = new GeoPoint(
+        additionalData.location.latitude,
+        additionalData.location.longitude,
+      );
+    }
+    if (!existing.address && additionalData.address) {
+      updates.address = additionalData.address;
+    }
+    if (!existing.postalCode && additionalData.postalCode) {
+      updates.postalCode = additionalData.postalCode;
+    }
+    if (!existing.placeId && additionalData.placeId) {
+      updates.placeId = additionalData.placeId;
+    }
+    if (Object.keys(updates).length > 0) {
+      updates.updatedAt = serverTimestamp();
+      await updateDoc(doc(db, "hawkerCentres", existing.id), updates);
+    }
+
+    return { ...existing, ...updates, isNew: false };
   }
 
   // Create new centre

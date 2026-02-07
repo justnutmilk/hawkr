@@ -183,7 +183,7 @@ const paymentMethodLogos = {
   "CDC Voucher": "../../Payment Methods/CDC Voucher.png",
   "Google Pay": "../../Payment Methods/Google Pay.svg",
   GrabPay: "../../Payment Methods/GrabPay.svg",
-  MasterCard: "../../Payment Methods/masterCard.svg",
+  MasterCard: "../../Payment Methods/MasterCard.svg",
   NETS: "../../Payment Methods/NETS.svg",
   PayNow: "../../Payment Methods/PayNow.svg",
   UnionPay: "../../Payment Methods/UnionPay.svg",
@@ -834,7 +834,45 @@ function renderTransactionDetailFromOrder(order, orderId) {
   ) {
     paymentDisplayText = "Alipay";
     paymentSubtext = "支付宝";
-    paymentLogoHTML = `<img src="../../Payment Methods/AliPay.svg" alt="Alipay" class="paymentMethodImage" />`;
+    paymentLogoHTML = `<img src="../../Payment Methods/Alipay.svg" alt="Alipay" class="paymentMethodImage" />`;
+  } else if (
+    paymentMethod === "applePay" ||
+    paymentMethod === "apple_pay" ||
+    paymentMethod === "applepay"
+  ) {
+    paymentDisplayText = "Apple Pay";
+    const cardBrand = paymentBrand || "visa";
+    paymentSubtext = paymentLastFour
+      ? `${capitalizeFirstLetter(cardBrand)} ${paymentLastFour}`
+      : capitalizeFirstLetter(cardBrand);
+    const brandLogos = {
+      visa: "../../Payment Methods/Visa.svg",
+      mastercard: "../../Payment Methods/MasterCard.svg",
+      amex: "../../Payment Methods/Amex.svg",
+      unionpay: "../../Payment Methods/UnionPay.svg",
+    };
+    const cardLogoPath =
+      brandLogos[cardBrand.toLowerCase()] || "../../Payment Methods/Visa.svg";
+    paymentLogoHTML = `<img src="../../Payment Methods/Apple Pay.svg" alt="Apple Pay" class="paymentMethodImage" /><img src="${cardLogoPath}" alt="${cardBrand}" class="paymentMethodImage" />`;
+  } else if (
+    paymentMethod === "googlePay" ||
+    paymentMethod === "google_pay" ||
+    paymentMethod === "googlepay"
+  ) {
+    paymentDisplayText = "Google Pay";
+    const cardBrand = paymentBrand || "visa";
+    paymentSubtext = paymentLastFour
+      ? `${capitalizeFirstLetter(cardBrand)} ${paymentLastFour}`
+      : capitalizeFirstLetter(cardBrand);
+    const brandLogos = {
+      visa: "../../Payment Methods/Visa.svg",
+      mastercard: "../../Payment Methods/MasterCard.svg",
+      amex: "../../Payment Methods/Amex.svg",
+      unionpay: "../../Payment Methods/UnionPay.svg",
+    };
+    const cardLogoPath =
+      brandLogos[cardBrand.toLowerCase()] || "../../Payment Methods/Visa.svg";
+    paymentLogoHTML = `<img src="../../Payment Methods/Google Pay.svg" alt="Google Pay" class="paymentMethodImage" /><img src="${cardLogoPath}" alt="${cardBrand}" class="paymentMethodImage" />`;
   } else if (isCard) {
     paymentDisplayText = "Credit/Debit Card";
     if (paymentBrand && paymentLastFour) {
@@ -843,7 +881,7 @@ function renderTransactionDetailFromOrder(order, orderId) {
     // Get card logo
     const brandLogos = {
       visa: "../../Payment Methods/Visa.svg",
-      mastercard: "../../Payment Methods/masterCard.svg",
+      mastercard: "../../Payment Methods/MasterCard.svg",
       amex: "../../Payment Methods/Amex.svg",
       unionpay: "../../Payment Methods/UnionPay.svg",
     };
@@ -901,6 +939,7 @@ function renderTransactionDetailFromOrder(order, orderId) {
         </div>
         <div class="transactionIds">
           <span class="transactionId">Hawkr Transaction ID: ${transactionId}</span>
+          ${order.refundTransactionId ? `<span class="transactionId refundTransactionId">Refund ID: ${order.refundTransactionId}</span>` : ""}
         </div>
       </div>
     </div>

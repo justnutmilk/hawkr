@@ -7,6 +7,50 @@
         <link rel="stylesheet" href="../../styles.css" />
         <link rel="stylesheet" href="auth.css" />
         <link rel="stylesheet" href="onboarding.css" />
+        <script>
+            ((g) => {
+                var h,
+                    a,
+                    k,
+                    p = "The Google Maps JavaScript API",
+                    c = "google",
+                    l = "importLibrary",
+                    q = "__ib__",
+                    m = document,
+                    b = window;
+                b = b[c] || (b[c] = {});
+                var d = b.maps || (b.maps = {}),
+                    r = new Set(),
+                    e = new URLSearchParams(),
+                    u = () =>
+                        h ||
+                        (h = new Promise(async (f, n) => {
+                            await (a = m.createElement("script"));
+                            e.set("libraries", [...r] + "");
+                            for (k in g)
+                                e.set(
+                                    k.replace(
+                                        /[A-Z]/g,
+                                        (t) => "_" + t[0].toLowerCase(),
+                                    ),
+                                    g[k],
+                                );
+                            e.set("callback", c + ".maps." + q);
+                            a.src =
+                                `https://maps.${c}apis.com/maps/api/js?` + e;
+                            d[q] = f;
+                            a.onerror = () =>
+                                (h = n(Error(p + " could not load.")));
+                            a.nonce =
+                                m.querySelector("script[nonce]")?.nonce || "";
+                            m.head.append(a);
+                        }));
+                d[l]
+                    ? console.warn(p + " only loads once. Ignoring:", g)
+                    : (d[l] = (f, ...n) =>
+                          r.add(f) && u().then(() => d[l](f, ...n)));
+            })({ key: "AIzaSyDDnphzWwGQ6rGxgBJsMv6hxNg7eKH55rY", v: "weekly" });
+        </script>
     </head>
     <body class="onboardingPage">
         <!-- Liquid Glass Floating Top Bar -->
@@ -42,7 +86,9 @@
                     <div class="navSection active" data-section="company">
                         <div class="navSectionHeader">
                             <div class="navSectionIcon"></div>
-                            <div class="navSectionTitle">Company information</div>
+                            <div class="navSectionTitle">
+                                Company information
+                            </div>
                         </div>
                         <div class="navSectionItems">
                             <div
@@ -54,7 +100,9 @@
                             </div>
                             <div class="navItem" data-step="contact-info">
                                 <div class="navItemIndicator"></div>
-                                <div class="navItemLabel">Contact information</div>
+                                <div class="navItemLabel">
+                                    Contact information
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -63,14 +111,12 @@
                     <div class="navSection" data-section="locations">
                         <div class="navSectionHeader">
                             <div class="navSectionIcon"></div>
-                            <div class="navSectionTitle">
-                                Managed locations
-                            </div>
+                            <div class="navSectionTitle">Location</div>
                         </div>
                         <div class="navSectionItems">
                             <div class="navItem" data-step="hawker-centres">
                                 <div class="navItemIndicator"></div>
-                                <div class="navItemLabel">Hawker centres</div>
+                                <div class="navItemLabel">Hawker centre</div>
                             </div>
                         </div>
                     </div>
@@ -114,7 +160,9 @@
                     <div class="stepContent active" id="step-company-details">
                         <h1 class="stepTitle">Tell us about your company</h1>
                         <p class="stepDescription">
-                            This information helps us verify your operator status and connect you with your managed hawker centres.
+                            This information helps us verify your operator
+                            status and connect you with your managed hawker
+                            centres.
                         </p>
 
                         <div class="formSection">
@@ -153,7 +201,8 @@
                                     >Display name</label
                                 >
                                 <p class="formHint">
-                                    The name that will be shown to vendors and customers.
+                                    The name that will be shown to vendors and
+                                    customers.
                                 </p>
                                 <input
                                     type="text"
@@ -192,7 +241,8 @@
                     <div class="stepContent" id="step-contact-info">
                         <h1 class="stepTitle">Contact information</h1>
                         <p class="stepDescription">
-                            Provide contact details for your business representative.
+                            Provide contact details for your business
+                            representative.
                         </p>
 
                         <div class="formSection">
@@ -201,7 +251,8 @@
                                     >Contact person</label
                                 >
                                 <p class="formHint">
-                                    Your business representative must be listed on your ACRA Bizfile.
+                                    Your business representative must be listed
+                                    on your ACRA Bizfile.
                                 </p>
                                 <input
                                     type="text"
@@ -221,7 +272,9 @@
                                             src="../../assets/icons/singapore.svg"
                                             alt="SG"
                                             class="phoneFlag"
-                                            onerror="this.style.display = 'none'"
+                                            onerror="
+                                                this.style.display = 'none'
+                                            "
                                         />
                                         <span>+65</span>
                                     </div>
@@ -240,7 +293,8 @@
                                     >Email address</label
                                 >
                                 <p class="formHint">
-                                    We'll use this for important notifications and updates.
+                                    We'll use this for important notifications
+                                    and updates.
                                 </p>
                                 <input
                                     type="email"
@@ -253,7 +307,10 @@
 
                         <div class="stepFooter">
                             <div></div>
-                            <button class="primaryBtn" data-next="hawker-centres">
+                            <button
+                                class="primaryBtn"
+                                data-next="hawker-centres"
+                            >
                                 Continue
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -277,51 +334,102 @@
 
                     <!-- Step: Hawker Centres -->
                     <div class="stepContent" id="step-hawker-centres">
-                        <h1 class="stepTitle">Managed hawker centres</h1>
+                        <h1 class="stepTitle">Your hawker centre location</h1>
                         <p class="stepDescription">
-                            Add the hawker centres that your company manages. You can add more later.
+                            Search for your hawker centre address or drop a pin
+                            on the map.
                         </p>
 
                         <div class="formSection">
                             <div class="formField">
-                                <label class="formLabel">Hawker centres</label>
+                                <label class="formLabel">Address</label>
                                 <p class="formHint">
-                                    Search and add hawker centres you manage.
+                                    Start typing to search for your hawker
+                                    centre.
                                 </p>
-                                <div class="locationInputWrapper">
-                                    <input
-                                        type="text"
-                                        id="locationInput"
-                                        class="formInput"
-                                        placeholder="Search for a hawker centre..."
-                                    />
-                                    <button class="addLocationBtn" id="addLocationBtn" type="button">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        >
-                                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        </svg>
-                                        Add
-                                    </button>
+                                <input
+                                    type="text"
+                                    id="addressInput"
+                                    class="formInput"
+                                    placeholder="e.g., 67 Hawkr Street, Singapore"
+                                    autocomplete="off"
+                                />
+                            </div>
+                            <div class="mapContainer" id="mapContainer">
+                                <div id="map"></div>
+                            </div>
+                            <div
+                                class="selectedLocation"
+                                id="selectedLocation"
+                                style="display: none"
+                            >
+                                <div class="selectedLocationIcon">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path
+                                            d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
+                                        ></path>
+                                        <circle cx="12" cy="10" r="3"></circle>
+                                    </svg>
                                 </div>
-                                <div class="locationsList" id="locationsList">
-                                    <!-- Locations added here -->
+                                <div class="selectedLocationInfo">
+                                    <span
+                                        class="selectedLocationName"
+                                        id="selectedLocationName"
+                                    ></span>
+                                    <span
+                                        class="selectedLocationAddress"
+                                        id="selectedLocationAddress"
+                                    ></span>
                                 </div>
+                                <button
+                                    class="selectedLocationClear"
+                                    id="clearLocation"
+                                    type="button"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <line
+                                            x1="18"
+                                            y1="6"
+                                            x2="6"
+                                            y2="18"
+                                        ></line>
+                                        <line
+                                            x1="6"
+                                            y1="6"
+                                            x2="18"
+                                            y2="18"
+                                        ></line>
+                                    </svg>
+                                </button>
                             </div>
                         </div>
 
                         <div class="stepFooter">
                             <div></div>
-                            <button class="primaryBtn" data-next="notification-settings">
+                            <button
+                                class="primaryBtn"
+                                data-next="notification-settings"
+                            >
                                 Continue
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -347,7 +455,8 @@
                     <div class="stepContent" id="step-notification-settings">
                         <h1 class="stepTitle">Stay connected</h1>
                         <p class="stepDescription">
-                            Choose how you'd like to receive notifications and updates.
+                            Choose how you'd like to receive notifications and
+                            updates.
                         </p>
 
                         <div class="formSection">
@@ -378,7 +487,8 @@
                                             >Browser notifications</span
                                         >
                                         <span class="notificationOptionDesc"
-                                            >Receive alerts while you're on Hawkr.</span
+                                            >Receive alerts while you're on
+                                            Hawkr.</span
                                         >
                                     </div>
                                 </div>
@@ -415,7 +525,8 @@
                                             >Telegram notifications</span
                                         >
                                         <span class="notificationOptionDesc"
-                                            >Get instant updates on Telegram, even when you're away.</span
+                                            >Get instant updates on Telegram,
+                                            even when you're away.</span
                                         >
                                     </div>
                                 </div>
@@ -475,13 +586,19 @@
                     <div class="stepContent" id="step-review">
                         <h1 class="stepTitle">Review your information</h1>
                         <p class="stepDescription">
-                            Please review your details before submitting. You can edit any section by clicking the edit button.
+                            Please review your details before submitting. You
+                            can edit any section by clicking the edit button.
                         </p>
 
                         <div class="reviewSection">
                             <div class="reviewSectionHeader">
-                                <h2 class="reviewSectionTitle">Company information</h2>
-                                <button class="editBtn" data-edit="company-details">
+                                <h2 class="reviewSectionTitle">
+                                    Company information
+                                </h2>
+                                <button
+                                    class="editBtn"
+                                    data-edit="company-details"
+                                >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
                                         width="14"
@@ -505,24 +622,43 @@
                             </div>
                             <div class="reviewGrid">
                                 <div class="reviewItem">
-                                    <span class="reviewLabel">Company name</span>
-                                    <span class="reviewValue" id="reviewCompanyName">-</span>
+                                    <span class="reviewLabel"
+                                        >Company name</span
+                                    >
+                                    <span
+                                        class="reviewValue"
+                                        id="reviewCompanyName"
+                                        >-</span
+                                    >
                                 </div>
                                 <div class="reviewItem">
                                     <span class="reviewLabel">UEN</span>
-                                    <span class="reviewValue" id="reviewUen">-</span>
+                                    <span class="reviewValue" id="reviewUen"
+                                        >-</span
+                                    >
                                 </div>
                                 <div class="reviewItem">
-                                    <span class="reviewLabel">Display name</span>
-                                    <span class="reviewValue" id="reviewOperatorName">-</span>
+                                    <span class="reviewLabel"
+                                        >Display name</span
+                                    >
+                                    <span
+                                        class="reviewValue"
+                                        id="reviewOperatorName"
+                                        >-</span
+                                    >
                                 </div>
                             </div>
                         </div>
 
                         <div class="reviewSection">
                             <div class="reviewSectionHeader">
-                                <h2 class="reviewSectionTitle">Contact information</h2>
-                                <button class="editBtn" data-edit="contact-info">
+                                <h2 class="reviewSectionTitle">
+                                    Contact information
+                                </h2>
+                                <button
+                                    class="editBtn"
+                                    data-edit="contact-info"
+                                >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
                                         width="14"
@@ -546,24 +682,37 @@
                             </div>
                             <div class="reviewGrid">
                                 <div class="reviewItem">
-                                    <span class="reviewLabel">Contact person</span>
-                                    <span class="reviewValue" id="reviewContact">-</span>
+                                    <span class="reviewLabel"
+                                        >Contact person</span
+                                    >
+                                    <span class="reviewValue" id="reviewContact"
+                                        >-</span
+                                    >
                                 </div>
                                 <div class="reviewItem">
-                                    <span class="reviewLabel">Contact number</span>
-                                    <span class="reviewValue" id="reviewPhone">-</span>
+                                    <span class="reviewLabel"
+                                        >Contact number</span
+                                    >
+                                    <span class="reviewValue" id="reviewPhone"
+                                        >-</span
+                                    >
                                 </div>
                                 <div class="reviewItem">
                                     <span class="reviewLabel">Email</span>
-                                    <span class="reviewValue" id="reviewEmail">-</span>
+                                    <span class="reviewValue" id="reviewEmail"
+                                        >-</span
+                                    >
                                 </div>
                             </div>
                         </div>
 
                         <div class="reviewSection">
                             <div class="reviewSectionHeader">
-                                <h2 class="reviewSectionTitle">Managed locations</h2>
-                                <button class="editBtn" data-edit="hawker-centres">
+                                <h2 class="reviewSectionTitle">Location</h2>
+                                <button
+                                    class="editBtn"
+                                    data-edit="hawker-centres"
+                                >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
                                         width="14"
@@ -587,8 +736,14 @@
                             </div>
                             <div class="reviewGrid">
                                 <div class="reviewItem reviewItemWide">
-                                    <span class="reviewLabel">Hawker centres</span>
-                                    <span class="reviewValue" id="reviewLocations">-</span>
+                                    <span class="reviewLabel"
+                                        >Hawker centre</span
+                                    >
+                                    <span
+                                        class="reviewValue"
+                                        id="reviewLocations"
+                                        >-</span
+                                    >
                                 </div>
                             </div>
                         </div>
@@ -598,7 +753,8 @@
                                 <input type="checkbox" id="confirmTerms" />
                                 <span class="checkmark"></span>
                                 <span class="termsText">
-                                    I confirm that the information provided is accurate and I agree to the
+                                    I confirm that the information provided is
+                                    accurate and I agree to the
                                     <a href="#">Terms of Service</a> and
                                     <a href="#">Privacy Policy</a>.
                                 </span>

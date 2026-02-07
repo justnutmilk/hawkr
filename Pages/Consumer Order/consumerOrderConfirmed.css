@@ -508,6 +508,10 @@ body {
     line-height: normal;
 }
 
+.refundTransactionId {
+    color: #eb001b;
+}
+
 /* Feedback Button */
 .feedbackSection {
     display: flex;

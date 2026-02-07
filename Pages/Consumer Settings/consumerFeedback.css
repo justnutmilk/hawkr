@@ -537,6 +537,35 @@ body {
 }
 
 /* Feedback Textarea */
+.feedbackTitleSection {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.feedbackTitleInput {
+    width: 100%;
+    padding: 12px 20px;
+    border-radius: 16px;
+    border: 1px solid #e0e0e0;
+    background: #fff;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
+    transition: border-color 0.2s ease;
+}
+
+.feedbackTitleInput:focus {
+    outline: none;
+    border-color: #913b9f;
+}
+
+.feedbackTitleInput::placeholder {
+    color: #808080;
+}
+
 .feedbackTextareaSection {
     display: flex;
     flex-direction: column;

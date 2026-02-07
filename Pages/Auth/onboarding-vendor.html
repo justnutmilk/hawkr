@@ -7,6 +7,50 @@
         <link rel="stylesheet" href="../../styles.css" />
         <link rel="stylesheet" href="auth.css" />
         <link rel="stylesheet" href="onboarding.css" />
+        <script>
+            ((g) => {
+                var h,
+                    a,
+                    k,
+                    p = "The Google Maps JavaScript API",
+                    c = "google",
+                    l = "importLibrary",
+                    q = "__ib__",
+                    m = document,
+                    b = window;
+                b = b[c] || (b[c] = {});
+                var d = b.maps || (b.maps = {}),
+                    r = new Set(),
+                    e = new URLSearchParams(),
+                    u = () =>
+                        h ||
+                        (h = new Promise(async (f, n) => {
+                            await (a = m.createElement("script"));
+                            e.set("libraries", [...r] + "");
+                            for (k in g)
+                                e.set(
+                                    k.replace(
+                                        /[A-Z]/g,
+                                        (t) => "_" + t[0].toLowerCase(),
+                                    ),
+                                    g[k],
+                                );
+                            e.set("callback", c + ".maps." + q);
+                            a.src =
+                                `https://maps.${c}apis.com/maps/api/js?` + e;
+                            d[q] = f;
+                            a.onerror = () =>
+                                (h = n(Error(p + " could not load.")));
+                            a.nonce =
+                                m.querySelector("script[nonce]")?.nonce || "";
+                            m.head.append(a);
+                        }));
+                d[l]
+                    ? console.warn(p + " only loads once. Ignoring:", g)
+                    : (d[l] = (f, ...n) =>
+                          r.add(f) && u().then(() => d[l](f, ...n)));
+            })({ key: "AIzaSyDDnphzWwGQ6rGxgBJsMv6hxNg7eKH55rY", v: "weekly" });
+        </script>
     </head>
     <body class="onboardingPage">
         <!-- Liquid Glass Floating Top Bar -->
@@ -152,18 +196,77 @@
                                     >Hawker centre</label
                                 >
                                 <p class="formHint">
-                                    Search for your hawker centre location.
+                                    Search for your hawker centre or drop a pin
+                                    on the map.
                                 </p>
                                 <input
                                     type="text"
                                     id="storeLocation"
                                     class="formInput"
                                     placeholder="e.g., Maxwell Food Centre"
+                                    autocomplete="off"
                                 />
-                                <div class="mapPreview" id="mapContainer">
-                                    <span class="mapPlaceholder"
-                                        >Map will appear here</span
+                                <div class="mapContainer" id="mapContainer">
+                                    <div id="vendorMap"></div>
+                                </div>
+                                <div
+                                    class="selectedLocation"
+                                    id="selectedLocation"
+                                    style="display: none"
+                                >
+                                    <div class="selectedLocationIcon">
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="20"
+                                            height="20"
+                                            viewBox="0 0 24 24"
+                                            fill="currentColor"
+                                        >
+                                            <path
+                                                d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"
+                                            />
+                                        </svg>
+                                    </div>
+                                    <div class="selectedLocationInfo">
+                                        <span
+                                            class="selectedLocationName"
+                                            id="selectedLocationName"
+                                        ></span>
+                                        <span
+                                            class="selectedLocationAddress"
+                                            id="selectedLocationAddress"
+                                        ></span>
+                                    </div>
+                                    <button
+                                        class="selectedLocationClear"
+                                        id="clearLocation"
+                                        type="button"
                                     >
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="18"
+                                            height="18"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        >
+                                            <line
+                                                x1="18"
+                                                y1="6"
+                                                x2="6"
+                                                y2="18"
+                                            ></line>
+                                            <line
+                                                x1="6"
+                                                y1="6"
+                                                x2="18"
+                                                y2="18"
+                                            ></line>
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
 

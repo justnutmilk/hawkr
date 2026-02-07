@@ -62,7 +62,7 @@
                 <div class="searchDropdown" id="searchDropdown"></div>
             </div>
             <div class="topActionButtons">
-                <a href="consumerNotifications.html"
+                <a href="consumerNotifications.html" data-notification-bell
                     ><svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="27"
@@ -177,10 +177,68 @@
             </div>
         </div>
 
-        <!-- Add Card Popup -->
-        <div class="editPopupOverlay" id="addCardOverlay">
-            <div class="editPopup" id="addCardPopup">
-                <!-- Populated by JS -->
+        <!-- Add Card Modal (Stripe Elements) -->
+        <div class="cardModalOverlay" id="cardModalOverlay">
+            <div class="cardModal" id="cardModal">
+                <div class="cardModalHeader">
+                    <h2 class="cardModalTitle">Add New Card</h2>
+                    <button
+                        class="cardModalClose"
+                        id="cardModalClose"
+                        aria-label="Close"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <path
+                                d="M18 6L6 18M6 6L18 18"
+                                stroke="#341539"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                    </button>
+                </div>
+                <div class="cardModalContent">
+                    <div class="cardInputWrapper">
+                        <div id="cardElement"></div>
+                    </div>
+                    <p class="cardModalError" id="cardError"></p>
+                    <div class="cardModalSecure">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <path
+                                d="M12 22C12 22 20 18 20 12V5L12 2L4 5V12C4 18 12 22 12 22Z"
+                                stroke="#808080"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                        <span
+                            >Your payment info is securely processed by
+                            Stripe</span
+                        >
+                    </div>
+                </div>
+                <div class="cardModalFooter">
+                    <button class="cardModalCancelBtn" id="cardModalCancelBtn">
+                        Cancel
+                    </button>
+                    <button class="cardModalSaveBtn" id="cardModalSaveBtn">
+                        Save Card
+                    </button>
+                </div>
             </div>
         </div>
 

@@ -248,16 +248,20 @@ function renderTransactionDetails(payment, transactionIds) {
     ? `${payment.brand} ${payment.lastFour}`
     : payment.brand;
 
+  // Build logo HTML — support multiple icons (e.g. Apple Pay + Visa)
+  const icons = payment.icons || [payment.icon];
+  const logosHTML = icons
+    .map(
+      (icon) =>
+        `<img src="${icon}" alt="${payment.brand}" class="paymentMethodImage" onerror="this.style.background='#f4f1f6'" />`,
+    )
+    .join("");
+
   return `
         <section class="transactionDetailsSection">
             <span class="sectionLabel">Transaction Details</span>
             <div class="paymentMethodCard">
-                <img
-                    src="${payment.icon}"
-                    alt="${payment.brand}"
-                    class="paymentMethodImage"
-                    onerror="this.style.background='#f4f1f6'"
-                />
+                ${logosHTML}
                 <div class="paymentInfo">
                     <span class="paymentMethod">${payment.type}</span>
                     <span class="paymentMethodDetails">${paymentDetails}</span>
@@ -265,6 +269,7 @@ function renderTransactionDetails(payment, transactionIds) {
             </div>
             <div class="transactionIds">
                 <span class="transactionId">Hawkr Transaction ID: ${transactionIds.hawkr}</span>
+                ${transactionIds.refund ? `<span class="transactionId refundTransactionId">Refund ID: ${transactionIds.refund}</span>` : ""}
             </div>
         </section>
     `;
@@ -363,6 +368,7 @@ async function initializeConfirmedPage() {
       ),
       transactionIds: {
         hawkr: order.hawkrTransactionId || generateTransactionId(orderId), // Use saved transaction ID from Firebase
+        refund: order.refundTransactionId || null,
       },
       createdAt: order.createdAt,
     };
@@ -430,16 +436,70 @@ function formatPaymentMethodForDisplay(paymentMethod) {
         type: "Alipay",
         brand: "支付宝",
         lastFour: "",
-        icon: "../../Payment Methods/AliPay.svg",
+        icon: "../../Payment Methods/Alipay.svg",
+      };
+    }
+
+    if (type === "applepay" || type === "apple_pay") {
+      const cardBrand = paymentMethod.brand || "visa";
+      return {
+        type: "Apple Pay",
+        brand: capitalizeFirst(cardBrand),
+        lastFour: paymentMethod.lastFour || "",
+        icon: "../../Payment Methods/Apple Pay.svg",
+        icons: [
+          "../../Payment Methods/Apple Pay.svg",
+          getPaymentIcon(cardBrand),
+        ],
+      };
+    }
+
+    if (type === "googlepay" || type === "google_pay") {
+      const cardBrand = paymentMethod.brand || "visa";
+      return {
+        type: "Google Pay",
+        brand: capitalizeFirst(cardBrand),
+        lastFour: paymentMethod.lastFour || "",
+        icon: "../../Payment Methods/Google Pay.svg",
+        icons: [
+          "../../Payment Methods/Google Pay.svg",
+          getPaymentIcon(cardBrand),
+        ],
       };
     }
 
     if (type === "wallet") {
+      const walletName = paymentMethod.walletName || paymentMethod.type;
+      const cardBrand = paymentMethod.brand || "visa";
+      if (walletName === "applePay" || walletName === "apple_pay") {
+        return {
+          type: "Apple Pay",
+          brand: capitalizeFirst(cardBrand),
+          lastFour: paymentMethod.lastFour || "",
+          icon: "../../Payment Methods/Apple Pay.svg",
+          icons: [
+            "../../Payment Methods/Apple Pay.svg",
+            getPaymentIcon(cardBrand),
+          ],
+        };
+      }
+      if (walletName === "googlePay" || walletName === "google_pay") {
+        return {
+          type: "Google Pay",
+          brand: capitalizeFirst(cardBrand),
+          lastFour: paymentMethod.lastFour || "",
+          icon: "../../Payment Methods/Google Pay.svg",
+          icons: [
+            "../../Payment Methods/Google Pay.svg",
+            getPaymentIcon(cardBrand),
+          ],
+        };
+      }
       return {
         type: "Digital Wallet",
-        brand: capitalizeFirst(paymentMethod.brand || "Wallet"),
+        brand: capitalizeFirst(cardBrand),
         lastFour: "",
-        icon: "../../Payment Methods/visaCard.svg",
+        icon: getPaymentIcon(cardBrand),
       };
     }
 
@@ -471,17 +531,17 @@ function capitalizeFirst(str) {
 }
 
 function getPaymentIcon(brand) {
-  if (!brand) return "../../Payment Methods/visaCard.svg";
+  if (!brand) return "../../Payment Methods/Visa.svg";
 
   const brandLower = brand.toLowerCase();
   const icons = {
-    visa: "../../Payment Methods/visaCard.svg",
-    mastercard: "../../Payment Methods/masterCardCard.svg",
-    amex: "../../Payment Methods/americanExpressCard.svg",
-    unionpay: "../../Payment Methods/unionPayCard.svg",
+    visa: "../../Payment Methods/Visa.svg",
+    mastercard: "../../Payment Methods/MasterCard.svg",
+    amex: "../../Payment Methods/Amex.svg",
+    unionpay: "../../Payment Methods/UnionPay.svg",
   };
 
-  return icons[brandLower] || "../../Payment Methods/visaCard.svg";
+  return icons[brandLower] || "../../Payment Methods/Visa.svg";
 }
 
 // ============================================

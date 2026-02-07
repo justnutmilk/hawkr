@@ -78,7 +78,11 @@ function initializeLoginPage() {
         // Redirect to vendor dashboard
         window.location.href = "../Vendor Dashboard/vendorDashboard.html";
       } else if (operatorDoc.exists()) {
-        // Redirect to operator dashboard
+        const data = operatorDoc.data();
+        if (!data.onboardingComplete) {
+          window.location.href = "onboarding-operator.html";
+          return;
+        }
         window.location.href = "../Operator Dashboard/operatorDashboard.html";
       } else if (customerDoc.exists()) {
         const data = customerDoc.data();

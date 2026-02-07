@@ -341,6 +341,21 @@ body {
     border-width: 0;
 }
 
+/* Safari fallback: anchor positioning is not supported */
+@supports not (anchor-name: --a) {
+    .segmentedControl::before,
+    .segmentedControl::after {
+        display: none;
+    }
+
+    .segmentedButton:has(:checked) {
+        background-color: #fff;
+        box-shadow:
+            0 1px 3px 0 rgb(0 0 0 / 0.08),
+            0 1px 2px -1px rgb(0 0 0 / 0.06);
+    }
+}
+
 /* ============================================
    NOTIFICATIONS CONTENT
    ============================================ */
@@ -357,6 +372,27 @@ body {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    padding: 24px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.notificationCard:hover {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.notificationCard--unread {
+    background: #f9f7fb;
+    border-left: 4px solid #913b9f;
+}
+
+.notificationCard--unread:hover {
+    background: #f3eef6;
+}
+
+.notificationCard--unread .notificationTime::before {
+    background-color: #913b9f;
 }
 
 .notificationHeader {

@@ -12,12 +12,49 @@ import {
   doc,
   getDoc,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  initNotificationBadge,
+  cleanupNotificationBadge,
+} from "./notificationBadge.js";
+import {
+  initToastContainer,
+  subscribeToNewNotifications,
+  cleanupToastNotifications,
+} from "./toastNotifications.js";
 
 /**
  * Initialize the vendor navbar
  * Sets up auth listener, vendor name display, logout, and keyboard shortcuts
  */
 export function initVendorNavbar() {
+  // Inject skeleton styles if not already present
+  if (!document.getElementById("vendor-skeleton-styles")) {
+    const style = document.createElement("style");
+    style.id = "vendor-skeleton-styles";
+    style.textContent = `
+      .skeleton {
+        background: linear-gradient(90deg, #e8e4ec 25%, #f4f1f6 50%, #e8e4ec 75%);
+        background-size: 200% 100%;
+        animation: skeletonPulse 1.5s ease-in-out infinite;
+        border-radius: 4px;
+        min-height: 2.4em;
+        flex: 1;
+      }
+      @keyframes skeletonPulse {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Show skeleton loading state for vendor name
+  const vendorNameEl = document.querySelector(".vendorName");
+  if (vendorNameEl) {
+    vendorNameEl.textContent = "\u00A0";
+    vendorNameEl.classList.add("skeleton");
+  }
+
   // Setup logout button
   const logoutBtn = document.getElementById("logoutBtn");
   if (logoutBtn) {
@@ -33,7 +70,15 @@ export function initVendorNavbar() {
   // Listen for auth state changes
   onAuthStateChanged(auth, async (user) => {
     if (user) {
-      await updateVendorDisplay(user.uid);
+      const vendorData = await updateVendorDisplay(user.uid);
+      initNotificationBadge(`vendors/${user.uid}/notifications`);
+
+      // Only show browser toast notifications if the vendor has them enabled
+      const browserNotifsEnabled = vendorData?.browserNotifications !== false;
+      if (browserNotifsEnabled) {
+        initToastContainer();
+        subscribeToNewNotifications(`vendors/${user.uid}/notifications`);
+      }
     } else {
       // Redirect to login if not authenticated
       window.location.href = "../Auth/login.html";
@@ -53,12 +98,15 @@ async function updateVendorDisplay(userId) {
       const displayName =
         vendorData.storeName || vendorData.displayName || "My Store";
       updateVendorName(displayName);
+      return vendorData;
     } else {
       updateVendorName("My Store");
+      return null;
     }
   } catch (error) {
     console.error("Error fetching vendor data:", error);
     updateVendorName("My Store");
+    return null;
   }
 }
 
@@ -68,6 +116,7 @@ async function updateVendorDisplay(userId) {
 function updateVendorName(name) {
   const vendorNameEl = document.querySelector(".vendorName");
   if (vendorNameEl) {
+    vendorNameEl.classList.remove("skeleton");
     vendorNameEl.textContent = name;
   }
 }

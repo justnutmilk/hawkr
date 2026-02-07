@@ -1,170 +1,187 @@
-const allDaysOpen = [
-  { day: "Mon", active: true, slots: [{ from: "08:00", to: "02:00" }] },
-  { day: "Tue", active: true, slots: [{ from: "08:00", to: "02:00" }] },
-  { day: "Wed", active: true, slots: [{ from: "08:00", to: "02:00" }] },
-  { day: "Thu", active: true, slots: [{ from: "08:00", to: "02:00" }] },
-  { day: "Fri", active: true, slots: [{ from: "08:00", to: "02:00" }] },
-  { day: "Sat", active: true, slots: [{ from: "08:00", to: "02:00" }] },
-  { day: "Sun", active: true, slots: [{ from: "08:00", to: "02:00" }] },
-];
+/**
+ * Hawkr - Operator Children (My Stalls)
+ * Firebase-powered dynamic version.
+ * Fetches operator's hawker centre(s) and their stalls from Firestore.
+ * Provides an onboarding flow with 30-second rotating codes.
+ */
 
-const alternateDaysSchedule = [
-  { day: "Mon", active: true, slots: [{ from: "06:00", to: "14:00" }] },
-  { day: "Tue", active: false, slots: [] },
-  {
-    day: "Wed",
-    active: true,
-    slots: [
-      { from: "10:00", to: "13:00" },
-      { from: "15:00", to: "20:00" },
-    ],
-  },
-  { day: "Thu", active: false, slots: [] },
-  {
-    day: "Fri",
-    active: true,
-    slots: [
-      { from: "06:00", to: "14:00" },
-      { from: "14:30", to: "21:59" },
-      { from: "00:00", to: "04:30" },
-    ],
-  },
-  { day: "Sat", active: false, slots: [] },
-  { day: "Sun", active: false, slots: [] },
-];
+// ============================================
+// FIREBASE IMPORTS
+// ============================================
 
-const fridayOnlySchedule = [
-  { day: "Mon", active: false, slots: [] },
-  { day: "Tue", active: false, slots: [] },
-  { day: "Wed", active: false, slots: [] },
-  { day: "Thu", active: false, slots: [] },
-  {
-    day: "Fri",
-    active: true,
-    slots: [
-      { from: "06:00", to: "14:00" },
-      { from: "14:30", to: "21:59" },
-      { from: "00:00", to: "04:30" },
-    ],
-  },
-  { day: "Sat", active: false, slots: [] },
-  { day: "Sun", active: false, slots: [] },
-];
+import { db, auth } from "../../firebase/config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  addDoc,
+  onSnapshot,
+  serverTimestamp,
+  orderBy,
+  Timestamp,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getHawkerCentresByOperator,
+  getHawkerCentreById,
+  findOrCreateHawkerCentre,
+} from "../../firebase/services/hawkerCentres.js";
+import { getStallsByHawkerCentre } from "../../firebase/services/foodStalls.js";
 
-// Converts 24h time string (e.g. "14:30") to 12h format (e.g. "2:30 PM")
+// ============================================
+// STATE
+// ============================================
+
+let currentOperatorId = null;
+let currentHawkerCentre = null; // { id, name, ... }
+let stalls = []; // Active stalls fetched from Firestore
+let archivedStalls = []; // Inactive stalls
+let currentOnboardCode = "";
+let codeRefreshInterval = null;
+let codeSnapshotUnsubscribe = null;
+let linkedVendorData = null;
+
+// ============================================
+// TIME / HOURS FORMATTING UTILITIES
+// ============================================
+
+/**
+ * Converts 24h time string (e.g. "14:30") to 12h format (e.g. "2:30 PM")
+ */
 function formatTime12h(time24) {
-  if (!time24) return ""; // Return empty if no time provided
-  const [h, m] = time24.split(":").map(Number); // Split "HH:MM" into hour and minute numbers
-  const period = h >= 12 ? "PM" : "AM"; // Determine AM or PM
-  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h; // Convert 0 → 12, 13-23 → 1-11, 1-12 stays
-  return `${h12}:${m.toString().padStart(2, "0")} ${period}`; // Format as "H:MM AM/PM"
+  if (!time24) return "";
+  const [h, m] = time24.split(":").map(Number);
+  const period = h >= 12 ? "PM" : "AM";
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return `${h12}:${m.toString().padStart(2, "0")} ${period}`;
 }
 
-// Formats an array of time slots into a comma-separated string (e.g. "6:00 AM-2:00 PM, 2:30 PM-9:59 PM")
+/**
+ * Formats an array of time slots into a comma-separated string
+ */
 function formatSlots(slots) {
   return slots
-    .map((s) => `${formatTime12h(s.from)}-${formatTime12h(s.to)}`) // Format each slot as "from-to"
-    .join(", "); // Join multiple slots with commas
+    .map((s) => `${formatTime12h(s.from)}-${formatTime12h(s.to)}`)
+    .join(", ");
 }
 
-// Ordered day abbreviations used as indices for range detection
 const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-// Collapses an array of day names into ranges (e.g. ["Mon","Tue","Wed","Fri"] → "Mon-Wed, Fri")
+/**
+ * Collapses an array of day names into ranges (e.g. ["Mon","Tue","Wed","Fri"] -> "Mon-Wed, Fri")
+ */
 function formatDayRange(days) {
-  const indices = days.map((d) => dayNames.indexOf(d)); // Convert day names to numeric indices (0-6)
-  const ranges = []; // Accumulator for formatted range strings
-  let start = indices[0]; // Start index of the current consecutive run
-  let prev = indices[0]; // Previous index in the current run
+  const indices = days.map((d) => dayNames.indexOf(d));
+  const ranges = [];
+  let start = indices[0];
+  let prev = indices[0];
   for (let i = 1; i <= indices.length; i++) {
-    // Iterate through indices (extra iteration to flush last range)
     if (i < indices.length && indices[i] === prev + 1) {
-      prev = indices[i]; // Extend the current consecutive run
+      prev = indices[i];
     } else {
-      // Current run has ended — determine how to format it
       if (prev - start >= 2) {
-        ranges.push(`${dayNames[start]}-${dayNames[prev]}`); // 3+ consecutive days → dash range (e.g. "Mon-Wed")
+        ranges.push(`${dayNames[start]}-${dayNames[prev]}`);
       } else if (prev - start === 1) {
-        ranges.push(`${dayNames[start]}, ${dayNames[prev]}`); // 2 consecutive days → comma pair (e.g. "Sat, Sun")
+        ranges.push(`${dayNames[start]}, ${dayNames[prev]}`);
       } else {
-        ranges.push(dayNames[start]); // Single day (e.g. "Fri")
+        ranges.push(dayNames[start]);
       }
       if (i < indices.length) {
-        start = indices[i]; // Begin a new run from the current index
+        start = indices[i];
         prev = indices[i];
       }
     }
   }
-  return ranges.join(", "); // Join all ranges with commas (e.g. "Mon-Thu, Sat, Sun")
+  return ranges.join(", ");
 }
 
-// Groups days by their hours and formats into multi-line summary string
+/**
+ * Groups days by their hours and formats into multi-line summary string.
+ * Accepts both array format (from vendor onboarding) and object format (from Firestore stalls).
+ */
 function formatOperatingHours(hours) {
-  const groups = {}; // Map of hours-string → array of day names
-  const dayOrder = []; // Tracks insertion order of unique hour patterns
+  if (!hours) return "Hours not set";
+
+  // If hours is an object (Firestore format: { monday: { open, close, isClosed }, ... })
+  if (!Array.isArray(hours)) {
+    return formatOperatingHoursObject(hours);
+  }
+
+  // Array format: [{ day, active, slots: [{ from, to }] }, ...]
+  const groups = {};
+  const dayOrder = [];
   hours.forEach((d) => {
-    const key = d.active ? formatSlots(d.slots) : "Closed"; // Use formatted slots as key, or "Closed" if inactive
+    const key = d.active ? formatSlots(d.slots) : "Closed";
     if (!groups[key]) {
-      groups[key] = []; // Initialize group for this hour pattern
-      dayOrder.push(key); // Record first-seen order
+      groups[key] = [];
+      dayOrder.push(key);
     }
-    groups[key].push(d.day); // Add the day to its matching group
+    groups[key].push(d.day);
   });
-  const sorted = dayOrder.filter((k) => k !== "Closed"); // All open-day patterns first
-  const hasClosed = dayOrder.includes("Closed"); // Check if any days are closed
-  if (hasClosed) sorted.push("Closed"); // Push "Closed" to the end
+  const sorted = dayOrder.filter((k) => k !== "Closed");
+  const hasClosed = dayOrder.includes("Closed");
+  if (hasClosed) sorted.push("Closed");
   return sorted
-    .map((key) => {
-      const days = groups[key]; // Get the days for this hour pattern
-      return `${formatDayRange(days)}: ${key}`; // Format as "Mon-Fri: 6:00 AM-2:00 PM"
-    })
-    .join("\n"); // Join each group as a new line
+    .map((key) => `${formatDayRange(groups[key])}: ${key}`)
+    .join("\n");
 }
 
-const mockChildren = [
-  {
-    name: "Chinese Foods Private Limited",
-    image: "../../images/squirrelCard.svg",
-    tags: ["Chinese"],
-    rating: 4.5,
-    operatingHours: fridayOnlySchedule,
-  },
-  {
-    name: "Lalithambigai Saravanan KevyTan Cavan Xie Yu Xiang",
-    image: "../../images/squirrelCard.svg",
-    tags: ["Halal", "Chinese", "Malay"],
-    rating: 4.5,
-    operatingHours: alternateDaysSchedule,
-  },
-  {
-    name: "Lalithambigai Saravanan KevyTan Cavan Xie Yu Xiang",
-    image: "../../images/squirrelCard.svg",
-    tags: ["Halal", "Chinese", "Malay"],
-    rating: 4.5,
-    operatingHours: allDaysOpen,
-  },
-  {
-    name: "Chinese Foods Private Limited",
-    image: "../../images/squirrelCard.svg",
-    tags: ["Chinese"],
-    rating: 4.5,
-    operatingHours: alternateDaysSchedule,
-  },
-  {
-    name: "Lalithambigai Saravanan KevyTan Cavan Xie Yu Xiang",
-    image: "../../images/squirrelCard.svg",
-    tags: ["Halal", "Chinese", "Malay"],
-    rating: 4.5,
-    operatingHours: allDaysOpen,
-  },
-  {
-    name: "Lalithambigai Saravanan KevyTan Cavan Xie Yu Xiang",
-    image: "../../images/squirrelCard.svg",
-    tags: ["Halal", "Chinese", "Malay"],
-    rating: 4.5,
-    operatingHours: alternateDaysSchedule,
-  },
-];
+/**
+ * Format operating hours from Firestore object format.
+ */
+function formatOperatingHoursObject(hours) {
+  const dayMap = {
+    monday: "Mon",
+    tuesday: "Tue",
+    wednesday: "Wed",
+    thursday: "Thu",
+    friday: "Fri",
+    saturday: "Sat",
+    sunday: "Sun",
+  };
+  const orderedKeys = [
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+  ];
+
+  const groups = {};
+  const dayOrder = [];
+
+  orderedKeys.forEach((dayKey) => {
+    const h = hours[dayKey];
+    if (!h) return;
+    const key = h.isClosed
+      ? "Closed"
+      : `${formatTime12h(h.open)}-${formatTime12h(h.close)}`;
+    if (!groups[key]) {
+      groups[key] = [];
+      dayOrder.push(key);
+    }
+    groups[key].push(dayMap[dayKey]);
+  });
+
+  const sorted = dayOrder.filter((k) => k !== "Closed");
+  const hasClosed = dayOrder.includes("Closed");
+  if (hasClosed) sorted.push("Closed");
+  return sorted
+    .map((key) => `${formatDayRange(groups[key])}: ${key}`)
+    .join("\n");
+}
+
+// ============================================
+// ICONS
+// ============================================
 
 const tagIcons = {
   Halal: "../../assets/icons/halal.png",
@@ -174,71 +191,6 @@ const tagIcons = {
 const starIcon = `<img class="childCardMetaIcon" src="../../assets/icons/star.svg" alt="Rating" />`;
 const clockIcon = `<img class="childCardMetaIcon" src="../../assets/icons/clock.svg" alt="Hours" />`;
 
-function renderTag(tag) {
-  const icon = tagIcons[tag];
-  if (icon) {
-    return `<span class="childTag ${tag.toLowerCase()}"><img class="childTagIcon" src="${icon}" alt="${tag}" /> ${tag}</span>`;
-  }
-  return `<span class="childTag">${tag}</span>`;
-}
-
-function renderHoursLines(hours) {
-  return formatOperatingHours(hours)
-    .split("\n")
-    .map((line) => `<span class="childCardHoursLine">${line}</span>`)
-    .join("");
-}
-
-function renderChildCard(child) {
-  const tags = child.tags.map(renderTag).join("");
-  return `
-        <button class="childCard" onclick="window.location.href='../Operator Children Detail/operatorChildrenDetail.html?store=${encodeURIComponent(child.name)}'">
-            <img class="childCardImage" src="${child.image}" alt="${child.name}" />
-            <span class="childCardName">${child.name}</span>
-            <div class="childCardTags">${tags}</div>
-            <div class="childCardMeta">
-                <span class="childCardMetaItem">${starIcon} ${child.rating}</span>
-            </div>
-            <div class="childCardHours">
-                ${clockIcon}
-                <div class="childCardHoursLines">${renderHoursLines(child.operatingHours)}</div>
-            </div>
-        </button>
-    `;
-}
-
-function renderCurrentContent() {
-  return `
-        <div class="pageHeader">
-            <span class="pageTitle">My Children</span>
-            <button class="onboardButton" id="onboardBtn">
-                Onboard child
-                <kbd id="onboardKeyMod"></kbd>
-                <kbd>O</kbd>
-            </button>
-        </div>
-        <div class="childrenGrid">
-            ${mockChildren.map(renderChildCard).join("")}
-        </div>
-    `;
-}
-
-function renderArchivedContent() {
-  return `
-        <div class="pageHeader">
-            <span class="pageTitle">My Children</span>
-            <button class="onboardButton" id="onboardBtn">
-                Onboard child
-                <kbd id="onboardKeyMod"></kbd>
-                <kbd>O</kbd>
-            </button>
-        </div>
-        <div class="childrenGrid">
-        </div>
-    `;
-}
-
-// Onboard Panel
 const loadingIcon = `<svg class="onboardWaitingIcon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none">
   <path d="M7.1825 0.682617V3.28262M7.1825 11.0826V13.6826M2.58699 2.58712L4.4265 4.42662M9.93849 9.93862L11.778 11.7781M0.682495 7.18262H3.2825M11.0825 7.18262H13.6825M2.58699 11.7781L4.4265 9.93862M9.93849 4.42662L11.778 2.58712" stroke="#808080" stroke-width="1.365" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`;
@@ -251,6 +203,398 @@ const uploadIcon = `<svg class="onboardUploadIcon" xmlns="http://www.w3.org/2000
   <path d="M343.45 8.13067C338.713 2.95067 332.02 0 325 0C317.98 0 311.287 2.95067 306.55 8.13067L173.216 153.964C163.899 164.154 164.607 179.967 174.797 189.284C184.988 198.601 200.801 197.893 210.117 187.703L300 89.3933V458.333C300 472.14 311.193 483.333 325 483.333C338.807 483.333 350 472.14 350 458.333V89.3933L439.883 187.703C449.2 197.893 465.013 198.601 475.203 189.284C485.393 179.967 486.1 164.154 476.783 153.964L343.45 8.13067Z" fill="#808080"/>
   <path d="M50 425C50 411.193 38.8074 400 25 400C11.193 400 1.74651e-05 411.193 1.74651e-05 425V426.83C-0.000649201 472.417 -0.00131822 509.16 3.88401 538.06C7.91801 568.063 16.5477 593.323 36.6117 613.387C56.6757 633.453 81.938 642.083 111.942 646.117C140.841 650 177.585 650 223.171 650H426.83C472.417 650 509.16 650 538.06 646.117C568.063 642.083 593.323 633.453 613.39 613.387C633.453 593.323 642.083 568.063 646.117 538.06C650 509.16 650 472.417 650 426.83V425C650 411.193 638.807 400 625 400C611.193 400 600 411.193 600 425C600 472.847 599.947 506.217 596.563 531.397C593.273 555.857 587.26 568.807 578.033 578.033C568.807 587.26 555.857 593.273 531.397 596.563C506.217 599.947 472.847 600 425 600H225C177.153 600 143.782 599.947 118.604 596.563C94.145 593.273 81.1923 587.26 71.967 578.033C62.7417 568.807 56.7267 555.857 53.4383 531.397C50.053 506.217 50 472.847 50 425Z" fill="#808080"/>
 </svg>`;
+
+// ============================================
+// TAG RENDERING
+// ============================================
+
+function renderTag(tag) {
+  const icon = tagIcons[tag];
+  if (icon) {
+    return `<span class="childTag ${tag.toLowerCase()}"><img class="childTagIcon" src="${icon}" alt="${tag}" /> ${tag}</span>`;
+  }
+  return `<span class="childTag">${tag}</span>`;
+}
+
+function renderOnboardTag(tag) {
+  const icon = tagIcons[tag];
+  if (icon) {
+    return `<span class="childTag ${tag.toLowerCase()}"><img class="childTagIcon" src="${icon}" alt="${tag}" /> ${tag}</span>`;
+  }
+  return `<span class="childTag">${tag}</span>`;
+}
+
+// ============================================
+// STALL CARD RENDERING
+// ============================================
+
+function renderHoursLines(hours) {
+  return formatOperatingHours(hours)
+    .split("\n")
+    .map((line) => `<span class="childCardHoursLine">${line}</span>`)
+    .join("");
+}
+
+function renderChildCard(stall) {
+  const cuisines = stall.cuisineNames || stall.tags || [];
+  const tags = cuisines.map(renderTag).join("");
+  const rating = stall.rating || 0;
+  const image =
+    stall.imageUrl || stall.image || "../../images/squirrelCard.svg";
+  const stallId = stall.id || "";
+  const stallName = stall.name || "Unnamed Stall";
+
+  return `
+    <button class="childCard" onclick="window.location.href='../Operator Children Detail/operatorChildrenDetail.html?id=${encodeURIComponent(stallId)}&store=${encodeURIComponent(stallName)}'">
+      <img class="childCardImage" src="${image}" alt="${stallName}" onerror="this.src='../../images/squirrelCard.svg'" />
+      <span class="childCardName">${stallName}</span>
+      <div class="childCardTags">
+        ${tags}
+        <span class="ownerBadge">Owner</span>
+      </div>
+      <div class="childCardMeta">
+        <span class="childCardMetaItem">${starIcon} ${rating.toFixed ? rating.toFixed(1) : rating}</span>
+      </div>
+      <div class="childCardHours">
+        ${clockIcon}
+        <div class="childCardHoursLines">${renderHoursLines(stall.operatingHours)}</div>
+      </div>
+    </button>
+  `;
+}
+
+// ============================================
+// PAGE RENDERING
+// ============================================
+
+function renderCurrentContent() {
+  const stallCards =
+    stalls.length > 0
+      ? stalls.map(renderChildCard).join("")
+      : `<div class="emptyState">
+          <img src="../../images/noChildren.svg" alt="No children" class="emptyStateImage" onerror="this.style.display='none'" />
+          <p class="emptyStateText">No children yet</p>
+          <p class="emptyStateSubtext">Onboard your first vendor to get started.</p>
+          <button class="emptyStateCta" id="emptyOnboardBtn">Onboard child</button>
+        </div>`;
+
+  return `
+    <div class="pageHeader">
+      <span class="pageTitle">My Children</span>
+      <button class="onboardButton" id="onboardBtn">
+        Onboard child
+        <kbd id="onboardKeyMod"></kbd>
+        <kbd>O</kbd>
+      </button>
+    </div>
+    <div class="childrenGrid">
+      ${stallCards}
+    </div>
+  `;
+}
+
+function renderArchivedContent() {
+  const stallCards =
+    archivedStalls.length > 0
+      ? archivedStalls.map(renderChildCard).join("")
+      : `<div class="emptyState">
+          <p class="emptyStateText">No archived stalls.</p>
+        </div>`;
+
+  return `
+    <div class="pageHeader">
+      <span class="pageTitle">My Children</span>
+      <button class="onboardButton" id="onboardBtn">
+        Onboard child
+        <kbd id="onboardKeyMod"></kbd>
+        <kbd>O</kbd>
+      </button>
+    </div>
+    <div class="childrenGrid">
+      ${stallCards}
+    </div>
+  `;
+}
+
+function renderPage(tab) {
+  const container = document.getElementById("pageContent");
+  container.innerHTML =
+    tab === "archived" ? renderArchivedContent() : renderCurrentContent();
+
+  const isMacLocal = window.navigator.userAgentData
+    ? window.navigator.userAgentData.platform === "macOS"
+    : /Mac/i.test(window.navigator.userAgent);
+  const modKey = document.getElementById("onboardKeyMod");
+  if (modKey) {
+    modKey.textContent = isMacLocal ? "\u2318" : "CTRL";
+  }
+  const onboardBtn = document.getElementById("onboardBtn");
+  if (onboardBtn) {
+    onboardBtn.addEventListener("click", openOnboardPanel);
+  }
+  const emptyOnboardBtn = document.getElementById("emptyOnboardBtn");
+  if (emptyOnboardBtn) {
+    emptyOnboardBtn.addEventListener("click", openOnboardPanel);
+  }
+}
+
+// ============================================
+// DATA FETCHING
+// ============================================
+
+async function loadOperatorData(userId) {
+  try {
+    currentOperatorId = userId;
+
+    // Fetch operator's hawker centres
+    let centres = await getHawkerCentresByOperator(userId);
+
+    // Fallback: if no hawker centre has operatorId set, look up via operator doc
+    if (!centres || centres.length === 0) {
+      console.warn(
+        "No hawker centres found via operatorId, trying fallback...",
+      );
+      const operatorDoc = await getDoc(doc(db, "operators", userId));
+      if (operatorDoc.exists()) {
+        const opData = operatorDoc.data();
+
+        // Try hawkerCentreId first
+        if (opData.hawkerCentreId) {
+          const centre = await getHawkerCentreById(opData.hawkerCentreId);
+          if (centre) {
+            // Backfill operatorId on the hawker centre
+            await updateDoc(doc(db, "hawkerCentres", centre.id), {
+              operatorId: userId,
+              updatedAt: serverTimestamp(),
+            });
+            centres = [centre];
+          }
+        }
+
+        // Try managedLocation name as last resort
+        if (
+          (!centres || centres.length === 0) &&
+          opData.managedLocation?.name
+        ) {
+          const centre = await findOrCreateHawkerCentre(
+            opData.managedLocation.name,
+            {
+              address: opData.managedLocation.address || "",
+              postalCode: opData.managedLocation.postalCode || "",
+              placeId: opData.managedLocation.placeId || "",
+              location: opData.managedLocation.latitude
+                ? {
+                    latitude: opData.managedLocation.latitude,
+                    longitude: opData.managedLocation.longitude,
+                  }
+                : null,
+            },
+          );
+          // Set operatorId on the hawker centre
+          await updateDoc(doc(db, "hawkerCentres", centre.id), {
+            operatorId: userId,
+            updatedAt: serverTimestamp(),
+          });
+          // Also save hawkerCentreId on operator doc for future lookups
+          await updateDoc(doc(db, "operators", userId), {
+            hawkerCentreId: centre.id,
+            updatedAt: serverTimestamp(),
+          });
+          centres = [centre];
+        }
+      }
+    }
+
+    if (!centres || centres.length === 0) {
+      console.warn("No hawker centres found for operator:", userId);
+      stalls = [];
+      archivedStalls = [];
+      renderPage("current");
+      return;
+    }
+
+    // Use the first hawker centre (operator typically manages one)
+    currentHawkerCentre = centres[0];
+
+    // Update sidebar with actual centre name
+    const operatorNameEl = document.querySelector(".operatorName");
+    if (operatorNameEl) {
+      operatorNameEl.textContent = currentHawkerCentre.name || "My Centre";
+    }
+
+    // Fetch all stalls for this centre (active)
+    stalls = await getStallsByHawkerCentre(currentHawkerCentre.id);
+
+    // Also fetch archived (inactive) stalls
+    try {
+      const archivedQuery = query(
+        collection(db, "foodStalls"),
+        where("hawkerCentreId", "==", currentHawkerCentre.id),
+        where("isActive", "==", false),
+      );
+      const archivedSnapshot = await getDocs(archivedQuery);
+      archivedStalls = archivedSnapshot.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      }));
+    } catch (err) {
+      console.warn("Could not fetch archived stalls:", err);
+      archivedStalls = [];
+    }
+
+    renderPage("current");
+  } catch (error) {
+    console.error("Error loading operator data:", error);
+    stalls = [];
+    archivedStalls = [];
+    renderPage("current");
+  }
+}
+
+// ============================================
+// ONBOARDING CODE GENERATION
+// ============================================
+
+function generateCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+/**
+ * Creates an onboarding code document in Firestore.
+ * The document ID is the code itself for easy vendor lookup.
+ */
+async function createOnboardingCode() {
+  const code = generateCode();
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + 30 * 1000); // 30 seconds from now
+
+  await setDoc(doc(db, "onboardingCodes", code), {
+    code: code,
+    operatorId: currentOperatorId,
+    hawkerCentreId: currentHawkerCentre?.id || null,
+    createdAt: serverTimestamp(),
+    expiresAt: Timestamp.fromDate(expiresAt),
+    status: "pending",
+    vendorId: null,
+  });
+
+  return code;
+}
+
+/**
+ * Deletes an onboarding code document from Firestore.
+ */
+async function deleteOnboardingCode(code) {
+  if (!code) return;
+  try {
+    await deleteDoc(doc(db, "onboardingCodes", code));
+  } catch (err) {
+    console.warn("Could not delete onboarding code:", err);
+  }
+}
+
+/**
+ * Start listening for changes on the code document.
+ * When status changes to "linked" and vendorId is set, transition to linked state.
+ */
+function listenForCodeLink(code) {
+  // Unsubscribe from any previous listener
+  if (codeSnapshotUnsubscribe) {
+    codeSnapshotUnsubscribe();
+    codeSnapshotUnsubscribe = null;
+  }
+
+  codeSnapshotUnsubscribe = onSnapshot(
+    doc(db, "onboardingCodes", code),
+    async (snapshot) => {
+      if (!snapshot.exists()) return;
+      const data = snapshot.data();
+      if (data.status === "linked" && data.vendorId) {
+        // Stop the refresh interval since we have a linked vendor
+        if (codeRefreshInterval) {
+          clearInterval(codeRefreshInterval);
+          codeRefreshInterval = null;
+        }
+        // Unsubscribe from snapshot
+        if (codeSnapshotUnsubscribe) {
+          codeSnapshotUnsubscribe();
+          codeSnapshotUnsubscribe = null;
+        }
+        // Fetch vendor data and show linked state
+        await loadLinkedVendor(data.vendorId, code);
+      }
+    },
+  );
+}
+
+/**
+ * Refresh the code: delete old, create new, re-attach snapshot listener.
+ */
+async function refreshCode() {
+  const oldCode = currentOnboardCode;
+
+  // Delete old code document
+  await deleteOnboardingCode(oldCode);
+
+  // Unsubscribe from old listener
+  if (codeSnapshotUnsubscribe) {
+    codeSnapshotUnsubscribe();
+    codeSnapshotUnsubscribe = null;
+  }
+
+  // Create new code
+  const newCode = await createOnboardingCode();
+  currentOnboardCode = newCode;
+
+  // Update UI
+  const codeEl = document.querySelector(".onboardCode");
+  if (codeEl) {
+    codeEl.innerHTML = `<span class="onboardCodePrefix">OBD-</span>${newCode}`;
+  }
+
+  // Re-attach listener
+  listenForCodeLink(newCode);
+}
+
+// ============================================
+// ONBOARD PANEL — CODE STATE
+// ============================================
+
+function renderCodeState() {
+  document.getElementById("onboardBody").innerHTML = `
+    <div class="onboardCodeSection">
+      <span class="onboardCode"><span class="onboardCodePrefix">OBD-</span>${currentOnboardCode}</span>
+      <span class="onboardCodeSubtitle">Share this code with the vendor. They can enter it in their Settings to begin onboarding.</span>
+      <button class="onboardCopyBtn" id="copyCodeBtn">Copy code</button>
+      <span class="onboardWaiting">${loadingIcon} Waiting for vendor...</span>
+    </div>
+  `;
+  document.getElementById("onboardFooter").innerHTML = `
+    <button class="onboardCancelBtn" id="onboardCancelBtn">Cancel</button>
+  `;
+
+  document.getElementById("copyCodeBtn").addEventListener("click", () => {
+    navigator.clipboard.writeText(`OBD-${currentOnboardCode}`);
+    document.getElementById("copyCodeBtn").textContent = "Copied!";
+    setTimeout(() => {
+      const btn = document.getElementById("copyCodeBtn");
+      if (btn) btn.textContent = "Copy code";
+    }, 2000);
+  });
+
+  document
+    .getElementById("onboardCancelBtn")
+    .addEventListener("click", closeOnboardPanel);
+}
+
+// ============================================
+// ONBOARD PANEL — LINKED STATE
+// ============================================
 
 const filePreviewUrls = {};
 
@@ -306,7 +650,7 @@ function refreshPhotoField() {
   container.appendChild(label);
   container.insertAdjacentHTML(
     "beforeend",
-    renderPhotoField(mockVendorData.coverPhoto),
+    renderPhotoField(linkedVendorData?.coverPhoto || null),
   );
   bindCertUploads();
 }
@@ -321,7 +665,7 @@ function refreshCertField(fieldKey) {
   container.appendChild(label);
   container.insertAdjacentHTML(
     "beforeend",
-    renderCertField(mockVendorData[fieldKey], fieldKey),
+    renderCertField(linkedVendorData?.[fieldKey] || null, fieldKey),
   );
   bindCertUploads();
 }
@@ -332,7 +676,7 @@ function bindCertUploads() {
       const file = e.target.files[0];
       if (!file) return;
       const fieldKey = e.target.dataset.field;
-      mockVendorData[fieldKey] = file.name;
+      if (linkedVendorData) linkedVendorData[fieldKey] = file.name;
       if (filePreviewUrls[fieldKey])
         URL.revokeObjectURL(filePreviewUrls[fieldKey]);
       filePreviewUrls[fieldKey] = URL.createObjectURL(file);
@@ -346,7 +690,7 @@ function bindCertUploads() {
   document.querySelectorAll(".onboardFileDelete").forEach((btn) => {
     btn.addEventListener("click", () => {
       const fieldKey = btn.dataset.field;
-      mockVendorData[fieldKey] = null;
+      if (linkedVendorData) linkedVendorData[fieldKey] = null;
       if (filePreviewUrls[fieldKey]) {
         URL.revokeObjectURL(filePreviewUrls[fieldKey]);
         delete filePreviewUrls[fieldKey];
@@ -360,44 +704,9 @@ function bindCertUploads() {
   });
 }
 
-let currentOnboardCode = "";
-
-function generateCode() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-  let code = "";
-  for (let i = 0; i < 6; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
-}
-
-const mockVendorData = {
-  storeName: "Ah Huat Kopi & Toast",
-  unitNumber: "#01-42",
-  cuisines: ["Chinese", "Halal"],
-  operatingHours: [
-    { day: "Mon", active: true, slots: [{ from: "06:00", to: "14:00" }] },
-    { day: "Tue", active: true, slots: [{ from: "06:00", to: "14:00" }] },
-    {
-      day: "Wed",
-      active: true,
-      slots: [
-        { from: "10:00", to: "13:00" },
-        { from: "15:00", to: "20:00" },
-      ],
-    },
-    { day: "Thu", active: false, slots: [] },
-    { day: "Fri", active: true, slots: [{ from: "06:00", to: "14:00" }] },
-    { day: "Sat", active: true, slots: [{ from: "06:00", to: "14:00" }] },
-    { day: "Sun", active: true, slots: [{ from: "06:00", to: "14:00" }] },
-  ],
-  coverPhoto: null,
-  hygieneCert: "hygiene_cert_2025.pdf",
-  halalCert: null,
-  bizRegNo: "202401234K",
-  contactPerson: "Tan Ah Huat",
-  contactNumber: "+65 9123 4567",
-};
+// ============================================
+// SCHEDULE EDITING (for linked vendor form)
+// ============================================
 
 let scheduleData = [];
 
@@ -488,46 +797,118 @@ function refreshSchedule() {
   }
 }
 
-function renderOnboardTag(tag) {
-  const icon = tagIcons[tag];
-  if (icon) {
-    return `<span class="childTag ${tag.toLowerCase()}"><img class="childTagIcon" src="${icon}" alt="${tag}" /> ${tag}</span>`;
+// ============================================
+// LOAD LINKED VENDOR
+// ============================================
+
+/**
+ * Fetch vendor data from Firestore and show the linked state in the panel.
+ */
+async function loadLinkedVendor(vendorId, code) {
+  try {
+    const vendorDoc = await getDoc(doc(db, "vendors", vendorId));
+    if (!vendorDoc.exists()) {
+      console.error("Linked vendor not found:", vendorId);
+      return;
+    }
+
+    const v = vendorDoc.data();
+    linkedVendorData = {
+      vendorId: vendorId,
+      onboardCode: code,
+      storeName: v.storeName || v.businessName || v.name || "",
+      unitNumber: v.unitNumber || "",
+      cuisines: v.cuisines || v.cuisineNames || [],
+      operatingHours: v.operatingHours || null,
+      coverPhoto: v.coverPhoto || v.imageUrl || null,
+      hygieneCert: v.hygieneCert || null,
+      halalCert: v.halalCert || null,
+      bizRegNo: v.bizRegNo || v.uen || "",
+      contactPerson: v.contactPerson || v.name || "",
+      contactNumber: v.contactNumber || v.phone || "",
+    };
+
+    renderLinkedState();
+  } catch (error) {
+    console.error("Error fetching linked vendor:", error);
   }
-  return `<span class="childTag">${tag}</span>`;
 }
 
-function renderCodeState() {
-  document.getElementById("onboardBody").innerHTML = `
-    <div class="onboardCodeSection">
-      <span class="onboardCode"><span class="onboardCodePrefix">OBD-</span>${currentOnboardCode}</span>
-      <span class="onboardCodeSubtitle">Share this code with the vendor. They can enter it in their Settings to begin onboarding.</span>
-      <button class="onboardCopyBtn" id="copyCodeBtn">Copy code</button>
-      <span class="onboardWaiting">${loadingIcon} Waiting for vendor...</span>
-      <button class="onboardSimulateBtn" id="simulateBtn">Simulate vendor link</button>
-    </div>
-  `;
-  document.getElementById("onboardFooter").innerHTML = `
-    <button class="onboardCancelBtn" id="onboardCancelBtn">Cancel</button>
-  `;
-  document.getElementById("copyCodeBtn").addEventListener("click", () => {
-    navigator.clipboard.writeText(`OBD-${currentOnboardCode}`);
-    document.getElementById("copyCodeBtn").textContent = "Copied!";
-    setTimeout(() => {
-      const btn = document.getElementById("copyCodeBtn");
-      if (btn) btn.textContent = "Copy code";
-    }, 2000);
+/**
+ * Convert Firestore operating hours object to the array format used in the schedule editor.
+ */
+function operatingHoursToArray(hours) {
+  if (!hours) {
+    return dayNames.map((d) => ({ day: d, active: false, slots: [] }));
+  }
+
+  // If already an array, return as-is
+  if (Array.isArray(hours)) return JSON.parse(JSON.stringify(hours));
+
+  const dayMap = {
+    Mon: "monday",
+    Tue: "tuesday",
+    Wed: "wednesday",
+    Thu: "thursday",
+    Fri: "friday",
+    Sat: "saturday",
+    Sun: "sunday",
+  };
+
+  return dayNames.map((d) => {
+    const key = dayMap[d];
+    const h = hours[key];
+    if (!h || h.isClosed) {
+      return { day: d, active: false, slots: [] };
+    }
+    return {
+      day: d,
+      active: true,
+      slots: [{ from: h.open || "09:00", to: h.close || "17:00" }],
+    };
   });
-  document
-    .getElementById("simulateBtn")
-    .addEventListener("click", renderLinkedState);
-  document
-    .getElementById("onboardCancelBtn")
-    .addEventListener("click", closeOnboardPanel);
+}
+
+/**
+ * Convert the schedule editor array back to Firestore object format.
+ */
+function scheduleArrayToObject(arr) {
+  const dayMap = {
+    Mon: "monday",
+    Tue: "tuesday",
+    Wed: "wednesday",
+    Thu: "thursday",
+    Fri: "friday",
+    Sat: "saturday",
+    Sun: "sunday",
+  };
+
+  const result = {};
+  arr.forEach((d) => {
+    const key = dayMap[d.day];
+    if (!d.active || d.slots.length === 0) {
+      result[key] = { open: "00:00", close: "00:00", isClosed: true };
+    } else {
+      // Use first slot as the main operating hours
+      result[key] = {
+        open: d.slots[0].from || "09:00",
+        close: d.slots[0].to || "17:00",
+        isClosed: false,
+      };
+    }
+  });
+  return result;
 }
 
 function renderLinkedState() {
-  const v = mockVendorData;
-  scheduleData = JSON.parse(JSON.stringify(v.operatingHours));
+  const v = linkedVendorData;
+  scheduleData = operatingHoursToArray(v.operatingHours);
+
+  const phoneClean = (v.contactNumber || "")
+    .replace("+65 ", "")
+    .replace("+65", "")
+    .trim();
+
   document.getElementById("onboardBody").innerHTML = `
     <div class="onboardFields">
       <div class="onboardField">
@@ -575,30 +956,37 @@ function renderLinkedState() {
         <div class="onboardPhoneRow">
           <img src="../../assets/icons/singapore.svg" alt="SG" class="onboardPhoneFlag" />
           <span class="onboardPhonePrefix">+65</span>
-          <input class="onboardFieldInput" id="onboardPhone" type="tel" value="${v.contactNumber.replace("+65 ", "").replace("+65", "")}" maxlength="9" placeholder="8XXX XXXX" />
+          <input class="onboardFieldInput" id="onboardPhone" type="tel" value="${phoneClean}" maxlength="9" placeholder="8XXX XXXX" />
         </div>
       </div>
     </div>
   `;
+
   document.getElementById("onboardFooter").innerHTML = `
     <button class="onboardRejectBtn" id="onboardRejectBtn">Reject</button>
     <button class="onboardApproveBtn" id="onboardApproveBtn">Approve Onboarding</button>
   `;
+
   document
     .getElementById("onboardRejectBtn")
-    .addEventListener("click", closeOnboardPanel);
+    .addEventListener("click", handleReject);
   document
     .getElementById("onboardApproveBtn")
-    .addEventListener("click", closeOnboardPanel);
+    .addEventListener("click", handleApprove);
 
   bindCuisineInput();
   bindSchedule();
   bindCertUploads();
 }
 
+// ============================================
+// CUISINE INPUT
+// ============================================
+
 function bindCuisineInput() {
   const container = document.getElementById("onboardCuisineContainer");
   const input = document.getElementById("onboardCuisineInput");
+  if (!container || !input) return;
 
   container.addEventListener("click", (e) => {
     const removeBtn = e.target.closest(".onboardCuisineRemove");
@@ -626,6 +1014,7 @@ function bindCuisineInput() {
 function addCuisineTag(cuisine) {
   const container = document.getElementById("onboardCuisineContainer");
   const input = document.getElementById("onboardCuisineInput");
+  if (!container || !input) return;
   const capitalized =
     cuisine.charAt(0).toUpperCase() + cuisine.slice(1).toLowerCase();
   const tag = document.createElement("span");
@@ -635,60 +1024,242 @@ function addCuisineTag(cuisine) {
   container.insertBefore(tag, input);
 }
 
-function openOnboardPanel() {
-  currentOnboardCode = generateCode();
-  renderCodeState();
-  document.getElementById("onboardOverlay").classList.add("active");
-  document.getElementById("onboardPanel").classList.add("active");
-  document.body.style.overflow = "hidden";
+// ============================================
+// APPROVE / REJECT HANDLERS
+// ============================================
+
+/**
+ * Approve onboarding: create the foodStall document and link it to the hawker centre.
+ */
+async function handleApprove() {
+  if (!linkedVendorData || !currentHawkerCentre) return;
+
+  const approveBtn = document.getElementById("onboardApproveBtn");
+  if (approveBtn) {
+    approveBtn.disabled = true;
+    approveBtn.textContent = "Approving...";
+  }
+
+  try {
+    // Gather form values
+    const storeName =
+      document.getElementById("onboardStoreName")?.value ||
+      linkedVendorData.storeName;
+    const unitNumber =
+      document.getElementById("onboardUnitNo")?.value ||
+      linkedVendorData.unitNumber;
+    const bizRegNo =
+      document.getElementById("onboardBizReg")?.value ||
+      linkedVendorData.bizRegNo;
+    const contactPerson =
+      document.getElementById("onboardContact")?.value ||
+      linkedVendorData.contactPerson;
+    const contactNumber =
+      document.getElementById("onboardPhone")?.value ||
+      linkedVendorData.contactNumber;
+
+    // Gather cuisines from tags
+    const cuisineTags = document.querySelectorAll(
+      "#onboardCuisineContainer .onboardCuisineTag",
+    );
+    const cuisines = Array.from(cuisineTags).map((tag) => tag.dataset.cuisine);
+
+    // Convert schedule to Firestore format
+    const operatingHours = scheduleArrayToObject(scheduleData);
+
+    // Create foodStall document
+    const stallRef = await addDoc(collection(db, "foodStalls"), {
+      name: storeName,
+      nameLower: storeName.toLowerCase(),
+      ownerId: linkedVendorData.vendorId,
+      operatorId: currentOperatorId,
+      operatorName: currentHawkerCentre.name || "",
+      hawkerCentreId: currentHawkerCentre.id,
+      unitNumber: unitNumber,
+      cuisineNames: cuisines,
+      cuisineIds: [],
+      isHalal: cuisines.some((c) => c.toLowerCase() === "halal"),
+      operatingHours: operatingHours,
+      imageUrl: linkedVendorData.coverPhoto || "",
+      coverImageUrl: linkedVendorData.coverPhoto || "",
+      rating: 0,
+      reviewCount: 0,
+      isActive: true,
+      isOpen: true,
+      bizRegNo: bizRegNo,
+      contactPerson: contactPerson,
+      contactNumber: contactNumber,
+      hygieneCert: linkedVendorData.hygieneCert || null,
+      halalCert: linkedVendorData.halalCert || null,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    // Update the onboarding code to "approved"
+    if (linkedVendorData.onboardCode) {
+      try {
+        await updateDoc(
+          doc(db, "onboardingCodes", linkedVendorData.onboardCode),
+          {
+            status: "approved",
+            stallId: stallRef.id,
+          },
+        );
+      } catch (err) {
+        console.warn("Could not update onboarding code status:", err);
+      }
+    }
+
+    // Update vendor document with stall reference
+    try {
+      await updateDoc(doc(db, "vendors", linkedVendorData.vendorId), {
+        stallId: stallRef.id,
+        hawkerCentreId: currentHawkerCentre.id,
+        updatedAt: serverTimestamp(),
+      });
+    } catch (err) {
+      console.warn("Could not update vendor doc:", err);
+    }
+
+    // Close panel and refresh stalls
+    closeOnboardPanel();
+    await loadOperatorData(currentOperatorId);
+  } catch (error) {
+    console.error("Error approving onboarding:", error);
+    if (approveBtn) {
+      approveBtn.disabled = false;
+      approveBtn.textContent = "Approve Onboarding";
+    }
+    alert("Failed to approve onboarding. Please try again.");
+  }
+}
+
+/**
+ * Reject onboarding: delete the code and close the panel.
+ */
+async function handleReject() {
+  if (linkedVendorData?.onboardCode) {
+    try {
+      await updateDoc(
+        doc(db, "onboardingCodes", linkedVendorData.onboardCode),
+        {
+          status: "rejected",
+        },
+      );
+    } catch (err) {
+      // If doc doesn't exist, ignore
+      console.warn("Could not update onboarding code on reject:", err);
+    }
+    await deleteOnboardingCode(linkedVendorData.onboardCode);
+  }
+  closeOnboardPanel();
+}
+
+// ============================================
+// OPEN / CLOSE ONBOARD PANEL
+// ============================================
+
+async function openOnboardPanel() {
+  if (!currentHawkerCentre) {
+    alert("No hawker centre data loaded yet. Please wait and try again.");
+    return;
+  }
+
+  try {
+    // Generate initial code and store in Firestore
+    const code = await createOnboardingCode();
+    currentOnboardCode = code;
+
+    // Render the code state UI
+    renderCodeState();
+
+    // Start listening for vendor link
+    listenForCodeLink(code);
+
+    // Set up 30-second code refresh interval
+    codeRefreshInterval = setInterval(async () => {
+      try {
+        await refreshCode();
+      } catch (err) {
+        console.error("Error refreshing onboarding code:", err);
+      }
+    }, 30000);
+
+    // Open the panel
+    document.getElementById("onboardOverlay").classList.add("active");
+    document.getElementById("onboardPanel").classList.add("active");
+    document.body.style.overflow = "hidden";
+  } catch (error) {
+    console.error("Error opening onboard panel:", error);
+    alert("Failed to generate onboarding code. Please try again.");
+  }
 }
 
 function closeOnboardPanel() {
+  // Clear the code refresh interval
+  if (codeRefreshInterval) {
+    clearInterval(codeRefreshInterval);
+    codeRefreshInterval = null;
+  }
+
+  // Unsubscribe from snapshot listener
+  if (codeSnapshotUnsubscribe) {
+    codeSnapshotUnsubscribe();
+    codeSnapshotUnsubscribe = null;
+  }
+
+  // Delete pending code from Firestore (fire-and-forget)
+  if (currentOnboardCode) {
+    deleteOnboardingCode(currentOnboardCode);
+    currentOnboardCode = "";
+  }
+
+  // Reset linked vendor data
+  linkedVendorData = null;
+
+  // Revoke any preview object URLs
+  Object.keys(filePreviewUrls).forEach((key) => {
+    URL.revokeObjectURL(filePreviewUrls[key]);
+    delete filePreviewUrls[key];
+  });
+
+  // Close the panel
   document.getElementById("onboardOverlay").classList.remove("active");
   document.getElementById("onboardPanel").classList.remove("active");
   document.body.style.overflow = "";
 }
 
-function renderPage(tab) {
-  const container = document.getElementById("pageContent");
-  container.innerHTML =
-    tab === "archived" ? renderArchivedContent() : renderCurrentContent();
-
-  const isMacLocal = window.navigator.userAgentData
-    ? window.navigator.userAgentData.platform === "macOS"
-    : /Mac/i.test(window.navigator.userAgent);
-  const modKey = document.getElementById("onboardKeyMod");
-  if (modKey) {
-    modKey.textContent = isMacLocal ? "\u2318" : "CTRL";
-  }
-  const onboardBtn = document.getElementById("onboardBtn");
-  if (onboardBtn) {
-    onboardBtn.addEventListener("click", openOnboardPanel);
-  }
-}
+// ============================================
+// INITIALIZATION
+// ============================================
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Initial empty render while waiting for auth
   renderPage("current");
 
+  // Tab switching
   document.querySelectorAll('input[name="childrenTab"]').forEach((radio) => {
     radio.addEventListener("change", () => {
       renderPage(radio.value);
     });
   });
 
+  // Keyboard shortcut setup
   const isMac = window.navigator.userAgentData
     ? window.navigator.userAgentData.platform === "macOS"
     : /Mac/i.test(window.navigator.userAgent);
 
-  document.getElementById("searchKeyMod").textContent = isMac
-    ? "\u2318"
-    : "CTRL";
+  const searchKeyMod = document.getElementById("searchKeyMod");
+  if (searchKeyMod) {
+    searchKeyMod.textContent = isMac ? "\u2318" : "CTRL";
+  }
 
   document.addEventListener("keydown", (e) => {
     const modifier = isMac ? e.metaKey : e.ctrlKey;
     if (modifier && e.key === "k") {
       e.preventDefault();
-      document.getElementById("searchInput").focus();
+      const searchInput = document.getElementById("searchInput");
+      if (searchInput) searchInput.focus();
     }
     if (modifier && e.key === "o") {
       e.preventDefault();
@@ -696,10 +1267,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Onboard panel close handlers
   document
     .getElementById("onboardOverlay")
     .addEventListener("click", closeOnboardPanel);
   document
     .getElementById("onboardClose")
     .addEventListener("click", closeOnboardPanel);
+
+  // Firebase Auth — load operator data when authenticated
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      // Check onboarding status
+      const operatorDoc = await getDoc(doc(db, "operators", user.uid));
+      if (!operatorDoc.exists() || !operatorDoc.data().onboardingComplete) {
+        window.location.href = "../Auth/onboarding-operator.html";
+        return;
+      }
+
+      await loadOperatorData(user.uid);
+    } else {
+      // Not authenticated — redirect to login
+      window.location.href = "../Auth/login.html";
+    }
+  });
 });

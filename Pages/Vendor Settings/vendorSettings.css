@@ -1,0 +1,1088 @@
+@font-face {
+    font-family: "Aptos";
+    src: url("../../fonts/Aptos.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Source Serif";
+    src: url("../../fonts/SourceSerif4-Italic-VariableFont_opsz\,wght.ttf")
+        format("truetype");
+}
+
+@font-face {
+    font-family: "Source Serif";
+    src: url("../../fonts/SourceSerif4-VariableFont_opsz\,wght.ttf")
+        format("truetype");
+}
+
+@font-face {
+    font-family: "Geist Mono";
+    src: url("../../fonts/GeistMono-VariableFont_wght.ttf") format("truetype");
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    overflow-x: hidden;
+}
+
+body {
+    display: flex;
+    overflow-x: hidden;
+    font-family:
+        Aptos,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    background-color: #fff;
+    min-height: 100vh;
+}
+
+/* ============================================
+   SIDEBAR (from vendorDashboard.css)
+   ============================================ */
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 200px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 32px 24px 32px 0px;
+    border-right: 1px solid #e0e0e0;
+    background: #fff;
+    z-index: 100;
+    margin-left: 24px;
+}
+
+.sidebarTop {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+}
+
+.vendorAccount {
+    display: flex;
+    padding: 8px 16px;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    border-radius: 8px;
+    background: #f0f0f0;
+}
+
+.vendorIcon {
+    width: 21px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+.vendorName {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    color: #341539;
+    text-overflow: ellipsis;
+    font-family: Aptos;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.sidebarNav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.navItem {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+    transition: background 0.2s ease;
+}
+
+.navItem:hover {
+    background: #f4f1f6;
+}
+
+.navItem.active {
+    color: #913b9f;
+}
+
+.sidebarIcon {
+    width: 20px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+.navItem.hasDropdown {
+    position: relative;
+}
+
+.sidebarChevron {
+    width: 10px;
+    height: auto;
+    margin-left: auto;
+}
+
+.sidebarBottom {
+    display: flex;
+    align-items: center;
+}
+
+.sidebarLogo {
+    width: 170px;
+    height: auto;
+}
+
+/* ============================================
+   MAIN CONTENT
+   ============================================ */
+
+.mainContent {
+    margin-left: 200px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* Top Bar */
+.topBar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #fff;
+    padding: 32px 48px 0 48px;
+}
+
+/* Search module overrides */
+.searchModule {
+    height: 48px;
+    padding: 0px 16px 0px 20px;
+    border-radius: 24px;
+}
+
+.searchInput {
+    font-size: 16px;
+}
+
+.searchShortcut {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    pointer-events: none;
+}
+
+.searchKey {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 6px;
+    background: #e8e4ec;
+    box-shadow: 0 2px 0 #d0cad6;
+    color: #49454f;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.topBarActions {
+    display: flex;
+    align-items: center;
+    gap: 3em;
+    position: absolute;
+    right: 48px;
+}
+
+.topBarActions svg {
+    cursor: pointer;
+}
+
+/* ============================================
+   SETTINGS DROPDOWN
+   ============================================ */
+
+.settingsDropdownWrapper {
+    position: relative;
+}
+
+.settingsButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.settingsDropdown {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    min-width: 180px;
+    padding: 16px;
+    border-radius: 24px;
+    background: rgba(200, 150, 210, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: none;
+    box-shadow:
+        0 8px 32px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease,
+        visibility 0.3s ease;
+}
+
+.settingsDropdownWrapper:hover .settingsDropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.settingsDropdownItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-family: Aptos, sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    text-decoration: none;
+    color: #341539;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    transition: background 0.15s ease;
+}
+
+.settingsDropdownItem:hover {
+    background: #ece6f0;
+}
+
+.settingsDropdownActive {
+    color: #913b9f;
+    font-weight: 600;
+}
+
+.settingsDropdownLogout {
+    color: #eb001b;
+}
+
+.settingsDropdownLogout svg {
+    stroke: #eb001b;
+}
+
+/* ============================================
+   SETTINGS CONTENT
+   ============================================ */
+
+.settingsContent {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+    padding: 0 48px 48px 48px;
+}
+
+.sectionsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 96px;
+}
+
+/* Page Title */
+.pageTitle {
+    color: #913b9f;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+/* Section */
+.settingsSection {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sectionTitle {
+    color: #341539;
+    font-family:
+        Aptos,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    font-size: 23px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+}
+
+/* Action Buttons */
+.sectionActions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.actionButton {
+    display: flex;
+    padding: 2px 8px;
+    align-items: center;
+    gap: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+    color: #341539;
+}
+
+.actionButton.editButton {
+    border: 1px solid #ede5ec;
+    background: #ffffff;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.actionButton.editButton:hover {
+    background: #f4edf3;
+    border-color: #ddd2dc;
+}
+
+.actionButton img {
+    width: 13px;
+    height: 13px;
+}
+
+/* Detail Rows */
+.detailRows {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.detailRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    overflow: visible;
+}
+
+.detailLabel {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+}
+
+.detailLabelGroup {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow: visible;
+}
+
+.optionalBadge {
+    display: inline-flex;
+    padding: 4px 8px;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+    border: 1px solid #ac92ba;
+    background: #f4f1f6;
+    color: #913b9f;
+    font-family: Aptos;
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.detailValue {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.detailValuePhone {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.detailValuePhone img {
+    width: 23px;
+    height: 16px;
+}
+
+.detailValueNotProvided {
+    color: #999;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-style: italic;
+    font-weight: 400;
+    line-height: 24px;
+}
+
+.detailValueMono {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.detailValueList {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    max-width: 400px;
+    text-align: right;
+}
+
+/* ============================================
+   NOTIFICATIONS SECTION
+   ============================================ */
+
+.notificationsDescription {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+}
+
+.notificationMethods {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.notificationMethod {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 32px;
+}
+
+.notificationMethodLeft {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-width: 350px;
+}
+
+.notificationMethodTitle {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+}
+
+.notificationMethodDescription {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 20px;
+}
+
+.notificationMethodRight {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.telegramStatus {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+/* Telegram Connected State */
+.telegramConnected {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.telegramConnectedInfo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.telegramConnectedLabel {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    line-height: 24px;
+    letter-spacing: 0.4px;
+}
+
+.telegramConnectedAccount {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.telegramHandle {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    letter-spacing: 0.4px;
+}
+
+.telegramDisconnectButton {
+    display: flex;
+    padding: 0 12px;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    border-radius: 8px;
+    border: 1px solid #ffdde1;
+    background: #fff0f2;
+    color: #eb001b;
+    font-family: Aptos, sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 24px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.telegramDisconnectButton:hover {
+    border-color: #eb001b;
+    background: #ffe8eb;
+}
+
+/* Telegram Login Widget */
+#telegramLoginWidget {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 40px;
+    margin-top: 8px;
+}
+
+#telegramLoginWidget iframe {
+    border-radius: 8px;
+}
+
+/* ============================================
+   DANGER ZONE
+   ============================================ */
+
+.dangerSection {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.dangerTitle {
+    color: #341539;
+    font-family:
+        Aptos,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    font-size: 23px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+}
+
+.dangerDescription {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+}
+
+.dangerItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 32px;
+}
+
+.dangerItemLeft {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-width: 350px;
+}
+
+.dangerItemTitleGroup {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.informationIcon {
+    display: flex;
+    padding: 8px;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    border-radius: 8px;
+    border: 1px solid #ac92ba;
+    background: #f0f0f0;
+    cursor: pointer;
+    position: relative;
+}
+
+.informationTooltip {
+    position: absolute;
+    bottom: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    padding: 16px 20px;
+    background: rgba(200, 150, 210, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: none;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+    width: max-content;
+    max-width: 380px;
+    text-align: justify;
+    border-radius: 24px;
+    box-shadow:
+        0 8px 32px rgba(52, 21, 57, 0.1),
+        inset 0 1px 1px rgba(255, 255, 255, 0.6),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease,
+        visibility 0.3s ease;
+    z-index: 100;
+}
+
+.informationIcon:hover .informationTooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+.dangerItemTitle {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+}
+
+.dangerItemDescription {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 20px;
+}
+
+.dangerItemDescription a {
+    color: #913b9f;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 14px;
+    font-weight: 400;
+    text-decoration: none;
+}
+
+.dangerItemDescription a:hover {
+    opacity: 0.7;
+}
+
+.deleteButton {
+    display: flex;
+    padding: 0 12px;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    border-radius: 8px;
+    border: 1px solid #ffdde1;
+    background: #fff0f2;
+    color: #eb001b;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.deleteButton:hover {
+    background: #ffe0e3;
+    border-color: #ffbfc4;
+}
+
+/* ============================================
+   EDIT POPUP
+   ============================================ */
+
+.editPopupOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+        opacity 0.3s ease,
+        visibility 0.3s ease;
+}
+
+.editPopupOverlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.editPopup {
+    background: #fff;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: scale(0.9) translateY(20px);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
+}
+
+.editPopupOverlay.active .editPopup {
+    transform: scale(1) translateY(0);
+}
+
+.editPopupHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 24px 16px 24px;
+    border-bottom: 0.5px solid #e0e0e0;
+}
+
+.editPopupTitle {
+    color: #341539;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.editPopupClose {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: #f4f4f5;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.editPopupClose:hover {
+    background: #e8e8e9;
+    transform: scale(1.05);
+}
+
+.editPopupClose:active {
+    transform: scale(0.95);
+}
+
+.editPopupContent {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.editPopupFooter {
+    padding: 16px 24px 24px 24px;
+}
+
+.editPopupSaveBtn {
+    width: 100%;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 48px;
+    background: #913b9f;
+    color: #fff;
+    font-family: "Source Serif", Georgia, serif;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.editPopupSaveBtn:hover {
+    background: #7a3287;
+    transform: scale(1.02);
+}
+
+.editPopupSaveBtn:active {
+    transform: scale(0.98);
+}
+
+.editPopupSaveBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Edit Form Fields */
+.editFormGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.editFormLabelRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.editFormLabel {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+}
+
+.editFormInput {
+    padding: 14px 16px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 16px;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    color: #341539;
+    transition: border-color 0.2s ease;
+}
+
+.editFormInput::placeholder {
+    color: #a0a0a0;
+}
+
+.editFormInput:focus {
+    outline: none;
+    border-color: #913b9f;
+}
+
+.editFormPhoneRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.editFormPhoneRow img {
+    width: 23px;
+    height: 16px;
+}
+
+.editFormPhonePrefix {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.editFormPhoneRow .editFormInput {
+    flex: 1;
+}
+
+/* ============================================
+   LOADING SPINNER
+   ============================================ */
+
+.loadingSpinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid #f4f1f6;
+    border-top-color: #341539;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    .sidebar {
+        display: none;
+    }
+
+    .mainContent {
+        margin-left: 0;
+    }
+
+    .topBar {
+        padding: 24px 5% 0 5%;
+    }
+
+    .topBarActions {
+        right: 5%;
+        gap: 1.5em;
+    }
+
+    .settingsContent {
+        padding: 0 5% 48px 5%;
+    }
+
+    .detailRow {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .detailValueList {
+        text-align: left;
+    }
+
+    .notificationMethod {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .dangerItem {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .sectionHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .topBar {
+        padding: 16px 4% 0 4%;
+    }
+
+    .topBarActions {
+        right: 4%;
+        gap: 1em;
+    }
+
+    .settingsContent {
+        padding: 0 4% 48px 4%;
+    }
+}

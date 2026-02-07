@@ -1,3 +1,25 @@
+import { db, auth } from "../../firebase/config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  doc,
+  getDoc,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getStallById } from "../../firebase/services/foodStalls.js";
+import {
+  getFeedbackByStall,
+  resolveFeedbackWithResponse,
+} from "../../firebase/services/feedback.js";
+
+// ============================================
+// STATE
+// ============================================
+
+let currentStallId = null;
+let currentStallData = null;
+let realReviews = [];
+let selectedReviewId = null;
+let selectedReviewData = null;
+
 const tagIcons = {
   Halal: "../../assets/icons/halal.png",
   Kosher: "../../assets/icons/kosher.svg",
@@ -525,7 +547,7 @@ const reviewsIcon = `<svg class="reviewsHeaderIcon" xmlns="http://www.w3.org/200
 // Review resolve icon
 const reviewAckIcon = `<img class="reviewAckIcon" src="../../assets/icons/resolveReview.svg" alt="Resolve" />`;
 
-let currentReviewTab = "negative";
+let currentReviewTab = "new";
 
 function renderStars(count) {
   let html = "";
@@ -538,32 +560,85 @@ function renderStars(count) {
   return html;
 }
 
+function formatTimeAgo(date) {
+  if (!date) return "";
+  const now = new Date();
+  const d =
+    date instanceof Date ? date : date.toDate ? date.toDate() : new Date(date);
+  const diffMs = now - d;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "1 day ago";
+  if (diffDays < 30) return `${diffDays} days ago`;
+  if (diffDays < 60) return "1 month ago";
+  return `${Math.floor(diffDays / 30)} months ago`;
+}
+
+function getSentimentTag(sentiment) {
+  const config = {
+    positive: { label: "Positive", className: "sentimentPositive" },
+    negative: { label: "Negative", className: "sentimentNegative" },
+    neutral: { label: "Neutral", className: "sentimentNeutral" },
+  };
+  const c = config[sentiment] || config.neutral;
+  return `<span class="sentimentTag ${c.className}">
+    <img src="../../assets/icons/hawkrAi.svg" alt="HawkrAI" class="sentimentAiIcon" />
+    ${c.label}
+  </span>`;
+}
+
 function renderReviewCard(review) {
-  const bodyHtml = review.body
+  const body =
+    review.text || review.comment || review.body || "No comment provided.";
+  const bodyHtml = body
     .split("\n\n")
-    .map((paragraph) => `<p>${paragraph}</p>`)
+    .map((p) => `<p>${p}</p>`)
     .join("");
+  const title =
+    review.title ||
+    (review.tags && review.tags.length > 0 ? review.tags[0] : "Review");
+  const rating = review.rating || review.stars || 0;
+  const author = review.customerName || review.author || "Anonymous";
+  const timeAgo = formatTimeAgo(review.createdAt || review.date);
+  const sentimentTag = review.sentiment
+    ? getSentimentTag(review.sentiment)
+    : "";
+  const status = review.resolution ? "resolved" : "new";
+
+  const resolveButton =
+    status === "new"
+      ? `<button class="reviewResolveBtn" data-review-id="${review.id}" title="Resolve review">${reviewAckIcon}</button>`
+      : `<span class="reviewResolvedBadge">Resolved</span>`;
+
   return `
     <div class="reviewCard">
       <div class="reviewCardTop">
-        <span class="reviewTitle">${review.title}</span>
-        ${reviewAckIcon}
+        <span class="reviewTitle">${title}</span>
+        ${sentimentTag}
+        ${resolveButton}
       </div>
       <div class="reviewBody">${bodyHtml}</div>
       <div class="reviewMeta">
-        <span class="reviewStars">${renderStars(review.stars)}</span>
-        <span class="reviewDate">${review.date}</span>
+        <span class="reviewStars">${renderStars(rating)}</span>
+        <span class="reviewDate">${timeAgo}</span>
         <span class="reviewMetaDot">&bull;</span>
-        <span class="reviewAuthor">By ${review.author}</span>
+        <span class="reviewAuthor">By ${author}</span>
       </div>
     </div>
   `;
 }
 
 function renderReviewsSection(reviews) {
-  const filtered = reviews.filter(
-    (review) => review.sentiment === currentReviewTab,
-  );
+  const filtered = reviews.filter((review) => {
+    const status = review.resolution ? "resolved" : "new";
+    return status === currentReviewTab;
+  });
+
+  const emptyText =
+    filtered.length === 0
+      ? `<span class="reviewsEmpty">No ${currentReviewTab} reviews.</span>`
+      : "";
+
   return `
     <div class="reviewsSection">
       <div class="reviewsHeader">
@@ -573,19 +648,19 @@ function renderReviewsSection(reviews) {
         </div>
         <div class="segmentedControl reviewsSegmented">
           <label class="segmentedButton">
-            <input type="radio" name="reviewTab" value="negative" ${currentReviewTab === "negative" ? "checked" : ""} />
-            Negative
+            <input type="radio" name="reviewTab" value="new" ${currentReviewTab === "new" ? "checked" : ""} />
+            New
           </label>
           <label class="segmentedButton">
-            <input type="radio" name="reviewTab" value="positive" ${currentReviewTab === "positive" ? "checked" : ""} />
-            Positive
+            <input type="radio" name="reviewTab" value="resolved" ${currentReviewTab === "resolved" ? "checked" : ""} />
+            Resolved
           </label>
         </div>
       </div>
       <div class="reviewCards">
+        ${emptyText}
         ${filtered.map(renderReviewCard).join("")}
       </div>
-      <a class="reviewsSeeMore" href="operatorChildrenReviews.html">see more &gt;</a>
     </div>
   `;
 }
@@ -595,11 +670,138 @@ function bindReviewTabs() {
     input.addEventListener("change", (e) => {
       currentReviewTab = e.target.value;
       const container = document.querySelector(".reviewCards");
-      const filtered = mockStore.reviews.filter(
-        (review) => review.sentiment === currentReviewTab,
-      );
-      container.innerHTML = filtered.map(renderReviewCard).join("");
+      const filtered = realReviews.filter((review) => {
+        const status = review.resolution ? "resolved" : "new";
+        return status === currentReviewTab;
+      });
+      const emptyText =
+        filtered.length === 0
+          ? `<span class="reviewsEmpty">No ${currentReviewTab} reviews.</span>`
+          : "";
+      container.innerHTML = emptyText + filtered.map(renderReviewCard).join("");
+      bindResolveButtons();
     });
+  });
+}
+
+function bindResolveButtons() {
+  document.querySelectorAll(".reviewResolveBtn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const reviewId = btn.dataset.reviewId;
+      openResolveModal(reviewId);
+    });
+  });
+}
+
+// ============================================
+// RESOLVE MODAL
+// ============================================
+
+function openResolveModal(reviewId) {
+  selectedReviewId = reviewId;
+  selectedReviewData = realReviews.find((r) => r.id === reviewId);
+  if (!selectedReviewData) return;
+
+  const summary = document.getElementById("resolveReviewSummary");
+  summary.innerHTML = `
+    <span class="resolveCustomerName">${selectedReviewData.customerName || "Anonymous"}</span>
+    <div class="resolveReviewStars">${renderStars(selectedReviewData.rating || 0)}</div>
+    <span class="resolveReviewText">${selectedReviewData.text || selectedReviewData.comment || "No comment provided."}</span>
+  `;
+
+  document.getElementById("resolveResponseText").value = "";
+  document.getElementById("resolveCharCount").textContent = "0";
+  document.getElementById("resolveModal").hidden = false;
+}
+
+function closeResolveModal() {
+  document.getElementById("resolveModal").hidden = true;
+  document.getElementById("resolveResponseText").value = "";
+  document.getElementById("resolveCharCount").textContent = "0";
+  selectedReviewId = null;
+  selectedReviewData = null;
+}
+
+async function handleResolveSubmit() {
+  const response = document.getElementById("resolveResponseText").value.trim();
+  if (!response) {
+    alert("Please enter a response message");
+    return;
+  }
+
+  const submitBtn = document.getElementById("submitResolve");
+  try {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Processing...";
+
+    await resolveFeedbackWithResponse(selectedReviewId, response, "none", 0);
+
+    // Update local state
+    const review = realReviews.find((r) => r.id === selectedReviewId);
+    if (review) {
+      review.resolution = { type: "response_only", response };
+    }
+
+    closeResolveModal();
+
+    // Re-render review cards
+    const container = document.querySelector(".reviewCards");
+    const filtered = realReviews.filter((r) => {
+      const status = r.resolution ? "resolved" : "new";
+      return status === currentReviewTab;
+    });
+    const emptyText =
+      filtered.length === 0
+        ? `<span class="reviewsEmpty">No ${currentReviewTab} reviews.</span>`
+        : "";
+    container.innerHTML = emptyText + filtered.map(renderReviewCard).join("");
+    bindResolveButtons();
+
+    showToast("Feedback resolved successfully");
+  } catch (error) {
+    console.error("Error resolving feedback:", error);
+    alert("Failed to resolve feedback: " + (error.message || "Unknown error"));
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Resolve Feedback";
+  }
+}
+
+function showToast(message) {
+  const existing = document.querySelector(".toast");
+  if (existing) existing.remove();
+
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add("visible"));
+  setTimeout(() => {
+    toast.classList.remove("visible");
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+function bindResolveModal() {
+  document
+    .getElementById("closeResolveModal")
+    .addEventListener("click", closeResolveModal);
+  document
+    .getElementById("cancelResolve")
+    .addEventListener("click", closeResolveModal);
+  document
+    .getElementById("submitResolve")
+    .addEventListener("click", handleResolveSubmit);
+
+  document
+    .getElementById("resolveResponseText")
+    .addEventListener("input", (e) => {
+      document.getElementById("resolveCharCount").textContent =
+        e.target.value.length;
+    });
+
+  document.getElementById("resolveModal").addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) closeResolveModal();
   });
 }
 
@@ -730,7 +932,13 @@ const heartBadge = `<svg class="topItemIcon" viewBox="0 0 36 36" fill="none" xml
 
 function renderPage() {
   const store = mockStore;
-  const tags = store.tags.map(renderTag).join("");
+
+  // Use real stall data for header if available, fallback to mock
+  const displayName = currentStallData?.name || store.name;
+  const displayUen = currentStallData?.bizRegNo || store.uen;
+  const displayTags = (currentStallData?.cuisineNames || store.tags)
+    .map(renderTag)
+    .join("");
 
   // Get current timeframe data for rendering totals in the chart headers
   const timeframeData = store.charts[currentTimeframe];
@@ -741,10 +949,10 @@ function renderPage() {
       <div class="storeHeaderTop">
         <div class="storeHeaderInfo">
           <span class="storePerusing">Now Perusing:</span>
-          <span class="storeName">${store.name}</span>
-          <span class="storeUen">UEN: ${store.uen}</span>
+          <span class="storeName">${displayName}</span>
+          <span class="storeUen">UEN: ${displayUen}</span>
         </div>
-        <div class="storeTags">${tags}</div>
+        <div class="storeTags">${displayTags}</div>
       </div>
     </div>
 
@@ -805,7 +1013,7 @@ function renderPage() {
 
     ${renderTopItemSection("likes", heartBadge, "Top Item by Likes", store.topByLikes)}
 
-    ${renderReviewsSection(store.reviews)}
+    ${renderReviewsSection(realReviews)}
 
     ${renderDocumentsSection(store.documents)}
 
@@ -819,11 +1027,57 @@ function renderPage() {
   bindLoadMoreButtons();
   bindReviewTabs();
   bindDocTabs();
+  bindResolveButtons();
+}
+
+async function loadStallData() {
+  const params = new URLSearchParams(window.location.search);
+  currentStallId = params.get("id");
+
+  if (currentStallId) {
+    try {
+      currentStallData = await getStallById(currentStallId);
+    } catch (err) {
+      console.warn("Could not fetch stall data:", err);
+    }
+
+    try {
+      const result = await getFeedbackByStall(currentStallId, {
+        limitCount: 50,
+        publicOnly: false,
+      });
+      realReviews = result.feedback || [];
+    } catch (err) {
+      console.warn("Could not fetch reviews:", err);
+      realReviews = [];
+    }
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  google.charts.load("current", { packages: ["corechart"] });
-  google.charts.setOnLoadCallback(renderPage);
+  // Firebase Auth — check onboarding before initialising page
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      // Check onboarding status
+      const operatorDoc = await getDoc(doc(db, "operators", user.uid));
+      if (!operatorDoc.exists() || !operatorDoc.data().onboardingComplete) {
+        window.location.href = "../Auth/onboarding-operator.html";
+        return;
+      }
+
+      // Load real stall data and reviews before rendering
+      await loadStallData();
+
+      google.charts.load("current", { packages: ["corechart"] });
+      google.charts.setOnLoadCallback(renderPage);
+
+      // Bind resolve modal events
+      bindResolveModal();
+    } else {
+      window.location.href = "../Auth/login.html";
+      return;
+    }
+  });
 
   const isMac = window.navigator.userAgentData
     ? window.navigator.userAgentData.platform === "macOS"
