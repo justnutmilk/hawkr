@@ -103,6 +103,44 @@ function renderBusinessDetails(vendor) {
   `;
 }
 
+const cuisineIcons = {
+  Halal: "../../assets/icons/halal.png",
+  Kosher: "../../assets/icons/kosher.svg",
+};
+
+function renderCuisineTag(tag) {
+  const icon = cuisineIcons[tag];
+  const cls = tag.toLowerCase();
+  if (icon) {
+    return `<span class="stallCuisineTag ${cls}"><img class="stallCuisineIcon" src="${icon}" alt="${tag}" /> ${tag}</span>`;
+  }
+  return `<span class="stallCuisineTag">${tag}</span>`;
+}
+
+function renderHoursTable(hours) {
+  if (!hours || !Array.isArray(hours) || hours.length === 0) {
+    return `<span class="detailValueNotProvided">Not set</span>`;
+  }
+
+  return `
+    <div class="stallHoursTable">
+      ${hours
+        .map((day) => {
+          const slots =
+            day.active && day.slots && day.slots.length > 0
+              ? day.slots.map((s) => `${s.from} – ${s.to}`).join(", ")
+              : "Closed";
+          return `
+          <div class="stallHoursRow${!day.active ? " stallHoursClosed" : ""}">
+            <span class="stallHoursDay">${day.day}</span>
+            <span class="stallHoursTime">${slots}</span>
+          </div>`;
+        })
+        .join("")}
+    </div>
+  `;
+}
+
 function renderStallDetails(stall) {
   if (!stall) {
     return `
@@ -115,12 +153,15 @@ function renderStallDetails(stall) {
     `;
   }
 
-  const cuisinesDisplay =
-    stall.cuisines && stall.cuisines.length > 0
-      ? stall.cuisines.join(", ")
-      : "None set";
+  const locationName =
+    vendorData.centreName || stall.location || vendorData.storeLocation || "";
+  const locationAddress = vendorData.centreAddress || "";
+  const hasCoords = vendorData.centreLat && vendorData.centreLng;
 
-  const hoursDisplay = formatOperatingHours(stall.operatingHours);
+  const cuisinesHtml =
+    stall.cuisines && stall.cuisines.length > 0
+      ? `<div class="stallCuisines">${stall.cuisines.map(renderCuisineTag).join("")}</div>`
+      : `<span class="detailValueNotProvided">None set</span>`;
 
   return `
     <div class="settingsSection">
@@ -133,23 +174,27 @@ function renderStallDetails(stall) {
           </button>
         </div>
       </div>
-      <div class="detailRows">
-        <div class="detailRow">
-          <span class="detailLabel">Location</span>
-          <span class="detailValue">${stall.location || vendorData.storeLocation || "Not set"}</span>
-        </div>
-        <div class="detailRow">
-          <span class="detailLabel">Unit Number</span>
-          <span class="detailValue">${stall.unitNumber || vendorData.unitNumber || "Not set"}</span>
-        </div>
-        <div class="detailRow">
-          <span class="detailLabel">Cuisines</span>
-          <span class="detailValueList">${cuisinesDisplay}</span>
-        </div>
-        <div class="detailRow">
-          <span class="detailLabel">Operating Hours</span>
-          <span class="detailValueList">${hoursDisplay}</span>
-        </div>
+
+      <div class="stallDetailBlock">
+        <span class="stallDetailLabel">Location</span>
+        ${
+          hasCoords
+            ? `<div class="stallMapContainer" id="settingsStallMap"></div>`
+            : ""
+        }
+        <span class="stallLocationName">${locationName || "Not set"}</span>
+        ${locationAddress ? `<span class="stallLocationAddress">${locationAddress}</span>` : ""}
+        ${stall.unitNumber || vendorData.unitNumber ? `<span class="stallLocationUnit">Unit ${stall.unitNumber || vendorData.unitNumber}</span>` : ""}
+      </div>
+
+      <div class="stallDetailBlock">
+        <span class="stallDetailLabel">Cuisines</span>
+        ${cuisinesHtml}
+      </div>
+
+      <div class="stallDetailBlock">
+        <span class="stallDetailLabel">Operating Hours</span>
+        ${renderHoursTable(stall.operatingHours)}
       </div>
     </div>
   `;
@@ -316,6 +361,36 @@ function renderSettingsPage(vendor, stall) {
   `;
 
   attachEventListeners();
+  initSettingsMap();
+}
+
+/**
+ * Initialize the static Google Map in Stall Details (if coordinates are available)
+ */
+async function initSettingsMap() {
+  const mapEl = document.getElementById("settingsStallMap");
+  if (!mapEl || !vendorData.centreLat || !vendorData.centreLng) return;
+
+  try {
+    const { Map } = await google.maps.importLibrary("maps");
+    const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+
+    const pos = { lat: vendorData.centreLat, lng: vendorData.centreLng };
+
+    const map = new Map(mapEl, {
+      center: pos,
+      zoom: 16,
+      mapId: "hawkr-settings",
+      disableDefaultUI: true,
+      zoomControl: false,
+      gestureHandling: "none",
+      clickableIcons: false,
+    });
+
+    new AdvancedMarkerElement({ position: pos, map });
+  } catch (err) {
+    console.warn("Could not load settings map:", err);
+  }
 }
 
 // ============================================
@@ -851,6 +926,7 @@ async function initializeSettingsPage() {
         vendorData.hygieneCertUrl = data.hygieneCertUrl || null;
         vendorData.halalCertUrl = data.halalCertUrl || null;
         vendorData.stallId = data.stallId || null;
+        vendorData.hawkerCentreId = data.hawkerCentreId || null;
       }
     } catch (error) {
       console.error("Error loading vendor data:", error);
@@ -858,19 +934,16 @@ async function initializeSettingsPage() {
 
     // Load stall data — prefer direct fetch by stallId from vendor doc
     try {
+      let stallDocData = null;
+      let stallDocId = null;
+
       if (vendorData.stallId) {
-        const stallDoc = await getDoc(
+        const stallDocSnap = await getDoc(
           doc(db, "foodStalls", vendorData.stallId),
         );
-        if (stallDoc.exists()) {
-          const data = stallDoc.data();
-          stallData = {
-            id: stallDoc.id,
-            location: data.location || data.hawkerCentre || "",
-            unitNumber: data.unitNumber || "",
-            cuisines: data.cuisines || [],
-            operatingHours: data.operatingHours || [],
-          };
+        if (stallDocSnap.exists()) {
+          stallDocData = stallDocSnap.data();
+          stallDocId = stallDocSnap.id;
         }
       } else {
         // Fallback: query by ownerId
@@ -880,19 +953,44 @@ async function initializeSettingsPage() {
         );
         const stallsSnapshot = await getDocs(stallsQuery);
         if (!stallsSnapshot.empty) {
-          const stallDoc = stallsSnapshot.docs[0];
-          const data = stallDoc.data();
-          stallData = {
-            id: stallDoc.id,
-            location: data.location || data.hawkerCentre || "",
-            unitNumber: data.unitNumber || "",
-            cuisines: data.cuisines || [],
-            operatingHours: data.operatingHours || [],
-          };
+          stallDocData = stallsSnapshot.docs[0].data();
+          stallDocId = stallsSnapshot.docs[0].id;
         }
+      }
+
+      if (stallDocData) {
+        stallData = {
+          id: stallDocId,
+          location: stallDocData.location || stallDocData.hawkerCentre || "",
+          unitNumber: stallDocData.unitNumber || "",
+          cuisines: stallDocData.cuisineNames || stallDocData.cuisines || [],
+          operatingHours: stallDocData.operatingHours || [],
+          hawkerCentreId:
+            stallDocData.hawkerCentreId || vendorData.hawkerCentreId || null,
+        };
       }
     } catch (error) {
       console.error("Error loading stall data:", error);
+    }
+
+    // Fetch hawker centre location for the map
+    const centreId =
+      stallData?.hawkerCentreId || vendorData.hawkerCentreId || null;
+    if (centreId) {
+      try {
+        const centreDoc = await getDoc(doc(db, "hawkerCentres", centreId));
+        if (centreDoc.exists()) {
+          const cd = centreDoc.data();
+          vendorData.centreName = cd.name || "";
+          vendorData.centreAddress = cd.address || "";
+          vendorData.centreLat =
+            cd.location?.latitude || cd.location?._lat || null;
+          vendorData.centreLng =
+            cd.location?.longitude || cd.location?._long || null;
+        }
+      } catch (error) {
+        console.error("Error loading hawker centre:", error);
+      }
     }
   }
 

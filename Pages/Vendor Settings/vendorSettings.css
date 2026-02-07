@@ -1172,6 +1172,140 @@ body {
 }
 
 /* ============================================
+   STALL DETAILS
+   ============================================ */
+
+.stallDetailBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 16px;
+}
+
+.stallDetailBlock:first-of-type {
+    padding-top: 0;
+}
+
+.stallDetailLabel {
+    color: #913b9f;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+/* Stall Map */
+.stallMapContainer {
+    width: 100%;
+    height: 200px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f0f0f0;
+}
+
+.stallLocationName {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.stallLocationAddress {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.stallLocationUnit {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+}
+
+/* Cuisine Tags */
+.stallCuisines {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.stallCuisineTag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 16px;
+    border-radius: 48px;
+    background: #f2f2ff;
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: normal;
+    white-space: nowrap;
+}
+
+.stallCuisineTag.halal {
+    background: #eaf5e9;
+}
+
+.stallCuisineTag.kosher {
+    background: #eeeade;
+}
+
+.stallCuisineIcon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
+
+/* Operating Hours Table */
+.stallHoursTable {
+    width: 100%;
+}
+
+.stallHoursRow {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.stallHoursRow:last-child {
+    border-bottom: none;
+}
+
+.stallHoursDay {
+    width: 48px;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.stallHoursTime {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 13px;
+    font-weight: 400;
+}
+
+.stallHoursClosed .stallHoursDay {
+    color: #c0c0c0;
+}
+
+.stallHoursClosed .stallHoursTime {
+    color: #c0c0c0;
+    font-style: italic;
+}
+
+/* ============================================
    RESPONSIVE
    ============================================ */
 
