@@ -342,7 +342,6 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    margin-left: 4px;
     padding: 2px 6px;
     border-radius: 4px;
     background: rgba(235, 0, 27, 0.1);
@@ -581,10 +580,7 @@ body {
 .topItemCard {
     display: flex;
     align-items: flex-start;
-}
-
-.topItemCard .topItemImage {
-    margin-right: 48px;
+    gap: 48px;
 }
 
 .topItemCard .topItemPrice {
@@ -810,19 +806,14 @@ body {
 }
 
 .reviewBody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     color: #341539;
     font-family: Aptos, sans-serif;
     font-size: 16px;
     font-weight: 400;
     line-height: 1.5;
-}
-
-.reviewBody p {
-    margin: 0;
-}
-
-.reviewBody p + p {
-    margin-top: 12px;
 }
 
 .reviewMeta {
@@ -876,6 +867,7 @@ body {
 .hygieneBlock {
     display: flex;
     flex-direction: column;
+    gap: 16px;
 }
 
 .hygieneTitle {
@@ -887,7 +879,7 @@ body {
 }
 
 .hygieneGradeRow {
-    margin-top: 24px;
+    padding-top: 8px;
 }
 
 .hygieneGrade {
@@ -899,20 +891,12 @@ body {
     letter-spacing: -3px;
 }
 
-.hygieneUpdatedRow {
-    margin-top: 16px;
-}
-
 .hygieneUpdated {
     color: #341539;
     font-family: Aptos, sans-serif;
     font-size: 19px;
     font-weight: 300;
     line-height: 36px;
-}
-
-.hygieneHistoryRow {
-    margin-top: 16px;
 }
 
 .hygieneHistory {
