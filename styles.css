@@ -168,6 +168,12 @@ h1 {
 
 .heroCtaRow .ctaEmail {
     flex-shrink: 0;
+    width: 23vw;
+    min-width: 300px;
+}
+
+.heroCtaRow .pillInput {
+    width: 100%;
 }
 
 .heroCtaImage {
