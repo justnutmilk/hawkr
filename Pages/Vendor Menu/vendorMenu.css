@@ -2303,11 +2303,24 @@ body {
     /* Add/Edit side panel — full-screen on mobile */
     .addPanel {
         width: 100%;
+        height: 100dvh;
+    }
+
+    .addPanelForm {
+        padding: 16px;
+        gap: 16px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .addPanelHeader {
+        padding: 16px;
     }
 
     .addPanelFooter {
         flex-direction: column;
         gap: 12px;
+        padding: 16px;
     }
 
     .addPanelFooterRight {
@@ -2322,6 +2335,11 @@ body {
     .addPanelDeleteBtn {
         width: 100%;
         justify-content: center;
+    }
+
+    /* Image upload zone — smaller on mobile */
+    .imageUploadZone {
+        padding: 20px 16px;
     }
 
     /* Edit popup overlay */
