@@ -1016,3 +1016,1292 @@ h1 {
 body.mobileMenuOpen {
     overflow: hidden;
 }
+
+/* ============================================
+   LANDING PAGE — APPENDED SECTIONS
+   ============================================ */
+
+/* Shared section heading */
+.sectionHeading {
+    color: #341539;
+    font-family: "Geist Mono", "Courier New", Courier, monospace;
+    font-size: 2.5rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+/* ============================================
+   PROBLEM → OUTCOME
+   ============================================ */
+
+.problemOutcomeSection {
+    margin: 96px 8% 0;
+}
+
+.problemOutcomeGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+}
+
+.problemOutcomeCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 32px 24px;
+    border-radius: 24px;
+    background: #f9f7fa;
+    text-align: center;
+}
+
+.problemSide,
+.outcomeSide {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.problemLabel {
+    color: #595959;
+    font-family: "Geist Mono", monospace;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.problemDesc {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.outcomeArrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 0;
+}
+
+.outcomeLabel {
+    color: #913b9f;
+    font-family: "Geist Mono", monospace;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+.outcomeDesc {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* ============================================
+   HOW IT WORKS
+   ============================================ */
+
+.howItWorksSection {
+    margin: 96px 8% 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 48px;
+}
+
+.howItWorksGrid {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0;
+}
+
+.howItWorksStep {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    text-align: center;
+    width: 200px;
+}
+
+.stepIconCircle {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #f3edf5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stepIcon {
+    width: 28px;
+    height: 28px;
+}
+
+.stepLabel {
+    color: #341539;
+    font-family: "Geist Mono", monospace;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.stepDesc {
+    color: #595959;
+    font-family: Aptos, sans-serif;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.stepConnector {
+    display: flex;
+    align-items: center;
+    padding-top: 20px;
+    margin: 0 8px;
+}
+
+.howItWorksSidenote {
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 0.85rem;
+    font-style: italic;
+    margin: 0;
+}
+
+/* ============================================
+   PRODUCT SUITE
+   ============================================ */
+
+.productSuiteSection {
+    margin: 96px 8% 0;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+}
+
+.productSuiteHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 700px;
+}
+
+.productSuiteSubheading {
+    color: #595959;
+    font-family: Aptos, sans-serif;
+    font-size: 1rem;
+    line-height: 1.7;
+    margin: 0;
+}
+
+.productSuiteLayout {
+    display: flex;
+    gap: 48px;
+    align-items: flex-start;
+}
+
+/* Preview area */
+.productSuitePreview {
+    flex: 1;
+    min-height: 360px;
+    background: #f9f7fa;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.moduleAnimation {
+    display: none;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+}
+
+.moduleAnimation.active {
+    display: flex;
+}
+
+/* Module grid */
+.productSuiteGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    width: 280px;
+    flex-shrink: 0;
+}
+
+.moduleTab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 20px 12px;
+    border-radius: 16px;
+    border: 2px solid transparent;
+    background: #f9f7fa;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: "Geist Mono", monospace;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #595959;
+}
+
+.moduleTab:hover {
+    background: #f3edf5;
+}
+
+.moduleTab.active {
+    border-color: #913b9f;
+    background: #fff;
+    color: #913b9f;
+}
+
+.moduleTabIcon {
+    width: 24px;
+    height: 24px;
+}
+
+/* ============================================
+   PRODUCT SUITE — ANIMATIONS
+   ============================================ */
+
+/* --- Ordering --- */
+.animOrdering {
+    width: 100%;
+    max-width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.animCartHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: "Geist Mono", monospace;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #341539;
+}
+
+.animCartIcon {
+    width: 20px;
+    height: 20px;
+}
+
+.animCartItems {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.animCartItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #f9f7fa;
+    opacity: 0;
+    transform: translateY(-12px);
+    animation: cartItemDrop 0.5s ease forwards;
+}
+
+.animCartItem1 {
+    animation-delay: 0.3s;
+}
+.animCartItem2 {
+    animation-delay: 0.9s;
+}
+.animCartItem3 {
+    animation-delay: 1.5s;
+}
+
+@keyframes cartItemDrop {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animItemName {
+    font-family: Aptos, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #341539;
+}
+
+.animItemStall {
+    font-family: Aptos, sans-serif;
+    font-size: 0.75rem;
+    color: #808080;
+}
+
+.animItemPrice {
+    font-family: "Geist Mono", monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #913b9f;
+}
+
+.animCartFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.animCartTotal {
+    font-family: "Geist Mono", monospace;
+    font-size: 0.85rem;
+    color: #595959;
+}
+
+.animTotalValue {
+    color: #341539;
+}
+
+.animCheckoutBtn {
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: #913b9f;
+    color: #fff;
+    font-family: Aptos, sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    animation: checkoutPulse 2s ease-in-out infinite;
+    animation-delay: 2.2s;
+}
+
+@keyframes checkoutPulse {
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(145, 59, 159, 0.3);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 8px rgba(145, 59, 159, 0);
+    }
+}
+
+/* --- Line --- */
+.animLine {
+    width: 100%;
+    max-width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.animLineHeader {
+    font-family: "Geist Mono", monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: #913b9f;
+}
+
+.animLineCard {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+    animation: lineSlideIn 0.5s ease forwards;
+    opacity: 0;
+    transform: translateX(40px);
+}
+
+.animLineCard1 {
+    animation-delay: 0.2s;
+}
+.animLineCard2 {
+    animation-delay: 0.6s;
+}
+.animLineCard3 {
+    animation-delay: 1s;
+}
+
+@keyframes lineSlideIn {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.animLineOrderNum {
+    font-family: "Geist Mono", monospace;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #341539;
+}
+
+.animLineItems {
+    font-family: Aptos, sans-serif;
+    font-size: 0.8rem;
+    color: #595959;
+    flex: 1;
+    margin: 0 12px;
+}
+
+.animLineStatus {
+    font-family: "Geist Mono", monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #fff7e6;
+    color: #b8860b;
+}
+
+.animLineReady {
+    background: #eaf5e9;
+    color: #2d8a2d;
+}
+
+/* --- Pulse --- */
+.animPulse {
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.animPulseHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.animPulseLabel {
+    font-family: "Geist Mono", monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #913b9f;
+}
+
+.animPulseValue {
+    font-family: "Geist Mono", monospace;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #341539;
+}
+
+.animPulseChart {
+    width: 100%;
+    height: 120px;
+}
+
+.animPulseLine {
+    stroke-dasharray: 500;
+    stroke-dashoffset: 500;
+    animation: pulseDraw 2.5s ease forwards;
+}
+
+.animPulseArea {
+    opacity: 0;
+    animation: pulseFadeIn 0.5s ease forwards;
+    animation-delay: 2.5s;
+}
+
+@keyframes pulseDraw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes pulseFadeIn {
+    to {
+        opacity: 1;
+    }
+}
+
+/* --- Aegis --- */
+.animAegis {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.animAegisCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 32px 40px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    text-align: center;
+}
+
+.animAegisStall {
+    font-family: Aptos, sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #341539;
+}
+
+.animAegisDate {
+    font-family: Aptos, sans-serif;
+    font-size: 0.8rem;
+    color: #808080;
+}
+
+.animAegisBadge {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #eaf5e9;
+    color: #2d8a2d;
+    font-family: "Geist Mono", monospace;
+    font-size: 2.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: aegisStamp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    animation-delay: 0.5s;
+    transform: scale(0);
+}
+
+@keyframes aegisStamp {
+    0% {
+        transform: scale(0) rotate(-20deg);
+    }
+    60% {
+        transform: scale(1.2) rotate(5deg);
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+/* --- Feedback --- */
+.animFeedback {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.animFeedbackStars {
+    display: flex;
+    gap: 6px;
+}
+
+.animStar path {
+    transition: fill 0.3s ease;
+}
+
+.animStar1 {
+    animation: starFill 0.3s ease forwards;
+    animation-delay: 0.3s;
+}
+.animStar2 {
+    animation: starFill 0.3s ease forwards;
+    animation-delay: 0.6s;
+}
+.animStar3 {
+    animation: starFill 0.3s ease forwards;
+    animation-delay: 0.9s;
+}
+.animStar4 {
+    animation: starFill 0.3s ease forwards;
+    animation-delay: 1.2s;
+}
+.animStar5 {
+    animation: starFill 0.3s ease forwards;
+    animation-delay: 1.5s;
+}
+
+@keyframes starFill {
+    to {
+        fill: #913b9f;
+        transform: scale(1.15);
+    }
+    100% {
+        fill: #913b9f;
+        transform: scale(1);
+    }
+}
+
+.animFeedbackText {
+    font-family: Aptos, sans-serif;
+    font-size: 1rem;
+    font-style: italic;
+    color: #595959;
+    opacity: 0;
+    animation: feedbackType 0.5s ease forwards;
+    animation-delay: 2s;
+}
+
+@keyframes feedbackType {
+    to {
+        opacity: 1;
+    }
+}
+
+/* --- Payments --- */
+.animPayments {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.animPaymentsPill {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 28px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.animPaymentsAmount {
+    font-family: "Geist Mono", monospace;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #341539;
+}
+
+.animPaymentsSpinner {
+    width: 24px;
+    height: 24px;
+    border: 2.5px solid #e0e0e0;
+    border-top-color: #913b9f;
+    border-radius: 50%;
+    animation:
+        paymentSpin 0.8s linear infinite,
+        paymentSpinHide 0s ease forwards;
+    animation-delay: 0s, 2s;
+}
+
+@keyframes paymentSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes paymentSpinHide {
+    to {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+}
+
+.animPaymentsCheck {
+    opacity: 0;
+    transform: scale(0);
+    animation: paymentCheckPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    animation-delay: 2s;
+}
+
+@keyframes paymentCheckPop {
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.animPaymentsPowered {
+    font-family: Aptos, sans-serif;
+    font-size: 0.8rem;
+    color: #808080;
+}
+
+/* --- Dietary --- */
+.animDietary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    max-width: 320px;
+}
+
+.animDietaryTag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: #f2f2ff;
+    font-family: "Geist Mono", monospace;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #341539;
+    transform: scale(0);
+    animation: dietaryPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animDietaryTag1 {
+    animation-delay: 0.1s;
+    background: #eaf5e9;
+}
+.animDietaryTag2 {
+    animation-delay: 0.25s;
+    background: #eeeade;
+}
+.animDietaryTag3 {
+    animation-delay: 0.4s;
+}
+.animDietaryTag4 {
+    animation-delay: 0.55s;
+}
+.animDietaryTag5 {
+    animation-delay: 0.7s;
+}
+.animDietaryTag6 {
+    animation-delay: 0.85s;
+}
+.animDietaryTag7 {
+    animation-delay: 1s;
+}
+
+@keyframes dietaryPop {
+    to {
+        transform: scale(1);
+    }
+}
+
+.animDietaryIcon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
+
+/* --- Telegram --- */
+.animTelegram {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.animPhoneFrame {
+    width: 220px;
+    height: 320px;
+    border-radius: 28px;
+    border: 3px solid #e0e0e0;
+    background: #f9f9f9;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.animPhoneNotch {
+    width: 80px;
+    height: 6px;
+    border-radius: 3px;
+    background: #e0e0e0;
+    margin-top: 12px;
+}
+
+.animTelegramNotif {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin: 24px 12px 0;
+    padding: 12px;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transform: translateY(-80px);
+    opacity: 0;
+    animation: notifSlideDown 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    animation-delay: 0.8s;
+}
+
+@keyframes notifSlideDown {
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.animTelegramLogo {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
+.animTelegramText {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-family: Aptos, sans-serif;
+    font-size: 0.75rem;
+    color: #595959;
+    line-height: 1.4;
+}
+
+.animTelegramText strong {
+    color: #341539;
+    font-size: 0.8rem;
+}
+
+/* ============================================
+   SOLUTIONS (ROLE SWITCHER)
+   ============================================ */
+
+.solutionsSection {
+    margin: 96px 8% 0;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.solutionsTabs {
+    display: flex;
+    gap: 8px;
+    padding: 4px;
+    border-radius: 999px;
+    background: #f0f0f0;
+    align-self: flex-start;
+}
+
+.solutionTab {
+    padding: 10px 20px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-family: Aptos, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #595959;
+    transition: all 0.2s ease;
+}
+
+.solutionTab:hover {
+    background: #e4e4e4;
+}
+
+.solutionTab.active {
+    background: #fff;
+    color: #341539;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.solutionsContent {
+    min-height: 180px;
+}
+
+.solutionPanel {
+    display: none;
+}
+
+.solutionPanel.active {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    animation: solutionFadeIn 0.3s ease;
+}
+
+@keyframes solutionFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.solutionBenefits {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.solutionBenefits li {
+    font-family: Aptos, sans-serif;
+    font-size: 1.05rem;
+    color: #341539;
+    line-height: 1.6;
+    padding-left: 24px;
+    position: relative;
+}
+
+.solutionBenefits li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 8px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #913b9f;
+}
+
+.solutionCta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #913b9f;
+    font-family: Aptos, sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: gap 0.2s ease;
+}
+
+.solutionCta:hover {
+    gap: 12px;
+}
+
+.solutionCta svg {
+    width: 7px;
+    height: 11px;
+}
+
+/* ============================================
+   PRODUCT SCREENSHOTS
+   ============================================ */
+
+.screenshotsSection {
+    margin: 96px 8% 0;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.screenshotsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+}
+
+.screenshotCard {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.screenshotPlaceholder {
+    width: 100%;
+    aspect-ratio: 9 / 16;
+    border-radius: 16px;
+    background: #f0f0f0;
+    border: 2px dashed #d9d9d9;
+}
+
+.screenshotLabel {
+    font-family: "Geist Mono", monospace;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #595959;
+    text-align: center;
+}
+
+/* ============================================
+   ONBOARDING
+   ============================================ */
+
+.onboardingSection {
+    margin: 96px 8% 0;
+}
+
+.onboardingContent {
+    display: flex;
+    align-items: center;
+    gap: 64px;
+    padding: 48px;
+    border-radius: 24px;
+    background: #f9f7fa;
+}
+
+.onboardingIllustration {
+    width: 200px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+.onboardingText {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.onboardingDesc {
+    color: #595959;
+    font-family: Aptos, sans-serif;
+    font-size: 1rem;
+    line-height: 1.7;
+    margin: 0;
+}
+
+.onboardingCta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 999px;
+    background: #913b9f;
+    color: #fff;
+    font-family: Aptos, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    align-self: flex-start;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.onboardingCta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(145, 59, 159, 0.25);
+}
+
+.onboardingCta svg {
+    width: 7px;
+    height: 11px;
+}
+
+/* ============================================
+   PRICING
+   ============================================ */
+
+.pricingSection {
+    margin: 96px 8% 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+}
+
+.pricingGrid {
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+}
+
+.pricingCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 40px 48px;
+    border-radius: 24px;
+    background: #f9f7fa;
+    text-align: center;
+    min-width: 260px;
+}
+
+.pricingCardHighlight {
+    border: 2px solid #913b9f;
+    background: #fff;
+}
+
+.pricingTier {
+    font-family: "Geist Mono", monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #913b9f;
+}
+
+.pricingPrice {
+    font-family: "Geist Mono", monospace;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #341539;
+}
+
+.pricingDetail {
+    font-family: Aptos, sans-serif;
+    font-size: 0.9rem;
+    color: #595959;
+}
+
+.pricingCta {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 24px;
+    border-radius: 999px;
+    background: #341539;
+    color: #fff;
+    font-family: Aptos, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    margin-top: 8px;
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.pricingCta:hover {
+    background: #913b9f;
+    transform: translateY(-2px);
+}
+
+.pricingFootnote {
+    font-family: Aptos, sans-serif;
+    font-size: 0.85rem;
+    color: #808080;
+    margin: 0;
+}
+
+/* ============================================
+   FAQ
+   ============================================ */
+
+.faqSection {
+    margin: 96px 8% 0;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    max-width: 700px;
+}
+
+.faqList {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.faqItem {
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.faqQuestion {
+    padding: 20px 0;
+    font-family: Aptos, sans-serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #341539;
+    cursor: pointer;
+    list-style: none;
+}
+
+.faqQuestion::-webkit-details-marker {
+    display: none;
+}
+
+.faqQuestion::after {
+    content: "+";
+    float: right;
+    font-family: "Geist Mono", monospace;
+    font-size: 1.2rem;
+    color: #913b9f;
+    transition: transform 0.2s ease;
+}
+
+.faqItem[open] .faqQuestion::after {
+    content: "\2212";
+}
+
+.faqAnswer {
+    color: #595959;
+    font-family: Aptos, sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    padding: 0 0 20px;
+    margin: 0;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+
+.siteFooter {
+    margin-top: 96px;
+    padding: 48px 8%;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.footerTop {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.footerLogo {
+    height: 28px;
+    width: auto;
+}
+
+.footerTagline {
+    font-family: Aptos, sans-serif;
+    font-size: 0.9rem;
+    color: #595959;
+    font-style: italic;
+    margin: 0;
+}
+
+.footerLinks {
+    display: flex;
+    gap: 64px;
+}
+
+.footerLinkGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.footerLinkLabel {
+    font-family: "Geist Mono", monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #913b9f;
+    margin-bottom: 4px;
+}
+
+.footerLinkGroup a {
+    font-family: Aptos, sans-serif;
+    font-size: 0.9rem;
+    color: #595959;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.footerLinkGroup a:hover {
+    color: #341539;
+}
+
+.footerBottom {
+    padding-top: 16px;
+    border-top: 1px solid #e0e0e0;
+    font-family: Aptos, sans-serif;
+    font-size: 0.8rem;
+    color: #808080;
+}
