@@ -14,6 +14,7 @@ import {
   getDoc,
   updateDoc,
   deleteDoc,
+  deleteField,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import {
@@ -484,13 +485,11 @@ function convertOperatingHours(hours) {
   hours.forEach((day) => {
     const dayKey = dayMap[day.day];
     if (!day.active || day.slots.length === 0) {
-      firebaseHours[dayKey] = { open: "", close: "", isClosed: true };
+      firebaseHours[dayKey] = { isClosed: true, slots: [] };
     } else {
-      const slot = day.slots[0];
       firebaseHours[dayKey] = {
-        open: slot.from,
-        close: slot.to,
         isClosed: false,
+        slots: day.slots.map((s) => ({ from: s.from, to: s.to })),
       };
     }
   });
@@ -619,7 +618,12 @@ async function completeOnboarding() {
 
     if (existingStallId) {
       // Update existing stall instead of creating a duplicate
-      await updateDoc(doc(db, "foodStalls", existingStallId), stallFields);
+      // Also clear stale operator fields from any previous linking
+      await updateDoc(doc(db, "foodStalls", existingStallId), {
+        ...stallFields,
+        operatorId: deleteField(),
+        operatorName: deleteField(),
+      });
       stallId = existingStallId;
       console.log("Existing stall updated:", stallId);
     } else {
@@ -654,6 +658,8 @@ async function completeOnboarding() {
       hygieneCertUrl: vendorData.hygieneCertUrl || null,
       halalCertUrl: vendorData.halalCertUrl || null,
       onboardingComplete: true,
+      // Clear stale tenancy from any previous linking
+      tenancyLinkedAt: deleteField(),
       updatedAt: serverTimestamp(),
     });
     console.log("Vendor profile updated with stallId:", stallId);
@@ -1450,21 +1456,101 @@ function initBrowserNotifications() {
 }
 
 function initTelegram() {
-  const connectBtn = document.getElementById("connectTelegram");
+  const container = document.getElementById("telegramLoginWidget");
   const connectedState = document.getElementById("telegramConnectedState");
 
-  if (!connectBtn) return;
+  // If already connected (check both old and new field names)
+  if (vendorData.telegramConnected || vendorData.telegramLinked) {
+    const handle = vendorData.telegramUsername
+      ? `@${vendorData.telegramUsername}`
+      : "Linked";
+    showTelegramConnected(handle);
+    return;
+  }
 
-  connectBtn.addEventListener("click", () => {
-    const botUsername = "hawkrOrgBot";
-    const startParam = currentUser?.uid || "";
-    window.open(`https://t.me/${botUsername}?start=${startParam}`, "_blank");
-  });
+  if (!container) return;
 
-  // Check if already connected
-  if (vendorData.telegramConnected && connectedState) {
-    connectBtn.parentElement.style.display = "none";
-    connectedState.style.display = "flex";
+  container.innerHTML = "";
+
+  const script = document.createElement("script");
+  script.async = true;
+  script.src = "https://telegram.org/js/telegram-widget.js?22";
+  script.setAttribute("data-telegram-login", "hawkrOrgBot");
+  script.setAttribute("data-size", "large");
+  script.setAttribute("data-onauth", "onTelegramAuth(user)");
+  script.setAttribute("data-request-access", "write");
+
+  container.appendChild(script);
+}
+
+window.onTelegramAuth = async function (user) {
+  if (!currentUser) return;
+
+  try {
+    await updateDoc(doc(db, "vendors", currentUser.uid), {
+      telegramChatId: user.id.toString(),
+      telegramLinked: true,
+      telegramUsername: user.username || null,
+      telegramFirstName: user.first_name || null,
+      telegramLastName: user.last_name || null,
+      telegramPhotoUrl: user.photo_url || null,
+      telegramAuthDate: user.auth_date,
+    });
+
+    vendorData.telegramConnected = true;
+    vendorData.telegramChatId = user.id.toString();
+
+    const handle = user.username
+      ? `@${user.username}`
+      : user.first_name || "Linked";
+    showTelegramConnected(handle);
+  } catch (error) {
+    console.error("Error linking Telegram:", error);
+    alert("Failed to link Telegram account. Please try again.");
+  }
+};
+
+function showTelegramConnected(handle) {
+  const widget = document.getElementById("telegramLoginWidget");
+  const connectedState = document.getElementById("telegramConnectedState");
+  const handleEl = document.getElementById("telegramHandle");
+  if (widget) widget.style.display = "none";
+  if (handleEl) handleEl.textContent = handle;
+  if (connectedState) connectedState.style.display = "flex";
+
+  const disconnectBtn = document.getElementById("telegramDisconnect");
+  if (disconnectBtn) {
+    disconnectBtn.addEventListener("click", handleTelegramDisconnect);
+  }
+}
+
+async function handleTelegramDisconnect() {
+  if (!currentUser) return;
+
+  try {
+    await updateDoc(doc(db, "vendors", currentUser.uid), {
+      telegramChatId: null,
+      telegramLinked: false,
+      telegramUsername: null,
+      telegramFirstName: null,
+      telegramLastName: null,
+      telegramPhotoUrl: null,
+      telegramAuthDate: null,
+    });
+
+    vendorData.telegramConnected = false;
+    vendorData.telegramChatId = null;
+
+    const widget = document.getElementById("telegramLoginWidget");
+    const connectedState = document.getElementById("telegramConnectedState");
+    if (connectedState) connectedState.style.display = "none";
+    if (widget) widget.style.display = "flex";
+
+    // Re-init widget
+    initTelegram();
+  } catch (error) {
+    console.error("Error unlinking Telegram:", error);
+    alert("Failed to unlink Telegram. Please try again.");
   }
 }
 

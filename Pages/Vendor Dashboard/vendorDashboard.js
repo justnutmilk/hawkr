@@ -14,6 +14,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 import { initVendorNavbar } from "../../assets/js/vendorNavbar.js";
 import { updateOrderStatus } from "../../firebase/services/orders.js";
+import { disruptor } from "../../firebase/services/disruptor.js";
 import {
   doc,
   getDoc,
@@ -164,6 +165,14 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+// Cleanup all live subscriptions and disruptor listeners on page unload
+window.addEventListener("beforeunload", () => {
+  if (ordersUnsubscribe) ordersUnsubscribe();
+  if (completedOrdersUnsubscribe) completedOrdersUnsubscribe();
+  if (menuLikesUnsubscribe) menuLikesUnsubscribe();
+  disruptor.destroy();
+});
+
 /**
  * Load vendor data from Firestore
  */
@@ -212,14 +221,15 @@ async function loadVendorData(userId) {
         currentStall = stallDoc;
         console.log("Found stall:", currentStall.id, currentStall.name);
 
-        // Load recent orders (for order line) and all completed orders (for stats) in parallel
-        await Promise.all([
-          loadOrders(currentStall.id),
-          loadAllCompletedOrders(currentStall.id),
-          loadMenuItemLikes(currentStall.id),
-        ]);
-        // Re-render now that orders, chart data, and likes are ready
-        renderDashboard();
+        // Subscribe to disruptor FIRST so it catches the initial snapshot emit
+        disruptor.on("vendor:charts:invalidated", () => {
+          renderDashboard();
+        });
+
+        // Subscribe to live data — order line, completed orders (charts), and likes
+        loadOrders(currentStall.id);
+        subscribeToCompletedOrders(currentStall.id);
+        subscribeToMenuItemLikes(currentStall.id);
       } else {
         // No stall found - render with empty orders
         orders = [];
@@ -254,6 +264,8 @@ function updateVendorName(name) {
  * Load orders for a stall
  */
 let ordersUnsubscribe = null;
+let completedOrdersUnsubscribe = null;
+let menuLikesUnsubscribe = null;
 
 function loadOrders(stallId) {
   console.log("Loading orders for stallId:", stallId);
@@ -616,58 +628,75 @@ function parseOrderDate(dateStr) {
 /**
  * Load ALL completed orders for a stall (for charts & top items)
  */
-async function loadAllCompletedOrders(stallId) {
-  try {
-    const q = query(
-      collection(db, "orders"),
-      where("stallId", "==", stallId),
-      where("status", "==", "ready"),
-    );
-    const snapshot = await getDocs(q);
-
-    completedOrders = snapshot.docs.map((d) => {
-      const data = d.data();
-      return {
-        id: d.id,
-        total: data.total || 0,
-        items: data.items || [],
-        createdAt: data.createdAt?.toDate?.() || new Date(data.createdAt),
-      };
-    });
-
-    // Build chart data and top items
-    chartData = aggregateChartData(completedOrders);
-    topItems = buildTopItemsBySales(completedOrders);
-  } catch (error) {
-    console.error("Error loading completed orders:", error);
-    completedOrders = [];
-    chartData = aggregateChartData([]);
-    topItems = [];
+function subscribeToCompletedOrders(stallId) {
+  if (completedOrdersUnsubscribe) {
+    completedOrdersUnsubscribe();
+    completedOrdersUnsubscribe = null;
   }
+
+  const q = query(
+    collection(db, "orders"),
+    where("stallId", "==", stallId),
+    where("status", "==", "ready"),
+  );
+
+  completedOrdersUnsubscribe = onSnapshot(
+    q,
+    (snapshot) => {
+      completedOrders = snapshot.docs.map((d) => {
+        const data = d.data();
+        return {
+          id: d.id,
+          total: data.total || 0,
+          items: data.items || [],
+          createdAt: data.createdAt?.toDate?.() || new Date(data.createdAt),
+        };
+      });
+
+      chartData = aggregateChartData(completedOrders);
+      topItems = buildTopItemsBySales(completedOrders);
+      disruptor.emit("vendor:charts:invalidated");
+    },
+    (error) => {
+      console.error("Error in completed orders listener:", error);
+      completedOrders = [];
+      chartData = aggregateChartData([]);
+      topItems = [];
+    },
+  );
 }
 
 /**
  * Load menu items with their like counts for the stall
  */
-async function loadMenuItemLikes(stallId) {
-  try {
-    const menuRef = collection(db, "foodStalls", stallId, "menuItems");
-    const snapshot = await getDocs(menuRef);
-
-    topItemsByLikes = snapshot.docs
-      .map((d) => ({
-        id: d.id,
-        name: d.data().name || "Unknown Item",
-        imageUrl: d.data().imageUrl || "",
-        unitPrice: d.data().price || 0,
-        likesCount: d.data().likesCount || 0,
-      }))
-      .filter((item) => item.likesCount > 0)
-      .sort((a, b) => b.likesCount - a.likesCount);
-  } catch (error) {
-    console.error("Error loading menu item likes:", error);
-    topItemsByLikes = [];
+function subscribeToMenuItemLikes(stallId) {
+  if (menuLikesUnsubscribe) {
+    menuLikesUnsubscribe();
+    menuLikesUnsubscribe = null;
   }
+
+  const menuRef = collection(db, "foodStalls", stallId, "menuItems");
+
+  menuLikesUnsubscribe = onSnapshot(
+    menuRef,
+    (snapshot) => {
+      topItemsByLikes = snapshot.docs
+        .map((d) => ({
+          id: d.id,
+          name: d.data().name || "Unknown Item",
+          imageUrl: d.data().imageUrl || "",
+          unitPrice: d.data().price || 0,
+          likesCount: d.data().likesCount || 0,
+        }))
+        .filter((item) => item.likesCount > 0)
+        .sort((a, b) => b.likesCount - a.likesCount);
+      disruptor.emit("vendor:charts:invalidated");
+    },
+    (error) => {
+      console.error("Error in menu item likes listener:", error);
+      topItemsByLikes = [];
+    },
+  );
 }
 
 /**

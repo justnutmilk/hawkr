@@ -33,7 +33,17 @@ import {
   findOrCreateHawkerCentre,
 } from "../../firebase/services/hawkerCentres.js";
 import { getStallsByHawkerCentre } from "../../firebase/services/foodStalls.js";
+import {
+  getFunctions,
+  httpsCallable,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
+import { app } from "../../firebase/config.js";
 import { showToast } from "../../assets/js/toast.js";
+import { initNotificationBadge } from "../../assets/js/notificationBadge.js";
+import {
+  initToastContainer,
+  subscribeToNewNotifications,
+} from "../../assets/js/toastNotifications.js";
 window.showToast = showToast;
 
 // ============================================
@@ -254,9 +264,14 @@ function formatOperatingHoursObject(hours) {
   orderedKeys.forEach((dayKey) => {
     const h = hours[dayKey];
     if (!h) return;
-    const key = h.isClosed
-      ? "Closed"
-      : `${formatTime12h(h.open)}-${formatTime12h(h.close)}`;
+    let key;
+    if (h.isClosed) {
+      key = "Closed";
+    } else if (h.slots && Array.isArray(h.slots)) {
+      key = formatSlots(h.slots);
+    } else {
+      key = `${formatTime12h(h.open)}-${formatTime12h(h.close)}`;
+    }
     if (!groups[key]) {
       groups[key] = [];
       dayOrder.push(key);
@@ -1102,6 +1117,11 @@ function operatingHoursToArray(hours) {
     if (!h || h.isClosed) {
       return { day: d, active: false, slots: [] };
     }
+    // New format: { slots: [...] }
+    if (h.slots && Array.isArray(h.slots)) {
+      return { day: d, active: true, slots: h.slots };
+    }
+    // Legacy format: { open, close }
     return {
       day: d,
       active: true,
@@ -1128,13 +1148,11 @@ function scheduleArrayToObject(arr) {
   arr.forEach((d) => {
     const key = dayMap[d.day];
     if (!d.active || d.slots.length === 0) {
-      result[key] = { open: "00:00", close: "00:00", isClosed: true };
+      result[key] = { isClosed: true, slots: [] };
     } else {
-      // Use first slot as the main operating hours
       result[key] = {
-        open: d.slots[0].from || "09:00",
-        close: d.slots[0].to || "17:00",
         isClosed: false,
+        slots: d.slots.map((s) => ({ from: s.from, to: s.to })),
       };
     }
   });
@@ -1502,6 +1520,21 @@ async function handleApprove() {
       console.warn("Could not update vendor doc:", err);
     }
 
+    // Notify vendor of link (non-blocking)
+    try {
+      const fns = getFunctions(app, "asia-southeast1");
+      const notifyTenancy = httpsCallable(fns, "notifyVendorTenancy");
+      notifyTenancy({
+        vendorId: linkedVendorData.vendorId,
+        action: "linked",
+        centreName: currentHawkerCentre.name || "",
+        operatorId: currentOperatorId,
+        vendorName: linkedVendorData.storeName || "",
+      });
+    } catch (err) {
+      console.warn("Tenancy notification failed:", err);
+    }
+
     // Close panel — stalls grid updates automatically via realtime listener
     closeOnboardPanel();
   } catch (error) {
@@ -1630,23 +1663,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Keyboard shortcut setup
-  const isMac = window.navigator.userAgentData
-    ? window.navigator.userAgentData.platform === "macOS"
-    : /Mac/i.test(window.navigator.userAgent);
-
-  const searchKeyMod = document.getElementById("searchKeyMod");
-  if (searchKeyMod) {
-    searchKeyMod.textContent = isMac ? "\u2318" : "CTRL";
-  }
-
+  // Keyboard shortcuts (Ctrl+O for onboard, Escape to close)
   document.addEventListener("keydown", (e) => {
-    const modifier = isMac ? e.metaKey : e.ctrlKey;
-    if (modifier && e.key === "k") {
-      e.preventDefault();
-      const searchInput = document.getElementById("searchInput");
-      if (searchInput) searchInput.focus();
-    }
+    const modifier = e.metaKey || e.ctrlKey;
     if (modifier && e.key === "o") {
       e.preventDefault();
       openOnboardPanel();
@@ -1667,6 +1686,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // Firebase Auth — load operator data when authenticated
   onAuthStateChanged(auth, async (user) => {
     if (user) {
+      initNotificationBadge(`operators/${user.uid}/notifications`);
+      initToastContainer();
+      subscribeToNewNotifications(`operators/${user.uid}/notifications`);
+
       // Check onboarding status
       const operatorDoc = await getDoc(doc(db, "operators", user.uid));
       if (!operatorDoc.exists() || !operatorDoc.data().onboardingComplete) {

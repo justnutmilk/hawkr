@@ -826,7 +826,7 @@ exports.initiateRefund = onCall(async (request) => {
       .collection("foodStalls")
       .doc(orderData.stallId)
       .get();
-    const refundVendorId = stallDoc.exists ? stallDoc.data().vendorId : null;
+    const refundVendorId = stallDoc.exists ? stallDoc.data().ownerId : null;
 
     if (refundVendorId) {
       await db
@@ -944,7 +944,7 @@ exports.notifyVendorNewOrder = onCall(async (request) => {
     if (!stallDoc.exists) {
       return { success: false, reason: "Stall not found" };
     }
-    const vendorId = stallDoc.data().vendorId;
+    const vendorId = stallDoc.data().ownerId;
     if (!vendorId) {
       return { success: false, reason: "No vendor linked to stall" };
     }
@@ -1134,6 +1134,98 @@ exports.notifyCardEvent = onCall(async (request) => {
 });
 
 // ============================================
+// VENDOR TENANCY NOTIFICATION (callable)
+// ============================================
+
+/**
+ * Notify vendor when they are linked/unlinked from an operator.
+ * Optionally also notify the operator (e.g. when vendor disconnects).
+ * Called from operator children, operator children detail, and vendor tenancy pages.
+ */
+exports.notifyVendorTenancy = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "User must be logged in");
+  }
+
+  const { vendorId, action, centreName, operatorId, vendorName } = request.data;
+  if (!vendorId || !action) {
+    throw new HttpsError(
+      "invalid-argument",
+      "vendorId and action are required",
+    );
+  }
+
+  const db = admin.firestore();
+
+  const isLink = action === "linked";
+  const vendorTitle = isLink
+    ? `Linked to ${centreName || "a hawker centre"}`
+    : `Unlinked from ${centreName || "a hawker centre"}`;
+  const vendorMessage = isLink
+    ? `Your stall has been linked to ${centreName || "a hawker centre"}. You are now managed by this operator. They have access to your stall's details and data.`
+    : `Your stall has been unlinked from ${centreName || "a hawker centre"}. You are no longer managed by this operator. They no longer have access to your stall's details and data.`;
+
+  try {
+    // In-app notification for vendor
+    await db
+      .collection("vendors")
+      .doc(vendorId)
+      .collection("notifications")
+      .add({
+        type: isLink ? "operator_linked" : "operator_unlinked",
+        title: vendorTitle,
+        message: vendorMessage,
+        isRead: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+    // Telegram notification for vendor
+    const vendorDoc = await db.collection("vendors").doc(vendorId).get();
+    if (vendorDoc.exists) {
+      const chatId = vendorDoc.data().telegramChatId;
+      if (chatId) {
+        const escapeMarkdown = (text) =>
+          text.replace(/[_*[\]()~`>#+=|{}.!-]/g, "\\$&");
+
+        const tgMessage = `*${escapeMarkdown(vendorTitle)}*\n\n${escapeMarkdown(vendorMessage)}`;
+        await sendMessage(chatId, tgMessage, { parse_mode: "MarkdownV2" });
+      }
+    }
+
+    // Notify operator if operatorId is provided (e.g. vendor-initiated disconnect)
+    if (operatorId) {
+      const stallName =
+        vendorName ||
+        (vendorDoc.exists ? vendorDoc.data().storeName : "") ||
+        "A vendor";
+      const opTitle = isLink
+        ? `${stallName} linked`
+        : `${stallName} disconnected`;
+      const opMessage = isLink
+        ? `${stallName} has been linked to your hawker centre.`
+        : `${stallName} has disconnected from your hawker centre.`;
+
+      await db
+        .collection("operators")
+        .doc(operatorId)
+        .collection("notifications")
+        .add({
+          type: isLink ? "vendor_linked" : "vendor_unlinked",
+          title: opTitle,
+          message: opMessage,
+          isRead: false,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("notifyVendorTenancy error:", error);
+    throw new HttpsError("internal", error.message);
+  }
+});
+
+// ============================================
 // VENDOR FEEDBACK NOTIFICATION (callable)
 // ============================================
 
@@ -1161,7 +1253,7 @@ exports.notifyVendorFeedback = onCall(async (request) => {
     if (!stallDoc.exists) {
       return { success: false, reason: "Stall not found" };
     }
-    const vendorId = stallDoc.data().vendorId;
+    const vendorId = stallDoc.data().ownerId;
     if (!vendorId) {
       return { success: false, reason: "No vendor linked to stall" };
     }
@@ -1346,5 +1438,73 @@ Response (one word only):`;
     if (rating >= 4) return { sentiment: "positive" };
     if (rating <= 2) return { sentiment: "negative" };
     return { sentiment: "neutral" };
+  }
+});
+
+// ============================================
+// INSPECTION NOTIFICATION (callable)
+// ============================================
+
+/**
+ * Notify an operator or vendor about an inspection result.
+ * Called from the authority inspection page.
+ */
+exports.notifyInspection = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "User must be logged in");
+  }
+
+  const { targetId, targetType, stallName, grade, inspectionDate } =
+    request.data;
+  if (!targetId || !targetType || !stallName) {
+    throw new HttpsError(
+      "invalid-argument",
+      "targetId, targetType, and stallName are required",
+    );
+  }
+
+  const db = admin.firestore();
+  const collectionName = targetType === "operator" ? "operators" : "vendors";
+
+  try {
+    // Create in-app notification
+    await db
+      .collection(collectionName)
+      .doc(targetId)
+      .collection("notifications")
+      .add({
+        type: "inspection_result",
+        title: `Hygiene Inspection: Grade ${grade}`,
+        message: `${stallName} received grade ${grade} from inspection on ${inspectionDate}.`,
+        isRead: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+    // Send Telegram if connected
+    const targetDoc = await db.collection(collectionName).doc(targetId).get();
+    if (targetDoc.exists) {
+      const data = targetDoc.data();
+      const chatId = data.telegramChatId || data.preferences?.telegramChatId;
+      if (chatId) {
+        const botToken = process.env.TELEGRAM_BOT_TOKEN;
+        if (botToken) {
+          const text = `🔍 Hygiene Inspection\n\n${stallName} received grade ${grade} from inspection on ${inspectionDate}.`;
+          await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text,
+              parse_mode: "HTML",
+            }),
+          });
+        }
+      }
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("notifyInspection error:", error);
+    throw new HttpsError("internal", error.message);
   }
 });

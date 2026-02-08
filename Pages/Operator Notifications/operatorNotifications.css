@@ -16,6 +16,7 @@
 
 html {
     overflow-x: hidden;
+    overflow-y: scroll;
 }
 
 body {
@@ -87,9 +88,15 @@ body {
     font-style: normal;
     font-weight: 400;
     line-height: normal;
+    flex: 1;
+    min-width: 0;
 }
 
-/* Sidebar Navigation */
+.operatorName--loading {
+    display: block;
+    overflow: visible;
+}
+
 .sidebarNav {
     display: flex;
     flex-direction: column;
@@ -125,7 +132,6 @@ body {
     flex-shrink: 0;
 }
 
-/* Sidebar Bottom */
 .sidebarBottom {
     display: flex;
     align-items: center;
@@ -141,26 +147,14 @@ body {
    ============================================ */
 
 .mainContent {
-    margin-left: 224px;
+    margin-left: 200px;
     flex: 1;
     display: flex;
     flex-direction: column;
     gap: 48px;
-    height: 100vh;
-    overflow-y: auto;
+    min-height: 100vh;
     overflow-x: hidden;
-}
-
-/* Sticky Header */
-.stickyHeader {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background: #fff;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 32px;
+    overflow-y: auto;
 }
 
 /* Top Bar */
@@ -180,24 +174,13 @@ body {
     right: 48px;
 }
 
-.topBarActions a {
-    display: flex;
-    align-items: center;
-}
-
 .topBarActions svg {
     cursor: pointer;
 }
 
-/* ============================================
-   DASHBOARD CONTENT
-   ============================================ */
-
-.dashboardContent {
+.topBarActions a {
     display: flex;
-    flex-direction: column;
-    gap: 48px;
-    padding: 0 48px 48px 48px;
+    align-items: center;
 }
 
 /* ============================================
@@ -212,7 +195,6 @@ body {
     border-radius: 9999px;
     background: #f0f0f0;
     align-self: center;
-    anchor-name: --segmented-button-hover;
 }
 
 .segmentedControl::before,
@@ -220,10 +202,11 @@ body {
     content: "";
     position: absolute;
     border-radius: inherit;
-    transition: inset 250ms cubic-bezier(0.4, 0, 0.2, 1);
-    inset: calc(anchor(start) + var(--padding))
-        calc(anchor(end) + var(--padding)) calc(anchor(end) + var(--padding))
-        calc(anchor(start) + var(--padding));
+    transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    top: var(--padding);
+    bottom: var(--padding);
+    left: calc(anchor(left) + var(--padding));
+    right: calc(anchor(right) + var(--padding));
 }
 
 .segmentedControl::before {
@@ -254,7 +237,7 @@ body {
     background-color: transparent;
     border: none;
     border-radius: inherit;
-    width: 200px;
+    width: 160px;
     height: 38px;
     padding: 0;
     font-family: Aptos, sans-serif;
@@ -281,6 +264,8 @@ body {
 
 .segmentedButton input {
     position: absolute;
+    top: 0;
+    left: 0;
     width: 1px;
     height: 1px;
     padding: 0;
@@ -291,7 +276,7 @@ body {
     border-width: 0;
 }
 
-/* Safari fallback: anchor positioning is not supported */
+/* Safari fallback */
 @supports not (anchor-name: --a) {
     .segmentedControl::before,
     .segmentedControl::after {
@@ -307,313 +292,169 @@ body {
 }
 
 /* ============================================
-   QUICK STATS
+   NOTIFICATIONS CONTENT
    ============================================ */
 
-.quickStats {
-    display: flex;
-    flex-direction: column;
-    gap: 32px;
-}
-
-.quickStatsBlocks {
-    display: flex;
-    flex-direction: column;
-    gap: 96px;
-}
-
-.quickStatsSection {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-}
-
-.quickStatsHeader {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.quickStatsIcon {
-    width: 20px;
-    height: 20px;
-}
-
-.statBlock {
+.notificationsContent {
     display: flex;
     flex-direction: column;
     gap: 48px;
+    padding: 0 48px 48px 48px;
 }
 
-.statBlockTop {
+.notificationCard {
     display: flex;
     flex-direction: column;
     gap: 16px;
-}
-
-.statBlockLabel {
-    color: #913b9f;
-    font-family: "Geist Mono", "Courier New", Courier, monospace;
-    font-size: 16px;
-    font-style: normal;
-    font-weight: 400;
-    line-height: normal;
-    letter-spacing: 0.64px;
-}
-
-.statBlockValue {
-    color: #341539;
-    font-family: "Geist Mono", "Courier New", Courier, monospace;
-    font-size: 32px;
-    font-weight: 700;
-    line-height: normal;
-    font-feature-settings: "ss09" on;
-}
-
-.statBlockPlaceholder {
-    color: #808080;
-    font-family: "Geist Mono", "Courier New", Courier, monospace;
-    font-size: 24px;
-    font-weight: 400;
-    font-style: italic;
-    line-height: normal;
-    padding: 32px 0;
-}
-
-.chartContainer {
-    width: 100%;
-    height: 200px;
-}
-
-.starRating {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-}
-
-.starIcon {
-    width: 24px;
-    height: 24px;
-    flex-shrink: 0;
-}
-
-/* Section Titles */
-.sectionLabel {
-    color: #913b9f;
-    font-family: "Geist Mono", "Courier New", Courier, monospace;
-    font-size: 16px;
-    font-style: normal;
-    font-weight: 600;
-    line-height: normal;
-}
-
-/* ============================================
-   TOP STORES
-   ============================================ */
-
-.topStoresSection {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.topStoresSubtitle {
-    color: #808080;
-    font-family: "Geist Mono", "Courier New", Courier, monospace;
-    font-size: 16px;
-    font-weight: 400;
-    line-height: normal;
-}
-
-.topStoresCards {
-    display: flex;
-    justify-content: space-between;
-    gap: 32px;
-    overflow-x: auto;
-    padding-bottom: 8px;
-}
-
-.topStoresCards::-webkit-scrollbar {
-    height: 4px;
-}
-
-.topStoresCards::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.topStoresCards::-webkit-scrollbar-thumb {
-    background: #d9d9d9;
-    border-radius: 4px;
-}
-
-.topStoreCard {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    flex: 1;
-    min-width: 0;
-    background: none;
-    border: none;
-    padding: 16px;
-    border-radius: 24px;
-    text-align: left;
+    padding: 24px;
+    border-radius: 12px;
     cursor: pointer;
     transition: background 0.2s ease;
 }
 
-.topStoreCard:hover {
-    background: #f5f5f5;
+.notificationCard:hover {
+    background: rgba(0, 0, 0, 0.02);
 }
 
-.topStoreImage {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-    border-radius: 24px;
-    background: #f0f0f0;
+.notificationCard--unread {
+    background: #f9f7fb;
+    border-left: 4px solid #913b9f;
 }
 
-.topStoreName {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    align-self: stretch;
-    overflow: hidden;
-    color: #595959;
-    text-overflow: ellipsis;
-    font-family: "Geist Mono";
-    font-size: 16px;
-    font-style: normal;
-    font-weight: 600;
-    line-height: normal;
+.notificationCard--unread:hover {
+    background: #f3eef6;
 }
 
-.topStoreRevenue {
-    color: #341539;
-    font-family: "Geist Mono", "Courier New", Courier, monospace;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    align-self: stretch;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 28px;
-    font-style: normal;
-    font-weight: 600;
-    line-height: normal;
+.notificationCard--unread .notificationTime::before {
+    background-color: #913b9f;
 }
 
-/* ============================================
-   STALL LIST
-   ============================================ */
-
-.stallListSection {
-    display: flex;
-    flex-direction: column;
-    gap: 48px;
-}
-
-.stallRow {
+.notificationHeader {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 48px;
-    background: none;
-    border: none;
-    padding: 16px 24px;
-    border-radius: 12px;
-    text-align: left;
-    cursor: pointer;
-    width: 100%;
-    transition: background 0.2s ease;
+    gap: 16px;
 }
 
-.stallRow:hover {
-    background: #f5f5f5;
-}
-
-.stallRowInfo {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    flex: 1;
-    min-width: 0;
-}
-
-.stallRowName {
+.notificationTitle {
     color: #341539;
     font-family: "Geist Mono", "Courier New", Courier, monospace;
-    font-size: 32px;
-    font-weight: 700;
-    line-height: normal;
-}
-
-.stallRowTags {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.stallTag {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 6px 16px;
-    border-radius: 48px;
-    background: #f2f2ff;
-    color: #341539;
-    font-family: "Geist Mono", "Courier New", Courier, monospace;
-    font-size: 16px;
+    font-size: 23px;
+    font-style: normal;
     font-weight: 600;
     line-height: normal;
+}
+
+.notificationTime {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
     white-space: nowrap;
 }
 
-.stallTag.halal {
-    background: #eaf5e9;
+.notificationTime::before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background-color: #808080;
+    border-radius: 50%;
 }
 
-.stallTag.kosher {
-    background: #eeeade;
-}
-
-.stallTagIcon {
-    width: 16px;
-    height: 16px;
-    object-fit: contain;
-}
-
-.loadMoreButton {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    padding: 8px;
-    border-radius: 8px;
-    border: none;
-    background: #eaf5e9;
-    border: 1px solid #cee6cc;
-    color: #595959;
+.notificationBody {
+    color: #341539;
     font-family: Aptos, sans-serif;
     font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+}
+
+.seeMore {
+    color: #913b9f;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-style: normal;
     font-weight: 400;
     line-height: normal;
+    text-decoration: none;
     cursor: pointer;
-    transition: background 0.2s ease;
+    transition: opacity 0.2s ease;
 }
 
-.loadMoreButton:hover {
-    background: #dceeda;
+.seeMore:hover {
+    opacity: 0.7;
 }
 
-.stallRowGraphPlaceholder {
-    color: #808080;
+.emptyState {
+    color: #595959;
     font-family: "Geist Mono", "Courier New", Courier, monospace;
     font-size: 16px;
     font-weight: 400;
-    font-style: italic;
     line-height: normal;
-    white-space: nowrap;
-    flex-shrink: 0;
+}
+
+/* ============================================
+   SKELETON LOADING STATE
+   ============================================ */
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.skeletonLine {
+    border-radius: 8px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+.skeletonCard {
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px;
+}
+
+.skeletonTitle {
+    height: 23px;
+    width: 50%;
+}
+
+.skeletonBody {
+    height: 16px;
+    width: 80%;
+}
+
+.skeletonTime {
+    height: 16px;
+    width: 100px;
+}
+
+.skeletonHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.skeletonName {
+    height: 14px;
+    width: 100%;
+}
+
+.skeletonNameShort {
+    width: 50%;
+    margin-top: 6px;
 }

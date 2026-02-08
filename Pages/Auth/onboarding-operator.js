@@ -31,7 +31,6 @@ const stepOrder = [
   "company-details",
   "contact-info",
   "hawker-centres",
-  "notification-settings",
   "review",
 ];
 
@@ -39,7 +38,6 @@ const stepToSection = {
   "company-details": "company",
   "contact-info": "company",
   "hawker-centres": "locations",
-  "notification-settings": "notifications",
   review: "review",
 };
 
@@ -52,9 +50,6 @@ const operatorData = {
   contactNumber: "",
   contactEmail: "",
   managedLocation: null,
-  browserNotifications: false,
-  telegramConnected: false,
-  telegramChatId: null,
 };
 
 const completedSteps = new Set();
@@ -287,9 +282,6 @@ async function saveProgress() {
       contactNumber: operatorData.contactNumber,
       contactEmail: operatorData.contactEmail,
       managedLocation: operatorData.managedLocation,
-      browserNotifications: operatorData.browserNotifications,
-      telegramConnected: operatorData.telegramConnected,
-      telegramChatId: operatorData.telegramChatId,
       onboardingStep: currentStep,
       updatedAt: serverTimestamp(),
     };
@@ -354,9 +346,6 @@ async function completeOnboarding() {
       contactEmail: operatorData.contactEmail,
       managedLocation: operatorData.managedLocation,
       hawkerCentreId: hawkerCentreId,
-      browserNotifications: operatorData.browserNotifications,
-      telegramConnected: operatorData.telegramConnected,
-      telegramChatId: operatorData.telegramChatId,
       onboardingComplete: true,
       updatedAt: serverTimestamp(),
     });
@@ -584,51 +573,6 @@ function clearMapSelection() {
   if (mapInstance) {
     mapInstance.setCenter({ lat: 1.3521, lng: 103.8198 });
     mapInstance.setZoom(12);
-  }
-}
-
-// ============================================
-// NOTIFICATIONS
-// ============================================
-
-function initBrowserNotifications() {
-  const toggleLabel = document.querySelector(
-    "#step-notification-settings .liquidGlassToggle",
-  );
-  if (!toggleLabel) return;
-
-  initLiquidGlassToggle(toggleLabel, async (isChecked) => {
-    if (isChecked && "Notification" in window) {
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        // Reset toggle if permission denied
-        const checkbox = toggleLabel.querySelector("input");
-        const thumb = toggleLabel.querySelector(".toggleThumb");
-        if (checkbox) checkbox.checked = false;
-        if (thumb) thumb.classList.remove("glass");
-        return;
-      }
-    }
-    operatorData.browserNotifications = isChecked;
-  });
-}
-
-function initTelegram() {
-  const connectBtn = document.getElementById("connectTelegram");
-  const connectedState = document.getElementById("telegramConnectedState");
-
-  if (!connectBtn) return;
-
-  connectBtn.addEventListener("click", () => {
-    const botUsername = "hawkrOrgBot";
-    const startParam = currentUser?.uid || "";
-    window.open(`https://t.me/${botUsername}?start=${startParam}`, "_blank");
-  });
-
-  // Check if already connected
-  if (operatorData.telegramConnected && connectedState) {
-    connectBtn.parentElement.style.display = "none";
-    connectedState.style.display = "flex";
   }
 }
 
@@ -872,8 +816,6 @@ function initializeForm() {
   // Initialize components
   initLiquidGlassTopBar();
   initMapLocationPicker();
-  initBrowserNotifications();
-  initTelegram();
 }
 
 // ============================================

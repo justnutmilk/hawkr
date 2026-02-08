@@ -41,6 +41,12 @@ service cloud.firestore {
         allow read: if true;
         allow write: if request.auth != null;
       }
+
+      // Hygiene grade history subcollection
+      match /hygieneHistory/{historyId} {
+        allow read: if true;
+        allow write: if request.auth != null;
+      }
     }
 
     match /menuItems/{itemId} {
@@ -101,6 +107,23 @@ service cloud.firestore {
       match /{subcollection=**} {
         allow read, write: if request.auth != null && request.auth.uid == operatorId;
       }
+    }
+
+    // Authorities collection
+    match /authorities/{authorityId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == authorityId;
+
+      // Authority subcollections (notifications, etc.)
+      match /{subcollection=**} {
+        allow read, write: if request.auth != null && request.auth.uid == authorityId;
+      }
+    }
+
+    // Inspections collection
+    match /inspections/{inspectionId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
     }
 
     // Onboarding codes for operator-vendor linking

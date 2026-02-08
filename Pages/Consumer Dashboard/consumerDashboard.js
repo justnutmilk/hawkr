@@ -10,6 +10,9 @@ import {
   orderBy,
   limit,
   getDocs,
+  doc,
+  updateDoc,
+  increment,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import {
   getFeaturedHawkerCentres,
@@ -191,10 +194,13 @@ const api = {
     return mockData.searchHistory;
   },
 
-  async fetchPopularSearches() {
-    // Popular searches can be fetched from Firebase later
-    // For now return mockData
-    return mockData.popularSearches;
+  fetchPopularSearches(items) {
+    // Derive popular searches from searchable items sorted by real searchCount
+    const searchable = items.filter(
+      (i) => i.type === "hawkerCentre" || i.type === "stall",
+    );
+    searchable.sort((a, b) => (b.searchCount || 0) - (a.searchCount || 0));
+    return searchable.slice(0, 5);
   },
 
   async fetchCarouselSlides() {
@@ -242,12 +248,15 @@ const api = {
     try {
       console.log("Fetching featured hawkers...");
       let hawkers = await getFeaturedHawkerCentres(5);
+      // Only show hawker centres with a real operator
+      hawkers = hawkers.filter((h) => h.operatorId);
       console.log("Featured hawkers from Firebase:", hawkers);
 
-      // If no featured hawkers, get all hawkers instead
+      // If no featured hawkers, get all operator-managed hawkers instead
       if (hawkers.length === 0) {
         console.log("No featured hawkers, fetching all...");
         hawkers = await getAllHawkerCentres();
+        hawkers = hawkers.filter((h) => h.operatorId);
         console.log("All hawkers from Firebase:", hawkers);
         hawkers = hawkers.slice(0, 5);
       }
@@ -274,11 +283,12 @@ const api = {
 
   async fetchNearbyHawkers() {
     try {
-      // Get all hawker centres from Firebase
+      // Get all hawker centres from Firebase — only show operator-managed ones
       const allHawkers = await getAllHawkerCentres();
+      const operatorHawkers = allHawkers.filter((h) => h.operatorId);
 
       // Transform Firebase data to match expected format
-      return allHawkers.slice(0, 5).map((hawker) => ({
+      return operatorHawkers.slice(0, 5).map((hawker) => ({
         id: hawker.id,
         name: hawker.name,
         address: hawker.address || "",
@@ -308,6 +318,7 @@ const api = {
         id: h.id,
         type: "hawkerCentre",
         name: h.name,
+        searchCount: h.searchCount || 0,
         image:
           h.imageUrl ||
           `../../mock-data/Consumer Dashboard/hawker-center/${h.name}.png`,
@@ -327,6 +338,7 @@ const api = {
         parentName:
           hawkerCentres.find((h) => h.id === s.hawkerCentreId)?.name || "",
         image: s.imageUrl || "",
+        searchCount: s.searchCount || 0,
       }));
 
       // Navigation pages are static UI elements (keep from mockData)
@@ -838,7 +850,7 @@ function handleSearchKeydown(e) {
   }
 }
 
-function handleSearchResultClick(type, id, url = null) {
+async function handleSearchResultClick(type, id, url = null) {
   // Find the item in searchableItems to add to history
   const item = searchableItems.find(
     (i) => i.id.toString() === id.toString() && i.type === type,
@@ -846,6 +858,14 @@ function handleSearchResultClick(type, id, url = null) {
 
   if (item) {
     addToSearchHistory(item);
+  }
+
+  // Increment searchCount on Firestore doc before navigating
+  if (type === "hawkerCentre" || type === "stall") {
+    const col = type === "hawkerCentre" ? "hawkerCentres" : "foodStalls";
+    await updateDoc(doc(db, col, id), { searchCount: increment(1) }).catch(
+      () => {},
+    );
   }
 
   // Navigate to the appropriate page
@@ -874,10 +894,8 @@ function initializeSearchDropdown() {
 
     // Load other data if not already loaded
     if (searchableItems.length === 0) {
-      [popularSearches, searchableItems] = await Promise.all([
-        api.fetchPopularSearches(),
-        api.fetchSearchableItems(),
-      ]);
+      searchableItems = await api.fetchSearchableItems();
+      popularSearches = api.fetchPopularSearches(searchableItems);
     }
 
     // Transfer any text from small input to large input

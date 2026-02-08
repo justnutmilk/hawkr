@@ -67,6 +67,12 @@ function initializeLoginPage() {
       const customerDoc = await getDoc(doc(db, "customers", user.uid));
       const vendorDoc = await getDoc(doc(db, "vendors", user.uid));
       const operatorDoc = await getDoc(doc(db, "operators", user.uid));
+      const authorityDoc = await getDoc(doc(db, "authorities", user.uid));
+
+      if (authorityDoc.exists()) {
+        window.location.href = "../Authority Dashboard/authorityDashboard.html";
+        return;
+      }
 
       if (vendorDoc.exists()) {
         const data = vendorDoc.data();

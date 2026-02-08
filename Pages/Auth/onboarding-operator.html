@@ -121,26 +121,7 @@
                         </div>
                     </div>
 
-                    <!-- Section 3: Notifications -->
-                    <div class="navSection" data-section="notifications">
-                        <div class="navSectionHeader">
-                            <div class="navSectionIcon"></div>
-                            <div class="navSectionTitle">Notifications</div>
-                        </div>
-                        <div class="navSectionItems">
-                            <div
-                                class="navItem"
-                                data-step="notification-settings"
-                            >
-                                <div class="navItemIndicator"></div>
-                                <div class="navItemLabel">
-                                    Notification settings
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Section 4: Review -->
+                    <!-- Section 3: Review -->
                     <div class="navSection" data-section="review">
                         <div
                             class="navSectionHeader clickable"
@@ -158,12 +139,16 @@
                 <div class="onboardingContent">
                     <!-- Step: Company Details -->
                     <div class="stepContent active" id="step-company-details">
-                        <h1 class="stepTitle">Tell us about your company</h1>
-                        <p class="stepDescription">
-                            This information helps us verify your operator
-                            status and connect you with your managed hawker
-                            centres.
-                        </p>
+                        <div class="stepHeader">
+                            <h1 class="stepTitle">
+                                Tell us about your company
+                            </h1>
+                            <p class="stepDescription">
+                                This information helps us verify your operator
+                                status and connect you with your managed hawker
+                                centres.
+                            </p>
+                        </div>
 
                         <div class="formSection">
                             <div class="formField">
@@ -239,11 +224,13 @@
 
                     <!-- Step: Contact Information -->
                     <div class="stepContent" id="step-contact-info">
-                        <h1 class="stepTitle">Contact information</h1>
-                        <p class="stepDescription">
-                            Provide contact details for your business
-                            representative.
-                        </p>
+                        <div class="stepHeader">
+                            <h1 class="stepTitle">Contact information</h1>
+                            <p class="stepDescription">
+                                Provide contact details for your business
+                                representative.
+                            </p>
+                        </div>
 
                         <div class="formSection">
                             <div class="formField">
@@ -334,11 +321,15 @@
 
                     <!-- Step: Hawker Centres -->
                     <div class="stepContent" id="step-hawker-centres">
-                        <h1 class="stepTitle">Your hawker centre location</h1>
-                        <p class="stepDescription">
-                            Search for your hawker centre address or drop a pin
-                            on the map.
-                        </p>
+                        <div class="stepHeader">
+                            <h1 class="stepTitle">
+                                Your hawker centre location
+                            </h1>
+                            <p class="stepDescription">
+                                Search for your hawker centre address or drop a
+                                pin on the map.
+                            </p>
+                        </div>
 
                         <div class="formSection">
                             <div class="formField">
@@ -426,140 +417,6 @@
 
                         <div class="stepFooter">
                             <div></div>
-                            <button
-                                class="primaryBtn"
-                                data-next="notification-settings"
-                            >
-                                Continue
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                    <polyline
-                                        points="12 5 19 12 12 19"
-                                    ></polyline>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Step: Notification Settings -->
-                    <div class="stepContent" id="step-notification-settings">
-                        <h1 class="stepTitle">Stay connected</h1>
-                        <p class="stepDescription">
-                            Choose how you'd like to receive notifications and
-                            updates.
-                        </p>
-
-                        <div class="formSection">
-                            <div class="notificationOption">
-                                <div class="notificationOptionInfo">
-                                    <div class="notificationOptionIcon browser">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="24"
-                                            height="24"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        >
-                                            <path
-                                                d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"
-                                            ></path>
-                                            <path
-                                                d="M13.73 21a2 2 0 0 1-3.46 0"
-                                            ></path>
-                                        </svg>
-                                    </div>
-                                    <div class="notificationOptionText">
-                                        <span class="notificationOptionTitle"
-                                            >Browser notifications</span
-                                        >
-                                        <span class="notificationOptionDesc"
-                                            >Receive alerts while you're on
-                                            Hawkr.</span
-                                        >
-                                    </div>
-                                </div>
-                                <label class="liquidGlassToggle">
-                                    <input
-                                        type="checkbox"
-                                        id="browserNotifications"
-                                    />
-                                    <span class="toggleTrack">
-                                        <span class="toggleThumb"></span>
-                                    </span>
-                                </label>
-                            </div>
-
-                            <div class="notificationOption telegram">
-                                <div class="notificationOptionInfo">
-                                    <div
-                                        class="notificationOptionIcon telegram"
-                                    >
-                                        <svg
-                                            viewBox="0 0 24 24"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="24"
-                                            height="24"
-                                            fill="currentColor"
-                                        >
-                                            <path
-                                                d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"
-                                            />
-                                        </svg>
-                                    </div>
-                                    <div class="notificationOptionText">
-                                        <span class="notificationOptionTitle"
-                                            >Telegram notifications</span
-                                        >
-                                        <span class="notificationOptionDesc"
-                                            >Get instant updates on Telegram,
-                                            even when you're away.</span
-                                        >
-                                    </div>
-                                </div>
-                                <button class="connectBtn" id="connectTelegram">
-                                    Connect
-                                </button>
-                            </div>
-                            <div
-                                class="telegramConnectedState"
-                                id="telegramConnectedState"
-                                style="display: none"
-                            >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <polyline
-                                        points="20 6 9 17 4 12"
-                                    ></polyline>
-                                </svg>
-                                <span>Telegram connected</span>
-                            </div>
-                        </div>
-
-                        <div class="stepFooter">
-                            <div></div>
                             <button class="primaryBtn" data-next="review">
                                 Continue
                                 <svg
@@ -584,11 +441,14 @@
 
                     <!-- Step: Review -->
                     <div class="stepContent" id="step-review">
-                        <h1 class="stepTitle">Review your information</h1>
-                        <p class="stepDescription">
-                            Please review your details before submitting. You
-                            can edit any section by clicking the edit button.
-                        </p>
+                        <div class="stepHeader">
+                            <h1 class="stepTitle">Review your information</h1>
+                            <p class="stepDescription">
+                                Please review your details before submitting.
+                                You can edit any section by clicking the edit
+                                button.
+                            </p>
+                        </div>
 
                         <div class="reviewSection">
                             <div class="reviewSectionHeader">

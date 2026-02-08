@@ -8,6 +8,9 @@ import {
   collection,
   collectionGroup,
   getDocs,
+  doc,
+  updateDoc,
+  increment,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const SEARCH_HISTORY_KEY = "hawkr_search_history";
@@ -106,6 +109,7 @@ async function fetchSearchableData() {
       id: doc.id,
       type: "hawkerCentre",
       name: doc.data().name,
+      searchCount: doc.data().searchCount || 0,
       image:
         doc.data().imageUrl ||
         `../../mock-data/Consumer Dashboard/hawker-center/${doc.data().name}.png`,
@@ -123,6 +127,7 @@ async function fetchSearchableData() {
         name: data.name,
         parentName: parentCentre?.name || "",
         hawkerCentreId: data.hawkerCentreId,
+        searchCount: data.searchCount || 0,
         image:
           data.imageUrl ||
           `../../mock-data/Consumer Dashboard/hawker-center/${parentCentre?.name || "Maxwell Food Centre"}.png`,
@@ -132,11 +137,10 @@ async function fetchSearchableData() {
     // Combine searchable items (without menu items initially for faster load)
     searchableItems = [...hawkerCentres, ...stalls, ...navigationPages];
 
-    // Set popular searches
-    popularSearches = [
-      ...hawkerCentres.slice(0, 2).map((h) => ({ ...h, searchCount: 5 })),
-      ...stalls.slice(0, 1).map((s) => ({ ...s, searchCount: 3 })),
-    ];
+    // Set popular searches — sorted by real searchCount
+    const allSearchable = [...hawkerCentres, ...stalls];
+    allSearchable.sort((a, b) => (b.searchCount || 0) - (a.searchCount || 0));
+    popularSearches = allSearchable.slice(0, 5);
 
     dataLoaded = true;
     console.log(
@@ -657,13 +661,21 @@ function handleSearchKeydown(e) {
   }
 }
 
-function handleSearchResultClick(type, id, url = null, stallId = null) {
+async function handleSearchResultClick(type, id, url = null, stallId = null) {
   const item = searchableItems.find(
     (i) => i.id.toString() === id.toString() && i.type === type,
   );
 
   if (item) {
     addToSearchHistory(item);
+  }
+
+  // Increment searchCount on Firestore doc before navigating
+  if (type === "hawkerCentre" || type === "stall") {
+    const col = type === "hawkerCentre" ? "hawkerCentres" : "foodStalls";
+    await updateDoc(doc(db, col, id), { searchCount: increment(1) }).catch(
+      () => {},
+    );
   }
 
   // Navigate to appropriate page

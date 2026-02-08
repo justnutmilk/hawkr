@@ -10,13 +10,24 @@ import {
   query,
   where,
   getDocs,
+  onSnapshot,
+  orderBy,
+  limit,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getFunctions,
+  httpsCallable,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
+import { app } from "../../firebase/config.js";
+import { disruptor } from "../../firebase/services/disruptor.js";
 import { showConfirm } from "../../assets/js/toast.js";
 import { getStallById } from "../../firebase/services/foodStalls.js";
+import { resolveFeedbackWithResponse } from "../../firebase/services/feedback.js";
+import { initNotificationBadge } from "../../assets/js/notificationBadge.js";
 import {
-  getFeedbackByStall,
-  resolveFeedbackWithResponse,
-} from "../../firebase/services/feedback.js";
+  initToastContainer,
+  subscribeToNewNotifications,
+} from "../../assets/js/toastNotifications.js";
 
 // ============================================
 // STATE
@@ -31,6 +42,11 @@ let completedOrders = [];
 let chartData = null;
 let topItemsBySales = [];
 let topItemsByLikes = [];
+let completedOrdersUnsubscribe = null;
+let menuLikesUnsubscribe = null;
+let reviewsUnsubscribe = null;
+let isReviewAnimating = false;
+let pendingReviewSnapshot = null;
 
 const tagIcons = {
   Halal: "../../assets/icons/halal.png",
@@ -184,53 +200,71 @@ function buildTopItemsBySales(orders) {
   return Object.values(itemMap).sort((a, b) => b.count - a.count);
 }
 
-async function loadCompletedOrders(stallId) {
-  try {
-    const q = query(collection(db, "orders"), where("stallId", "==", stallId));
-    const snapshot = await getDocs(q);
-
-    completedOrders = snapshot.docs
-      .map((d) => {
-        const data = d.data();
-        return {
-          id: d.id,
-          total: data.total || 0,
-          status: data.status || "",
-          items: data.items || [],
-          createdAt: data.createdAt?.toDate?.() || new Date(data.createdAt),
-        };
-      })
-      .filter((o) => o.status === "ready" || o.status === "completed");
-
-    chartData = aggregateChartData(completedOrders);
-    topItemsBySales = buildTopItemsBySales(completedOrders);
-  } catch (error) {
-    console.error("Error loading completed orders:", error);
-    completedOrders = [];
-    chartData = aggregateChartData([]);
-    topItemsBySales = [];
+function subscribeToCompletedOrders(stallId) {
+  if (completedOrdersUnsubscribe) {
+    completedOrdersUnsubscribe();
+    completedOrdersUnsubscribe = null;
   }
+
+  const q = query(collection(db, "orders"), where("stallId", "==", stallId));
+
+  completedOrdersUnsubscribe = onSnapshot(
+    q,
+    (snapshot) => {
+      completedOrders = snapshot.docs
+        .map((d) => {
+          const data = d.data();
+          return {
+            id: d.id,
+            total: data.total || 0,
+            status: data.status || "",
+            items: data.items || [],
+            createdAt: data.createdAt?.toDate?.() || new Date(data.createdAt),
+          };
+        })
+        .filter((o) => o.status === "ready" || o.status === "completed");
+
+      chartData = aggregateChartData(completedOrders);
+      topItemsBySales = buildTopItemsBySales(completedOrders);
+      disruptor.emit("operator:detail:invalidated");
+    },
+    (error) => {
+      console.error("Error in completed orders listener:", error);
+      completedOrders = [];
+      chartData = aggregateChartData([]);
+      topItemsBySales = [];
+    },
+  );
 }
 
-async function loadMenuItemLikes(stallId) {
-  try {
-    const menuRef = collection(db, "foodStalls", stallId, "menuItems");
-    const snapshot = await getDocs(menuRef);
-
-    topItemsByLikes = snapshot.docs
-      .map((d) => ({
-        id: d.id,
-        name: d.data().name || "Unknown Item",
-        imageUrl: d.data().imageUrl || "",
-        unitPrice: d.data().price || 0,
-        likesCount: d.data().likesCount || 0,
-      }))
-      .filter((item) => item.likesCount > 0)
-      .sort((a, b) => b.likesCount - a.likesCount);
-  } catch (error) {
-    console.error("Error loading menu item likes:", error);
-    topItemsByLikes = [];
+function subscribeToMenuItemLikes(stallId) {
+  if (menuLikesUnsubscribe) {
+    menuLikesUnsubscribe();
+    menuLikesUnsubscribe = null;
   }
+
+  const menuRef = collection(db, "foodStalls", stallId, "menuItems");
+
+  menuLikesUnsubscribe = onSnapshot(
+    menuRef,
+    (snapshot) => {
+      topItemsByLikes = snapshot.docs
+        .map((d) => ({
+          id: d.id,
+          name: d.data().name || "Unknown Item",
+          imageUrl: d.data().imageUrl || "",
+          unitPrice: d.data().price || 0,
+          likesCount: d.data().likesCount || 0,
+        }))
+        .filter((item) => item.likesCount > 0)
+        .sort((a, b) => b.likesCount - a.likesCount);
+      disruptor.emit("operator:detail:invalidated");
+    },
+    (error) => {
+      console.error("Error in menu item likes listener:", error);
+      topItemsByLikes = [];
+    },
+  );
 }
 
 function getRent() {
@@ -522,7 +556,7 @@ function renderReviewCard(review) {
       : `<span class="reviewResolvedBadge">Resolved</span>`;
 
   return `
-    <div class="reviewCard">
+    <div class="reviewCard" data-review-id="${review.id}">
       <div class="reviewCardTop">
         <span class="reviewTitle">${title}</span>
         ${sentimentTag}
@@ -605,6 +639,206 @@ function bindResolveButtons() {
 }
 
 // ============================================
+// LIVE REVIEWS SUBSCRIPTION
+// ============================================
+
+function subscribeToReviews(stallId) {
+  if (reviewsUnsubscribe) {
+    reviewsUnsubscribe();
+    reviewsUnsubscribe = null;
+  }
+
+  const q = query(
+    collection(db, "feedback"),
+    where("stallId", "==", stallId),
+    orderBy("createdAt", "desc"),
+    limit(50),
+  );
+
+  // Track previous IDs — same pattern as vendor order line
+  let previousNewIds = new Set();
+  let previousAllIds = new Set();
+  let isFirstSnapshot = true;
+
+  reviewsUnsubscribe = onSnapshot(
+    q,
+    (snapshot) => {
+      const processSnapshot = () => {
+        const newReviews = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }));
+
+        const currentAllIds = new Set(newReviews.map((r) => r.id));
+        const currentNewIds = new Set(
+          newReviews.filter((r) => !r.resolution).map((r) => r.id),
+        );
+
+        // Detect arrivals and resolves (skip on first snapshot)
+        const arrivedIds = isFirstSnapshot
+          ? []
+          : [...currentAllIds].filter((id) => !previousAllIds.has(id));
+        const resolvedIds = isFirstSnapshot
+          ? []
+          : [...previousNewIds].filter(
+              (id) => !currentNewIds.has(id) && currentAllIds.has(id),
+            );
+
+        // Update state
+        realReviews = newReviews;
+
+        const container = document.querySelector(".reviewCards");
+        const onNewTab = currentReviewTab === "new";
+
+        // --- RESOLVE: animate out BEFORE re-rendering (card must stay in DOM) ---
+        if (resolvedIds.length > 0 && container && onNewTab) {
+          isReviewAnimating = true;
+          let totalCards = 0;
+          let finishedCards = 0;
+
+          resolvedIds.forEach((id) => {
+            const card = container.querySelector(
+              `.reviewCard[data-review-id="${id}"]`,
+            );
+            if (card) {
+              totalCards++;
+              card.style.setProperty("--card-height", card.offsetHeight + "px");
+              card.classList.add("reviewCardSwipeOut");
+              card.addEventListener(
+                "animationend",
+                () => {
+                  card.classList.remove("reviewCardSwipeOut");
+                  card.classList.add("reviewCardCollapse");
+                  card.addEventListener(
+                    "animationend",
+                    () => {
+                      finishedCards++;
+                      if (finishedCards >= totalCards) {
+                        isReviewAnimating = false;
+                        refreshReviewCards();
+                        if (pendingReviewSnapshot) {
+                          const fn = pendingReviewSnapshot;
+                          pendingReviewSnapshot = null;
+                          fn();
+                        }
+                      }
+                    },
+                    { once: true },
+                  );
+                },
+                { once: true },
+              );
+            }
+          });
+
+          if (totalCards === 0) {
+            isReviewAnimating = false;
+            refreshReviewCards();
+          }
+          setTimeout(() => {
+            if (isReviewAnimating) {
+              isReviewAnimating = false;
+              refreshReviewCards();
+              if (pendingReviewSnapshot) {
+                const fn = pendingReviewSnapshot;
+                pendingReviewSnapshot = null;
+                fn();
+              }
+            }
+          }, 1500);
+
+          // --- ARRIVE: re-render first, then animate in ---
+        } else if (arrivedIds.length > 0 && onNewTab) {
+          const arrivedNew = arrivedIds.filter((id) => currentNewIds.has(id));
+          refreshReviewCards();
+
+          if (arrivedNew.length > 0 && container) {
+            isReviewAnimating = true;
+            let totalCards = 0;
+            let finishedCards = 0;
+
+            arrivedNew.forEach((id) => {
+              const card = container.querySelector(
+                `.reviewCard[data-review-id="${id}"]`,
+              );
+              if (card) {
+                totalCards++;
+                card.classList.add("reviewCardSlideIn");
+                let animCount = 0;
+                card.addEventListener("animationend", () => {
+                  animCount++;
+                  if (animCount >= 2) {
+                    card.classList.remove("reviewCardSlideIn");
+                    finishedCards++;
+                    if (finishedCards >= totalCards) {
+                      isReviewAnimating = false;
+                      if (pendingReviewSnapshot) {
+                        const fn = pendingReviewSnapshot;
+                        pendingReviewSnapshot = null;
+                        fn();
+                      }
+                    }
+                  }
+                });
+              }
+            });
+
+            if (totalCards === 0) isReviewAnimating = false;
+            setTimeout(() => {
+              if (isReviewAnimating) {
+                isReviewAnimating = false;
+                if (pendingReviewSnapshot) {
+                  const fn = pendingReviewSnapshot;
+                  pendingReviewSnapshot = null;
+                  fn();
+                }
+              }
+            }, 1500);
+          }
+
+          // --- No animation needed ---
+        } else {
+          refreshReviewCards();
+        }
+
+        // Update tracked IDs at the end
+        previousNewIds = currentNewIds;
+        previousAllIds = currentAllIds;
+        isFirstSnapshot = false;
+      };
+
+      // Queue if animating, otherwise process now
+      if (isReviewAnimating) {
+        pendingReviewSnapshot = processSnapshot;
+      } else {
+        processSnapshot();
+      }
+    },
+    (error) => {
+      console.error("Error in reviews listener:", error);
+    },
+  );
+}
+
+/**
+ * Re-render just the review cards container without a full page render.
+ */
+function refreshReviewCards() {
+  const container = document.querySelector(".reviewCards");
+  if (!container) return;
+  const filtered = realReviews.filter((review) => {
+    const status = review.resolution ? "resolved" : "new";
+    return status === currentReviewTab;
+  });
+  const emptyText =
+    filtered.length === 0
+      ? `<span class="reviewsEmpty">No ${currentReviewTab} reviews.</span>`
+      : "";
+  container.innerHTML = emptyText + filtered.map(renderReviewCard).join("");
+  bindResolveButtons();
+}
+
+// ============================================
 // RESOLVE MODAL
 // ============================================
 
@@ -647,27 +881,9 @@ async function handleResolveSubmit() {
 
     await resolveFeedbackWithResponse(selectedReviewId, response, "none", 0);
 
-    // Update local state
-    const review = realReviews.find((r) => r.id === selectedReviewId);
-    if (review) {
-      review.resolution = { type: "response_only", response };
-    }
-
     closeResolveModal();
 
-    // Re-render review cards
-    const container = document.querySelector(".reviewCards");
-    const filtered = realReviews.filter((r) => {
-      const status = r.resolution ? "resolved" : "new";
-      return status === currentReviewTab;
-    });
-    const emptyText =
-      filtered.length === 0
-        ? `<span class="reviewsEmpty">No ${currentReviewTab} reviews.</span>`
-        : "";
-    container.innerHTML = emptyText + filtered.map(renderReviewCard).join("");
-    bindResolveButtons();
-
+    // onSnapshot will detect the change and animate the card out automatically
     showToast("Feedback resolved successfully");
   } catch (error) {
     console.error("Error resolving feedback:", error);
@@ -1086,6 +1302,23 @@ async function handleUnlinkChild() {
       }
     }
 
+    // Notify vendor of unlink (non-blocking)
+    if (ownerId) {
+      try {
+        const fns = getFunctions(app, "asia-southeast1");
+        const notifyTenancy = httpsCallable(fns, "notifyVendorTenancy");
+        notifyTenancy({
+          vendorId: ownerId,
+          action: "unlinked",
+          centreName: currentStallData.operatorName || "",
+          operatorId: auth.currentUser.uid,
+          vendorName: currentStallData.name || "",
+        });
+      } catch (err) {
+        console.warn("Tenancy notification failed:", err);
+      }
+    }
+
     // Navigate back to My Children
     window.location.href = "../Operator Children/operatorChildren.html";
   } catch (error) {
@@ -1110,23 +1343,10 @@ async function loadStallData() {
       return;
     }
 
-    // Fetch reviews, completed orders, and menu item likes in parallel
-    await Promise.all([
-      (async () => {
-        try {
-          const result = await getFeedbackByStall(currentStallId, {
-            limitCount: 50,
-            publicOnly: false,
-          });
-          realReviews = result.feedback || [];
-        } catch (err) {
-          console.warn("Could not fetch reviews:", err);
-          realReviews = [];
-        }
-      })(),
-      loadCompletedOrders(currentStallId),
-      loadMenuItemLikes(currentStallId),
-    ]);
+    // Subscribe to live data for charts, top items, and reviews
+    subscribeToCompletedOrders(currentStallId);
+    subscribeToMenuItemLikes(currentStallId);
+    subscribeToReviews(currentStallId);
   }
 }
 
@@ -1134,6 +1354,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // Firebase Auth — check onboarding before initialising page
   onAuthStateChanged(auth, async (user) => {
     if (user) {
+      initNotificationBadge(`operators/${user.uid}/notifications`);
+      initToastContainer();
+      subscribeToNewNotifications(`operators/${user.uid}/notifications`);
+
       // Check onboarding status
       const operatorDoc = await getDoc(doc(db, "operators", user.uid));
       if (!operatorDoc.exists() || !operatorDoc.data().onboardingComplete) {
@@ -1143,6 +1367,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Load real stall data and reviews before rendering
       await loadStallData();
+
+      // Re-render charts live when order/likes data changes
+      disruptor.on("operator:detail:invalidated", () => {
+        if (!isReviewAnimating) renderPage();
+      });
+
+      // Re-render reviews when new feedback arrives or is resolved
+      disruptor.on("operator:reviews:invalidated", () => {
+        if (!isReviewAnimating) renderPage();
+      });
 
       google.charts.load("current", { packages: ["corechart"] });
       google.charts.setOnLoadCallback(renderPage);
@@ -1155,20 +1389,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  const isMac = window.navigator.userAgentData
-    ? window.navigator.userAgentData.platform === "macOS"
-    : /Mac/i.test(window.navigator.userAgent);
-
-  document.getElementById("searchKeyMod").textContent = isMac
-    ? "\u2318"
-    : "CTRL";
-
+  // Keyboard shortcut (Ctrl+Backspace to unlink)
   document.addEventListener("keydown", (e) => {
-    const modifier = isMac ? e.metaKey : e.ctrlKey;
-    if (modifier && e.key === "k") {
-      e.preventDefault();
-      document.getElementById("searchInput").focus();
-    }
+    const modifier = e.metaKey || e.ctrlKey;
     if (modifier && e.key === "Backspace") {
       e.preventDefault();
       handleUnlinkChild();
@@ -1180,4 +1403,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const el = document.getElementById("chartSalesByValue");
     if (el) drawAllCharts();
   });
+});
+
+// Cleanup live subscriptions and disruptor on page unload
+window.addEventListener("beforeunload", () => {
+  if (completedOrdersUnsubscribe) completedOrdersUnsubscribe();
+  if (menuLikesUnsubscribe) menuLikesUnsubscribe();
+  if (reviewsUnsubscribe) reviewsUnsubscribe();
+  disruptor.destroy();
 });

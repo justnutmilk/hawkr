@@ -72,6 +72,13 @@ function formatStallHours(hours) {
     return "Closed today";
   }
 
+  if (
+    todayHours.slots &&
+    Array.isArray(todayHours.slots) &&
+    todayHours.slots.length > 0
+  ) {
+    return todayHours.slots.map((s) => `${s.from} - ${s.to}`).join(", ");
+  }
   return `${todayHours.open || "08:00"} - ${todayHours.close || "22:00"}`;
 }
 

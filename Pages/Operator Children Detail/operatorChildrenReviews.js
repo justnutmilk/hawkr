@@ -4,6 +4,11 @@ import {
   doc,
   getDoc,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initNotificationBadge } from "../../assets/js/notificationBadge.js";
+import {
+  initToastContainer,
+  subscribeToNewNotifications,
+} from "../../assets/js/toastNotifications.js";
 
 const mockStore = {
   name: "Chinese Foods Private Limited",
@@ -200,6 +205,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // Firebase Auth — check onboarding before initialising page
   onAuthStateChanged(auth, async (user) => {
     if (user) {
+      initNotificationBadge(`operators/${user.uid}/notifications`);
+      initToastContainer();
+      subscribeToNewNotifications(`operators/${user.uid}/notifications`);
+
       // Check onboarding status
       const operatorDoc = await getDoc(doc(db, "operators", user.uid));
       if (!operatorDoc.exists() || !operatorDoc.data().onboardingComplete) {
@@ -211,22 +220,6 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       window.location.href = "../Auth/login.html";
       return;
-    }
-  });
-
-  const isMac = window.navigator.userAgentData
-    ? window.navigator.userAgentData.platform === "macOS"
-    : /Mac/i.test(window.navigator.userAgent);
-
-  document.getElementById("searchKeyMod").textContent = isMac
-    ? "\u2318"
-    : "CTRL";
-
-  document.addEventListener("keydown", (e) => {
-    const modifier = isMac ? e.metaKey : e.ctrlKey;
-    if (modifier && e.key === "k") {
-      e.preventDefault();
-      document.getElementById("searchInput").focus();
     }
   });
 });

@@ -376,7 +376,15 @@
 }
 
 .stepContent.active {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.stepHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .stepTitle {
@@ -384,14 +392,14 @@
     font-size: 28px;
     font-weight: 700;
     color: #341539;
-    margin: 0 0 8px 0;
+    margin: 0;
 }
 
 .stepDescription {
     font-size: 16px;
     color: #595959;
     line-height: 1.5;
-    margin: 0 0 32px 0;
+    margin: 0;
 }
 
 /* Form Styles */
@@ -647,17 +655,68 @@
     background: #1976d2;
 }
 
-.telegramConnectedState {
+#telegramLoginWidget {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background: #e8f5e9;
+    min-height: 40px;
+}
+
+#telegramLoginWidget iframe {
     border-radius: 8px;
-    color: #2e7d32;
-    font-size: 14px;
+}
+
+.notificationOptionIcon.telegramLogo {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+}
+
+.telegramConnectedState {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.telegramConnectedInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.telegramConnectedLabel {
+    font-size: 13px;
+    color: #888;
+    font-family: Aptos, sans-serif;
+}
+
+.telegramConnectedAccount {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.telegramHandle {
+    font-size: 15px;
+    font-weight: 600;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+}
+
+.telegramDisconnectBtn {
+    padding: 6px 14px;
+    border: 1px solid #e0d0d5;
+    border-radius: 8px;
+    background: transparent;
+    color: #c44569;
+    font-size: 13px;
     font-weight: 500;
-    margin-top: -8px;
+    font-family: Aptos, sans-serif;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.telegramDisconnectBtn:hover {
+    background: #fdf0f0;
 }
 
 /* Review Sections */
@@ -668,7 +727,7 @@
 }
 
 .reviewSection + .reviewSection {
-    margin-top: 24px;
+    margin-top: 0;
 }
 
 .reviewSection {
@@ -785,7 +844,7 @@
 
 /* Submit Section */
 .submitSection {
-    margin-top: 24px;
+    margin-top: 0;
     padding: 20px;
     background: #f8f7fa;
     border-radius: 12px;
@@ -850,7 +909,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 40px;
+    margin-top: 0;
     padding-top: 24px;
     border-top: 1px solid #e0e0e0;
 }
@@ -1123,6 +1182,11 @@
 .roleCardIcon.operatorIcon {
     background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
     color: #1565c0;
+}
+
+.roleCardIcon.authorityIcon {
+    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+    color: #e65100;
 }
 
 .roleCardTitle {

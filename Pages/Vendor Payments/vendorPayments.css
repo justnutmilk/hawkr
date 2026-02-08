@@ -420,7 +420,7 @@ body {
     gap: 16px;
     padding: 8px;
     border-radius: 8px;
-    align-items: center;
+    align-items: flex-start;
     transition: background 0.15s ease;
 }
 

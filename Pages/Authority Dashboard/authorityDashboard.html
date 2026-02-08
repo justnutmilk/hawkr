@@ -1,0 +1,167 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <title>HawkrOS | Authority Dashboard</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="authorityDashboard.css" />
+        <link rel="stylesheet" href="../../assets/css/searchModule.css" />
+    </head>
+
+    <body>
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebarTop">
+                <div class="authorityAccount skeleton" id="authorityAccount">
+                    <div class="skeletonIcon"></div>
+                    <div class="skeletonText"></div>
+                </div>
+                <nav class="sidebarNav">
+                    <a href="authorityDashboard.html" class="navItem active">
+                        <svg
+                            class="sidebarIcon"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="20"
+                            height="22"
+                            viewBox="0 0 20 22"
+                            fill="none"
+                        >
+                            <path
+                                d="M7 20.4663V12.4663C7 11.3617 7.89543 10.4663 9 10.4663H11C12.1046 10.4663 13 11.3617 13 12.4663V20.4663M19 18.4663V8.44448C19 7.8273 18.7151 7.24468 18.2279 6.86577L11.2279 1.42133C10.5057 0.8596 9.49434 0.859599 8.77212 1.42133L1.77212 6.86577C1.28495 7.24468 1 7.8273 1 8.44448V18.4663C1 18.9967 1.21071 19.5054 1.58579 19.8805C1.96086 20.2556 2.46957 20.4663 3 20.4663H17C17.5304 20.4663 18.0391 20.2556 18.4142 19.8805C18.7893 19.5054 19 18.9967 19 18.4663Z"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                        <span>Home</span>
+                    </a>
+                    <a
+                        href="../Authority Inspection/authorityInspection.html"
+                        class="navItem"
+                    >
+                        <svg
+                            class="sidebarIcon"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <rect
+                                x="3"
+                                y="4"
+                                width="18"
+                                height="18"
+                                rx="2"
+                                ry="2"
+                            ></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        <span>Inspect</span>
+                    </a>
+                </nav>
+            </div>
+            <div class="sidebarBottom">
+                <img
+                    src="../../images/hawkrOS.svg"
+                    alt="HawkrOS"
+                    class="sidebarLogo"
+                />
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="mainContent">
+            <!-- Top Bar -->
+            <div class="topBar">
+                <div class="searchModuleWrapper" id="searchModuleWrapper">
+                    <div class="searchModule" id="searchModule">
+                        <span class="searchIcon">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="18"
+                                height="18"
+                                viewBox="0 0 18 18"
+                                fill="none"
+                            >
+                                <path
+                                    d="M16.6 18L10.3 11.7C9.8 12.1 9.225 12.4167 8.575 12.65C7.925 12.8833 7.23333 13 6.5 13C4.68333 13 3.14583 12.3708 1.8875 11.1125C0.629167 9.85417 0 8.31667 0 6.5C0 4.68333 0.629167 3.14583 1.8875 1.8875C3.14583 0.629167 4.68333 0 6.5 0C8.31667 0 9.85417 0.629167 11.1125 1.8875C12.3708 3.14583 13 4.68333 13 6.5C13 7.23333 12.8833 7.925 12.65 8.575C12.4167 9.225 12.1 9.8 11.7 10.3L18 16.6L16.6 18ZM6.5 11C7.75 11 8.8125 10.5625 9.6875 9.6875C10.5625 8.8125 11 7.75 11 6.5C11 5.25 10.5625 4.1875 9.6875 3.3125C8.8125 2.4375 7.75 2 6.5 2C5.25 2 4.1875 2.4375 3.3125 3.3125C2.4375 4.1875 2 5.25 2 6.5C2 7.75 2.4375 8.8125 3.3125 9.6875C4.1875 10.5625 5.25 11 6.5 11Z"
+                                    fill="#49454F"
+                                />
+                            </svg>
+                        </span>
+                        <input
+                            class="searchInput"
+                            id="searchInput"
+                            type="text"
+                            placeholder="Search..."
+                            autocomplete="off"
+                        />
+                    </div>
+                    <div class="searchDropdown" id="searchDropdown"></div>
+                </div>
+                <div class="topBarActions">
+                    <a href="#" data-notification-bell>
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="25"
+                            height="32"
+                            viewBox="0 0 27 34"
+                            fill="none"
+                        >
+                            <path
+                                d="M15.0527 31.9336C15.01 31.9837 14.9648 32.0338 14.916 32.083C14.5225 32.4794 14.0771 32.667 13.5 32.667C12.931 32.667 12.4667 32.4836 12.043 32.083C11.997 32.0337 11.9534 31.9842 11.9131 31.9336H15.0527ZM13.5 1.33301C13.8369 1.33301 14.0745 1.43757 14.2988 1.67676L14.3252 1.70508L14.3525 1.73145C14.5901 1.95749 14.6982 2.2011 14.6982 2.5498V4.7793L15.7061 5.0332C17.6639 5.52639 19.2331 6.56053 20.4561 8.16211L20.4619 8.16992C21.6819 9.74314 22.2919 11.5361 22.292 13.5996V26.833H25.667V27.5664H1.33301V26.833H4.70801V13.5996C4.70808 11.5361 5.3181 9.74313 6.53809 8.16992L6.54395 8.16211C7.76687 6.56053 9.33609 5.52639 11.2939 5.0332L12.3018 4.7793V2.5498C12.3018 2.17642 12.4135 1.92406 12.6318 1.7041C12.8939 1.44005 13.1609 1.33301 13.5 1.33301ZM13.5 5.4668C11.2841 5.4668 9.35528 6.27762 7.78613 7.8584C6.21758 9.43872 5.41709 11.3767 5.41699 13.5996V26.833H21.583V13.5996C21.5829 11.3767 20.7824 9.43872 19.2139 7.8584C17.6447 6.27762 15.7159 5.4668 13.5 5.4668Z"
+                                stroke="#341539"
+                                stroke-width="2.66667"
+                            />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Grade Modal -->
+            <div class="gradeModalOverlay" id="gradeModalOverlay">
+                <div class="gradeModal" id="gradeModal">
+                    <div class="gradeModalHeader">
+                        <span class="gradeModalTitle" id="gradeModalTitle"
+                            >Update Grade</span
+                        >
+                        <button class="gradeModalClose" id="gradeModalClose">
+                            &times;
+                        </button>
+                    </div>
+                    <div class="gradeCards" id="gradeCards">
+                        <button class="gradeCard grade-NEW" data-grade="NEW">
+                            NEW
+                        </button>
+                        <button class="gradeCard grade-A" data-grade="A">
+                            A
+                        </button>
+                        <button class="gradeCard grade-B" data-grade="B">
+                            B
+                        </button>
+                        <button class="gradeCard grade-C" data-grade="C">
+                            C
+                        </button>
+                    </div>
+                    <span class="gradeToast" id="gradeToast"></span>
+                </div>
+            </div>
+
+            <!-- Dashboard Content -->
+            <div class="dashboardContent" id="dashboardContent">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <script type="module" src="authorityDashboard.js"></script>
+    </body>
+</html>

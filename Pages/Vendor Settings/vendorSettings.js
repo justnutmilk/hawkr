@@ -672,6 +672,15 @@ function normalizeOperatingHours(raw) {
       return dayOrder.map((dayKey) => {
         const entry = raw[dayKey];
         if (!entry) return { day: dayMap[dayKey], active: false, slots: [] };
+        // New format: { slots: [...] }
+        if (entry.slots && Array.isArray(entry.slots)) {
+          return {
+            day: dayMap[dayKey],
+            active: !entry.isClosed,
+            slots: entry.isClosed ? [] : entry.slots,
+          };
+        }
+        // Legacy format: { open, close }
         return {
           day: dayMap[dayKey],
           active: !entry.isClosed,
@@ -1106,6 +1115,31 @@ function closeEditStall() {
   }
 }
 
+function convertHoursArrayToObject(hours) {
+  const dayMap = {
+    Mon: "monday",
+    Tue: "tuesday",
+    Wed: "wednesday",
+    Thu: "thursday",
+    Fri: "friday",
+    Sat: "saturday",
+    Sun: "sunday",
+  };
+  const result = {};
+  hours.forEach((day) => {
+    const key = dayMap[day.day];
+    if (!day.active || day.slots.length === 0) {
+      result[key] = { isClosed: true, slots: [] };
+    } else {
+      result[key] = {
+        isClosed: false,
+        slots: day.slots.map((s) => ({ from: s.from, to: s.to })),
+      };
+    }
+  });
+  return result;
+}
+
 async function saveEditStall() {
   const unitNumber =
     document.getElementById("editStallUnit")?.value.trim() || "";
@@ -1122,7 +1156,7 @@ async function saveEditStall() {
       unitNumber,
       cuisineNames: editStallCuisines,
       isHalal: editStallCuisines.includes("Halal"),
-      operatingHours: editStallHours,
+      operatingHours: convertHoursArrayToObject(editStallHours),
     };
 
     // Handle location

@@ -15,6 +15,7 @@ import {
 const customerRoleBtn = document.getElementById("customerRole");
 const vendorRoleBtn = document.getElementById("vendorRole");
 const operatorRoleBtn = document.getElementById("operatorRole");
+const authorityRoleBtn = document.getElementById("authorityRole");
 const generalError = document.getElementById("generalError");
 
 let currentUser = null;
@@ -33,6 +34,12 @@ onAuthStateChanged(auth, async (user) => {
   const customerDoc = await getDoc(doc(db, "customers", user.uid));
   const vendorDoc = await getDoc(doc(db, "vendors", user.uid));
   const operatorDoc = await getDoc(doc(db, "operators", user.uid));
+  const authorityDoc = await getDoc(doc(db, "authorities", user.uid));
+
+  if (authorityDoc.exists()) {
+    window.location.href = "../Authority Dashboard/authorityDashboard.html";
+    return;
+  }
 
   if (vendorDoc.exists()) {
     // Already a vendor - go to onboarding or dashboard
@@ -167,6 +174,20 @@ async function selectRole(role) {
 
       // Redirect to operator onboarding
       window.location.href = "onboarding-operator.html";
+    } else if (role === "authority") {
+      // Create authority profile — no onboarding needed
+      await setDoc(doc(db, "authorities", currentUser.uid), {
+        displayName: displayName || "",
+        email: email,
+        photoURL: photoURL || "",
+        role: "authority",
+        onboardingComplete: true,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      // Redirect straight to authority dashboard
+      window.location.href = "../Authority Dashboard/authorityDashboard.html";
     }
   } catch (error) {
     console.error("Error creating profile:", error);
@@ -179,6 +200,7 @@ customerRoleBtn.addEventListener("click", () => {
   customerRoleBtn.classList.add("selected");
   vendorRoleBtn.classList.remove("selected");
   operatorRoleBtn.classList.remove("selected");
+  authorityRoleBtn.classList.remove("selected");
   selectRole("customer");
 });
 
@@ -186,6 +208,7 @@ vendorRoleBtn.addEventListener("click", () => {
   vendorRoleBtn.classList.add("selected");
   customerRoleBtn.classList.remove("selected");
   operatorRoleBtn.classList.remove("selected");
+  authorityRoleBtn.classList.remove("selected");
   selectRole("vendor");
 });
 
@@ -193,7 +216,16 @@ operatorRoleBtn.addEventListener("click", () => {
   operatorRoleBtn.classList.add("selected");
   customerRoleBtn.classList.remove("selected");
   vendorRoleBtn.classList.remove("selected");
+  authorityRoleBtn.classList.remove("selected");
   selectRole("operator");
+});
+
+authorityRoleBtn.addEventListener("click", () => {
+  authorityRoleBtn.classList.add("selected");
+  customerRoleBtn.classList.remove("selected");
+  vendorRoleBtn.classList.remove("selected");
+  operatorRoleBtn.classList.remove("selected");
+  selectRole("authority");
 });
 
 // Initialize liquid glass top bar

@@ -172,69 +172,6 @@ body {
     padding: 32px 48px 0 48px;
 }
 
-.searchModule {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    max-width: 500px;
-    height: 48px;
-    padding: 0px 16px 0px 20px;
-    border-radius: 24px;
-    background: #f4f1f6;
-}
-
-.searchInput {
-    flex: 1 1 auto;
-    border: none;
-    outline: none;
-    background: transparent;
-    color: #49454f;
-    font-family: Aptos, sans-serif;
-    font-size: 16px;
-    font-weight: 400;
-    padding: 0;
-    margin: 0;
-}
-
-.searchInput::placeholder {
-    color: #49454f;
-    opacity: 1;
-}
-
-.searchShortcut {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    pointer-events: none;
-}
-
-.searchKey {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 28px;
-    height: 28px;
-    padding: 0 8px;
-    border-radius: 6px;
-    background: #e8e4ec;
-    box-shadow: 0 2px 0 #d0cad6;
-    color: #49454f;
-    font-family: Aptos, sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.searchIcon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    pointer-events: none;
-}
-
 .topBarActions {
     display: flex;
     align-items: center;

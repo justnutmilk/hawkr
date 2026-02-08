@@ -345,7 +345,7 @@ async function resolveFeedback(request) {
       .doc(feedbackData.stallId)
       .get();
     const feedbackVendorId = vendorStallDoc.exists
-      ? vendorStallDoc.data().vendorId
+      ? vendorStallDoc.data().ownerId
       : null;
 
     if (feedbackVendorId) {

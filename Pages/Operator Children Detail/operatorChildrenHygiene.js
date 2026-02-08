@@ -3,32 +3,96 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/fi
 import {
   doc,
   getDoc,
+  getDocs,
+  collection,
+  query,
+  orderBy,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const mockStore = {
-  name: "Chinese Foods Private Limited",
-  tags: ["Chinese", "Halal", "Halal"],
-};
+import { initNotificationBadge } from "../../assets/js/notificationBadge.js";
+import {
+  initToastContainer,
+  subscribeToNewNotifications,
+} from "../../assets/js/toastNotifications.js";
 
 const tagIcons = {
   Halal: "../../assets/icons/halal.png",
   Kosher: "../../assets/icons/kosher.svg",
 };
 
-const mockHygieneHistory = {
-  current: {
-    grade: "A",
-    updated: "15 Jan 2025",
-  },
-  archived: [
-    { grade: "B", updated: "10 Jun 2023", activeTill: "14 Jan 2025" },
-    { grade: "A", updated: "2 Mar 2022", activeTill: "9 Jun 2023" },
-    { grade: "C", updated: "18 Sep 2021", activeTill: "1 Mar 2022" },
-    { grade: "B", updated: "5 Jan 2020", activeTill: "17 Sep 2021" },
-  ],
-};
-
 let currentTab = "current";
+let hygieneData = null;
+let storeData = null;
+
+// ============================================
+// URL & DATA
+// ============================================
+
+function getStallIdFromUrl() {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get("id") || null;
+}
+
+function formatDate(timestamp) {
+  if (!timestamp) return "Not available";
+  const date =
+    typeof timestamp.toDate === "function"
+      ? timestamp.toDate()
+      : new Date(timestamp);
+  return date.toLocaleDateString("en-SG", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+async function fetchStallAndHygieneData(stallId) {
+  if (!stallId) return { store: null, hygiene: null };
+
+  const stallDoc = await getDoc(doc(db, "foodStalls", stallId));
+  if (!stallDoc.exists()) return { store: null, hygiene: null };
+
+  const data = stallDoc.data();
+
+  const store = {
+    name: data.name || "Unknown Stall",
+    tags: data.cuisineNames || [],
+  };
+
+  const currentGrade = data.hygieneGrade || null;
+  const currentUpdatedStr = formatDate(data.hygieneUpdatedAt);
+
+  let archived = [];
+  try {
+    const historyQuery = query(
+      collection(db, "foodStalls", stallId, "hygieneHistory"),
+      orderBy("archivedAt", "desc"),
+    );
+    const historySnap = await getDocs(historyQuery);
+    archived = historySnap.docs.map((d) => {
+      const hData = d.data();
+      return {
+        grade: hData.grade || "--",
+        updated: formatDate(hData.updatedAt),
+        activeTill: hData.activeTill || "Unknown",
+      };
+    });
+  } catch (err) {
+    console.error("Error fetching hygiene history:", err);
+  }
+
+  const hygiene = {
+    current: currentGrade
+      ? { grade: currentGrade, updated: currentUpdatedStr }
+      : null,
+    archived,
+  };
+
+  return { store, hygiene };
+}
+
+// ============================================
+// RENDER
+// ============================================
 
 function renderTag(tag) {
   const icon = tagIcons[tag];
@@ -39,7 +103,7 @@ function renderTag(tag) {
 }
 
 function renderCurrentGrade() {
-  const data = mockHygieneHistory.current;
+  const data = hygieneData?.current;
   if (!data) {
     return `<div class="hygieneEmpty">No hygiene grade on record.</div>`;
   }
@@ -52,7 +116,7 @@ function renderCurrentGrade() {
 }
 
 function renderArchivedGrades() {
-  const items = mockHygieneHistory.archived;
+  const items = hygieneData?.archived || [];
   if (items.length === 0) {
     return `<div class="hygieneEmpty">No archived grades.</div>`;
   }
@@ -77,12 +141,19 @@ function renderArchivedGrades() {
 
 function renderContent() {
   const container = document.getElementById("hygieneContent");
+  if (!container) return;
   container.innerHTML =
     currentTab === "current" ? renderCurrentGrade() : renderArchivedGrades();
 }
 
 function renderPage() {
-  const store = mockStore;
+  const store = storeData;
+  if (!store) {
+    document.getElementById("pageContent").innerHTML =
+      `<div class="hygieneEmpty">Stall not found.</div>`;
+    return;
+  }
+
   const tags = store.tags.map(renderTag).join("");
 
   document.getElementById("pageContent").innerHTML = `
@@ -125,37 +196,43 @@ function renderPage() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  // Firebase Auth — check onboarding before initialising page
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      // Check onboarding status
-      const operatorDoc = await getDoc(doc(db, "operators", user.uid));
-      if (!operatorDoc.exists() || !operatorDoc.data().onboardingComplete) {
-        window.location.href = "../Auth/onboarding-operator.html";
-        return;
-      }
+// ============================================
+// INIT
+// ============================================
 
-      renderPage();
-    } else {
+document.addEventListener("DOMContentLoaded", () => {
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
       window.location.href = "../Auth/login.html";
       return;
     }
-  });
 
-  const isMac = window.navigator.userAgentData
-    ? window.navigator.userAgentData.platform === "macOS"
-    : /Mac/i.test(window.navigator.userAgent);
+    initNotificationBadge(`operators/${user.uid}/notifications`);
+    initToastContainer();
+    subscribeToNewNotifications(`operators/${user.uid}/notifications`);
 
-  document.getElementById("searchKeyMod").textContent = isMac
-    ? "\u2318"
-    : "CTRL";
+    const operatorDoc = await getDoc(doc(db, "operators", user.uid));
+    if (!operatorDoc.exists() || !operatorDoc.data().onboardingComplete) {
+      window.location.href = "../Auth/onboarding-operator.html";
+      return;
+    }
 
-  document.addEventListener("keydown", (e) => {
-    const modifier = isMac ? e.metaKey : e.ctrlKey;
-    if (modifier && e.key === "k") {
-      e.preventDefault();
-      document.getElementById("searchInput").focus();
+    const stallId = getStallIdFromUrl();
+    if (!stallId) {
+      document.getElementById("pageContent").innerHTML =
+        `<div class="hygieneEmpty">No stall specified.</div>`;
+      return;
+    }
+
+    try {
+      const { store, hygiene } = await fetchStallAndHygieneData(stallId);
+      storeData = store;
+      hygieneData = hygiene;
+      renderPage();
+    } catch (err) {
+      console.error("Failed to load hygiene data:", err);
+      document.getElementById("pageContent").innerHTML =
+        `<div class="hygieneEmpty">Something went wrong.</div>`;
     }
   });
 });

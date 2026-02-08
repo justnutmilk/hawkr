@@ -83,6 +83,13 @@ function formatOperatingHours(hours) {
 
   // Get most common hours
   const firstHours = openHours[0];
+  if (
+    firstHours.slots &&
+    Array.isArray(firstHours.slots) &&
+    firstHours.slots.length > 0
+  ) {
+    return firstHours.slots.map((s) => `${s.from} - ${s.to}`).join(", ");
+  }
   return `${firstHours.open || "08:00"} - ${firstHours.close || "22:00"}`;
 }
 
@@ -106,6 +113,13 @@ function formatStallHours(hours) {
     return "Closed today";
   }
 
+  if (
+    todayHours.slots &&
+    Array.isArray(todayHours.slots) &&
+    todayHours.slots.length > 0
+  ) {
+    return todayHours.slots.map((s) => `${s.from} - ${s.to}`).join(", ");
+  }
   return `${todayHours.open || "08:00"} - ${todayHours.close || "22:00"}`;
 }
 

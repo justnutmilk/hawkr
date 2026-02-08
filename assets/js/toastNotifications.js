@@ -255,6 +255,9 @@ function getNotificationLink(notification) {
   if (type === "new_order" && notification.orderId) {
     return "../Vendor Order/vendorOrder.html";
   }
+  if (type === "operator_linked" || type === "operator_unlinked") {
+    return "../Vendor Tenancy/vendorTenancy.html";
+  }
 
   return null;
 }

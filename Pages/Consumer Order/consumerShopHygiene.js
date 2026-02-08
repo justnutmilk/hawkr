@@ -2,63 +2,28 @@
 // IMPORTS
 // ============================================
 
+import { db } from "../../firebase/config.js";
+import {
+  doc,
+  getDoc,
+  getDocs,
+  collection,
+  query,
+  orderBy,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { initConsumerNavbar } from "../../assets/js/consumerNavbar.js";
 import { injectMobileMenu } from "../../assets/js/mobileMenu.js";
 
 // ============================================
-// MOCK DATA (Simulating Backend Database)
+// CONSTANTS
 // ============================================
-
-const mockShopData = {
-  id: 1,
-  name: "Ching Ching Chong Foods Private Limited",
-  cuisines: ["Chinese"],
-};
 
 // New grading system cutoff date: 19 January 2025
 const NEW_GRADING_SYSTEM_DATE = new Date("2025-01-19");
 
-// Old system: A, B, C, D
-// New system (after 19 Jan 2025): A, B, NEW, C
-
-const mockHygieneHistory = {
-  current: {
-    grade: "B",
-    updated: "20 Jan 2025", // After cutoff - new system
-  },
-  archived: [
-    { grade: "A", updated: "15 Jan 2025", activeTill: "19 Jan 2025" }, // Before cutoff - old system
-    { grade: "B", updated: "10 Jun 2023", activeTill: "14 Jan 2025" },
-    { grade: "A", updated: "2 Mar 2022", activeTill: "9 Jun 2023" },
-    { grade: "D", updated: "18 Sep 2021", activeTill: "1 Mar 2022" },
-    { grade: "C", updated: "5 Jan 2020", activeTill: "17 Sep 2021" },
-  ],
-};
-
 const tagIcons = {
   halal: "../../assets/icons/halal.png",
   kosher: "../../assets/icons/kosher.svg",
-};
-
-// ============================================
-// MOCK API FUNCTIONS (Simulating Backend Calls)
-// ============================================
-
-const api = {
-  async fetchShopData(/* shopId */) {
-    await this.simulateNetworkDelay();
-    return mockShopData;
-  },
-
-  async fetchHygieneHistory(/* shopId */) {
-    await this.simulateNetworkDelay();
-    return mockHygieneHistory;
-  },
-
-  simulateNetworkDelay() {
-    const delay = Math.random() * 300 + 200;
-    return new Promise((resolve) => setTimeout(resolve, delay));
-  },
 };
 
 // ============================================
@@ -67,7 +32,7 @@ const api = {
 
 function getShopIdFromUrl() {
   const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get("id") || urlParams.get("shopId") || 1;
+  return urlParams.get("id") || urlParams.get("shopId") || null;
 }
 
 // ============================================
@@ -76,13 +41,80 @@ function getShopIdFromUrl() {
 
 let currentTab = "current";
 let hygieneData = null;
+let shopData = null;
+
+// ============================================
+// FIREBASE DATA FETCHING
+// ============================================
+
+async function fetchShopAndHygieneData(stallId) {
+  if (!stallId) return { shop: null, hygiene: null };
+
+  // Fetch stall data
+  const stallDoc = await getDoc(doc(db, "foodStalls", stallId));
+  if (!stallDoc.exists()) return { shop: null, hygiene: null };
+
+  const stallData = stallDoc.data();
+
+  const shop = {
+    id: stallDoc.id,
+    name: stallData.name || "Unknown Stall",
+    cuisines: stallData.cuisineNames || [],
+  };
+
+  // Build current grade
+  const currentGrade = stallData.hygieneGrade || null;
+  const hygieneUpdatedAt = stallData.hygieneUpdatedAt;
+  const currentUpdatedStr = formatDate(hygieneUpdatedAt);
+
+  // Fetch archived grades from hygieneHistory subcollection
+  let archived = [];
+  try {
+    const historyQuery = query(
+      collection(db, "foodStalls", stallId, "hygieneHistory"),
+      orderBy("archivedAt", "desc"),
+    );
+    const historySnap = await getDocs(historyQuery);
+    archived = historySnap.docs.map((d) => {
+      const data = d.data();
+      return {
+        grade: data.grade || "--",
+        updated: formatDate(data.updatedAt),
+        activeTill: data.activeTill || "Unknown",
+      };
+    });
+  } catch (err) {
+    console.error("Error fetching hygiene history:", err);
+  }
+
+  const hygiene = {
+    current: currentGrade
+      ? { grade: currentGrade, updated: currentUpdatedStr }
+      : null,
+    archived,
+  };
+
+  return { shop, hygiene };
+}
+
+function formatDate(timestamp) {
+  if (!timestamp) return "Not available";
+  const date =
+    typeof timestamp.toDate === "function"
+      ? timestamp.toDate()
+      : new Date(timestamp);
+  return date.toLocaleDateString("en-SG", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
 
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
 
 function parseDate(dateStr) {
-  // Parse dates like "15 Jan 2025"
   const months = {
     Jan: 0,
     Feb: 1,
@@ -101,6 +133,7 @@ function parseDate(dateStr) {
   const day = parseInt(parts[0], 10);
   const month = months[parts[1]];
   const year = parseInt(parts[2], 10);
+  if (isNaN(day) || month === undefined || isNaN(year)) return new Date();
   return new Date(year, month, day);
 }
 
@@ -299,13 +332,18 @@ async function initializePage() {
     showLoading();
 
     const shopId = getShopIdFromUrl();
-    const [shopData, hygieneHistoryData] = await Promise.all([
-      api.fetchShopData(shopId),
-      api.fetchHygieneHistory(shopId),
-    ]);
+    const { shop, hygiene } = await fetchShopAndHygieneData(shopId);
 
-    hygieneData = hygieneHistoryData;
-    renderPage(shopData);
+    shopData = shop;
+    hygieneData = hygiene;
+
+    if (!shop) {
+      const container = document.getElementById("hygienePageContent");
+      container.innerHTML = `<div class="hygieneEmpty">Stall not found.</div>`;
+      return;
+    }
+
+    renderPage(shop);
   } catch (error) {
     console.error("Failed to initialize hygiene page:", error);
   }

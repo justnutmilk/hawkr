@@ -19,6 +19,11 @@ import {
   serverTimestamp,
   onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getFunctions,
+  httpsCallable,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
+import { app } from "../../firebase/config.js";
 import { initVendorNavbar } from "../../assets/js/vendorNavbar.js";
 import { showToast, showConfirm } from "../../assets/js/toast.js";
 import { getHawkerCentreById } from "../../firebase/services/hawkerCentres.js";
@@ -802,12 +807,15 @@ async function handleDisconnect() {
     }
 
     // 1. Remove operator-related fields from the food stall (keep ownerId, hawkerCentreId — stall location stays)
+    // Capture operatorId before deleting so we can notify them
+    let operatorId = null;
     const stallsQuery = query(
       collection(db, "foodStalls"),
       where("ownerId", "==", user.uid),
     );
     const stallsSnapshot = await getDocs(stallsQuery);
     for (const stallDoc of stallsSnapshot.docs) {
+      if (!operatorId) operatorId = stallDoc.data().operatorId || null;
       await updateDoc(doc(db, "foodStalls", stallDoc.id), {
         operatorId: deleteField(),
         operatorName: deleteField(),
@@ -826,9 +834,32 @@ async function handleDisconnect() {
     }
 
     // 3. Remove tenancy fields from vendor doc (keep stallId, hawkerCentreId, storeLocation — those are the stall's location)
+    // Capture centre name before clearing for notification
+    let centreName = "";
+    try {
+      const vendorSnap = await getDoc(doc(db, "vendors", user.uid));
+      if (vendorSnap.exists()) {
+        centreName = vendorSnap.data().storeLocation || "";
+      }
+    } catch (_) {}
+
     await updateDoc(doc(db, "vendors", user.uid), {
       tenancyLinkedAt: deleteField(),
     });
+
+    // Notify vendor of unlink (non-blocking)
+    try {
+      const fns = getFunctions(app, "asia-southeast1");
+      const notifyTenancy = httpsCallable(fns, "notifyVendorTenancy");
+      notifyTenancy({
+        vendorId: user.uid,
+        action: "unlinked",
+        centreName,
+        operatorId,
+      });
+    } catch (notifErr) {
+      console.warn("Tenancy notification failed:", notifErr);
+    }
 
     // Show the empty state again
     showEmptyState();

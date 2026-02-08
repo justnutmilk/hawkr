@@ -1,11 +1,16 @@
-import { initVendorNavbar } from "../../assets/js/vendorNavbar.js";
 import { auth } from "../../firebase/config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getHawkerCentresByOperator } from "../../firebase/services/hawkerCentres.js";
 import {
-  subscribeToVendorNotifications,
-  markVendorNotificationAsRead,
+  subscribeToOperatorNotifications,
+  markOperatorNotificationAsRead,
   formatTimeAgo,
-} from "../../firebase/services/vendorNotifications.js";
+} from "../../firebase/services/operatorNotifications.js";
+import { initNotificationBadge } from "../../assets/js/notificationBadge.js";
+import {
+  initToastContainer,
+  subscribeToNewNotifications,
+} from "../../assets/js/toastNotifications.js";
 
 // ============================================
 // STATE
@@ -13,18 +18,53 @@ import {
 
 let notifications = [];
 let unsubscribeNotifications = null;
-let currentTab = "customers";
+let currentTab = "vendors";
+let hasLoaded = false;
 
 // Map notification types to tabs
 const typeToTab = {
-  new_order: "customers",
-  customer_feedback: "customers",
-  refund_processed: "customers",
-  feedback_resolved: "customers",
-  operator_linked: "operator",
-  operator_unlinked: "operator",
-  inspection_result: "operator",
+  vendor_linked: "vendors",
+  vendor_unlinked: "vendors",
 };
+
+// ============================================
+// SKELETON LOADING
+// ============================================
+
+function renderSkeletonCards(count = 3) {
+  return Array.from(
+    { length: count },
+    () => `
+    <div class="skeletonCard">
+      <div class="skeletonHeader">
+        <div class="skeletonLine skeletonTitle"></div>
+        <div class="skeletonLine skeletonTime"></div>
+      </div>
+      <div class="skeletonLine skeletonBody"></div>
+    </div>
+  `,
+  ).join("");
+}
+
+function showNotificationsLoading() {
+  const container = document.getElementById("notificationsContent");
+  if (container) container.innerHTML = renderSkeletonCards(3);
+}
+
+function showNameLoading() {
+  const nameEl = document.querySelector(".operatorName");
+  if (nameEl) {
+    nameEl.classList.add("operatorName--loading");
+    nameEl.innerHTML = `<div class="skeletonLine skeletonName"></div><div class="skeletonLine skeletonName skeletonNameShort"></div>`;
+  }
+}
+
+function hideNameLoading() {
+  const nameEl = document.querySelector(".operatorName");
+  if (nameEl) {
+    nameEl.classList.remove("operatorName--loading");
+  }
+}
 
 // ============================================
 // RENDER FUNCTIONS
@@ -37,20 +77,8 @@ function formatNotificationTime(timestamp) {
 
 function getNotificationLink(notification) {
   const type = notification.type;
-  if (type === "new_order" && notification.orderId) {
-    return "../Vendor Order/vendorOrder.html";
-  }
-  if (type === "customer_feedback" && notification.feedbackId) {
-    return "../Vendor Reviews/vendorReviews.html";
-  }
-  if (type === "refund_processed" && notification.orderId) {
-    return "../Vendor Payments/vendorPayments.html";
-  }
-  if (type === "feedback_resolved" && notification.feedbackId) {
-    return "../Vendor Reviews/vendorReviews.html";
-  }
-  if (type === "operator_linked" || type === "operator_unlinked") {
-    return "../Vendor Tenancy/vendorTenancy.html";
+  if (type === "vendor_linked" || type === "vendor_unlinked") {
+    return "../Operator Children/operatorChildren.html";
   }
   return null;
 }
@@ -81,7 +109,11 @@ function renderNotifications(tab) {
   const container = document.getElementById("notificationsContent");
   if (!container) return;
 
-  // Filter notifications by tab
+  if (!hasLoaded) {
+    showNotificationsLoading();
+    return;
+  }
+
   const filtered = notifications.filter((n) => {
     const mappedTab = typeToTab[n.type] || "hawkr";
     return mappedTab === tab;
@@ -93,8 +125,6 @@ function renderNotifications(tab) {
   }
 
   container.innerHTML = filtered.map(renderNotificationCard).join("");
-
-  // Attach click-to-mark-as-read
   attachNotificationClickListeners();
 }
 
@@ -108,7 +138,7 @@ function attachNotificationClickListeners() {
         card.classList.contains("notificationCard--unread")
       ) {
         try {
-          await markVendorNotificationAsRead(notificationId);
+          await markOperatorNotificationAsRead(notificationId);
           card.classList.remove("notificationCard--unread");
         } catch (error) {
           console.error("Error marking notification as read:", error);
@@ -125,20 +155,18 @@ function attachNotificationClickListeners() {
 function initializeNotifications(user) {
   if (!user) return;
 
-  // Subscribe to real-time vendor notifications
-  unsubscribeNotifications = subscribeToVendorNotifications(
+  unsubscribeNotifications = subscribeToOperatorNotifications(
     (updatedNotifications) => {
       notifications = updatedNotifications;
+      hasLoaded = true;
       renderNotifications(currentTab);
     },
   );
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  initVendorNavbar();
-
-  // Render empty state until auth resolves
-  renderNotifications("customers");
+  showNameLoading();
+  showNotificationsLoading();
 
   // Tab switching
   document
@@ -149,15 +177,36 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
-  // Wait for auth then initialize
-  onAuthStateChanged(auth, (user) => {
+  // Auth
+  onAuthStateChanged(auth, async (user) => {
     if (user) {
+      initNotificationBadge(`operators/${user.uid}/notifications`);
+      initToastContainer();
+      subscribeToNewNotifications(`operators/${user.uid}/notifications`);
+
+      // Load hawker centre name for sidebar (same as dashboard)
+      try {
+        const centres = await getHawkerCentresByOperator(user.uid);
+        hideNameLoading();
+        const nameEl = document.querySelector(".operatorName");
+        if (centres && centres.length > 0) {
+          if (nameEl) nameEl.textContent = centres[0].name || "My Centre";
+        } else {
+          if (nameEl) nameEl.textContent = "My Centre";
+        }
+      } catch (_) {
+        hideNameLoading();
+        const nameEl = document.querySelector(".operatorName");
+        if (nameEl) nameEl.textContent = "My Centre";
+      }
+
       initializeNotifications(user);
+    } else {
+      window.location.href = "../Auth/login.html";
     }
   });
 });
 
-// Cleanup on page unload
 window.addEventListener("beforeunload", () => {
   if (unsubscribeNotifications) {
     unsubscribeNotifications();

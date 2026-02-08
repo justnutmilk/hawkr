@@ -1,0 +1,573 @@
+@font-face {
+    font-family: "Aptos";
+    src: url("../../fonts/Aptos.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Geist Mono";
+    src: url("../../fonts/GeistMono-VariableFont_wght.ttf") format("truetype");
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    overflow-x: hidden;
+}
+
+body {
+    display: flex;
+    overflow-x: hidden;
+    font-family:
+        Aptos,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    background-color: #fff;
+    min-height: 100vh;
+}
+
+/* ============================================
+   SIDEBAR (same as dashboard)
+   ============================================ */
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 200px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 32px 24px 32px 0px;
+    border-right: 1px solid #e0e0e0;
+    background: #fff;
+    z-index: 100;
+    margin-left: 24px;
+}
+
+.sidebarTop {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+}
+
+.authorityAccount {
+    display: flex;
+    padding: 8px 16px;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 8px;
+    border-radius: 8px;
+    background: #f0f0f0;
+}
+
+.authorityIcon {
+    height: 21px;
+    width: auto;
+    flex-shrink: 0;
+}
+
+.authorityName {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    color: #341539;
+    text-overflow: ellipsis;
+    font-family: Aptos;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+/* Override global nav styles from styles.css */
+nav {
+    padding: 0;
+    margin-left: 0;
+    margin-right: 0;
+    justify-content: initial;
+    align-items: initial;
+    align-self: initial;
+}
+
+.sidebarNav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.navItem {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+    transition: background 0.2s ease;
+}
+
+.navItem:hover {
+    background: #f4f1f6;
+}
+
+.navItem.active {
+    color: #913b9f;
+}
+
+.sidebarIcon {
+    width: 20px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+.sidebarBottom {
+    display: flex;
+    align-items: center;
+}
+
+.sidebarLogo {
+    width: 170px;
+    height: auto;
+}
+
+/* ============================================
+   MAIN CONTENT
+   ============================================ */
+
+.mainContent {
+    margin-left: 224px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+    height: 100vh;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+/* Top Bar */
+.topBar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 32px 48px 0 48px;
+}
+
+/* Search bar styles now provided by searchModule.css */
+
+.topBarActions {
+    display: flex;
+    align-items: center;
+    gap: 3em;
+    position: absolute;
+    right: 48px;
+}
+
+.topBarActions a {
+    display: flex;
+    align-items: center;
+}
+
+/* ============================================
+   PAGE CONTENT
+   ============================================ */
+
+.pageContent {
+    padding: 0 48px 48px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    max-width: 640px;
+}
+
+.sectionLabel {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: normal;
+}
+
+/* Form Fields */
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.formLabel {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.stallSelect {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    background: #fff;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23595959' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+}
+
+.stallSelect:focus {
+    border-color: #913b9f;
+}
+
+.dateInput {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    background: #fff;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    outline: none;
+}
+
+.dateInput:focus {
+    border-color: #913b9f;
+}
+
+/* Grade Cards */
+.gradeCards {
+    display: flex;
+    gap: 12px;
+}
+
+.gradeCard {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    border: 2px solid #e0e0e0;
+    background: #fff;
+    cursor: pointer;
+    font-family: "Geist Mono", monospace;
+    font-size: 24px;
+    font-weight: 700;
+    color: #595959;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+.gradeCard:hover {
+    border-color: #913b9f;
+}
+
+.gradeCard.selected {
+    border-color: #913b9f;
+    background: #913b9f;
+    color: #fff;
+}
+
+.gradeCard.grade-NEW {
+    font-size: 14px;
+}
+
+/* Grade update toast */
+.gradeToast {
+    color: #2e7d32;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.gradeToast.visible {
+    opacity: 1;
+}
+
+/* Notification toggles */
+.toggleRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+}
+
+.toggleInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.toggleLabel {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.toggleDesc {
+    color: #595959;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+/* Submit button */
+.submitButton {
+    padding: 14px 32px;
+    border-radius: 12px;
+    border: none;
+    background: #913b9f;
+    color: #fff;
+    font-family: Aptos, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        opacity 0.2s ease;
+    width: fit-content;
+}
+
+.submitButton:hover {
+    background: #7a3287;
+}
+
+.submitButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Success message */
+.successMessage {
+    padding: 16px 20px;
+    border-radius: 12px;
+    background: #e8f5e9;
+    color: #2e7d32;
+    font-family: Aptos, sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+/* ============================================
+   SEARCH — Action buttons (extends searchModule.css)
+   ============================================ */
+
+.searchResultActions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.searchActionBtn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    background: #fff;
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease;
+    white-space: nowrap;
+    position: relative;
+    z-index: 2;
+}
+
+.searchActionBtn:hover {
+    border-color: #913b9f;
+    color: #913b9f;
+}
+
+.searchActionBtn.gradeBtn:hover {
+    background: #913b9f;
+    color: #fff;
+    border-color: #913b9f;
+}
+
+/* ============================================
+   GRADE MODAL
+   ============================================ */
+
+.gradeModalOverlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 500;
+    align-items: center;
+    justify-content: center;
+}
+
+.gradeModalOverlay.active {
+    display: flex;
+}
+
+.gradeModal {
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px;
+    min-width: 320px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.gradeModalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.gradeModalTitle {
+    color: #341539;
+    font-family: Aptos, sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.gradeModalClose {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #595959;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.gradeModalClose:hover {
+    color: #341539;
+}
+
+.gradeCards {
+    display: flex;
+    gap: 12px;
+}
+
+.gradeCard {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    border: 2px solid #e0e0e0;
+    background: #fff;
+    cursor: pointer;
+    font-family: "Geist Mono", monospace;
+    font-size: 24px;
+    font-weight: 700;
+    color: #595959;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+.gradeCard:hover {
+    border-color: #913b9f;
+}
+
+.gradeCard.selected {
+    border-color: #913b9f;
+    background: #913b9f;
+    color: #fff;
+}
+
+.gradeCard.grade-NEW {
+    font-size: 14px;
+}
+
+.gradeToast {
+    color: #2e7d32;
+    font-family: Aptos, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    min-height: 18px;
+}
+
+.gradeToast.visible {
+    opacity: 1;
+}
+
+/* ============================================
+   SKELETON LOADING
+   ============================================ */
+
+@keyframes shimmer {
+    0% {
+        background-position: -200px 0;
+    }
+    100% {
+        background-position: 200px 0;
+    }
+}
+
+.authorityAccount.skeleton {
+    background: #f0f0f0;
+}
+
+.skeletonIcon {
+    width: 21px;
+    height: 21px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #e0e0e0 25%, #ececec 50%, #e0e0e0 75%);
+    background-size: 400px 100%;
+    animation: shimmer 1.5s infinite;
+    flex-shrink: 0;
+}
+
+.skeletonText {
+    width: 80px;
+    height: 16px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #e0e0e0 25%, #ececec 50%, #e0e0e0 75%);
+    background-size: 400px 100%;
+    animation: shimmer 1.5s infinite;
+    flex-shrink: 0;
+}
+
+/* Empty state */
+.emptyState {
+    padding: 3rem;
+    text-align: center;
+    color: #595959;
+}

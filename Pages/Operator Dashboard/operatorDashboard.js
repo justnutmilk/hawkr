@@ -25,6 +25,12 @@ import {
   getHawkerCentreStats,
 } from "../../firebase/services/hawkerCentres.js";
 import { getStallsByHawkerCentre } from "../../firebase/services/foodStalls.js";
+import { disruptor } from "../../firebase/services/disruptor.js";
+import { initNotificationBadge } from "../../assets/js/notificationBadge.js";
+import {
+  initToastContainer,
+  subscribeToNewNotifications,
+} from "../../assets/js/toastNotifications.js";
 
 // ============================================
 // STATE
@@ -47,6 +53,9 @@ let customerSatisfaction = 0;
 /** Per-stall revenue maps, keyed by stallId */
 let todayRevenueByStall = {};
 let monthlyRevenueByStall = {};
+
+/** Centre-level chart data (today hourly + monthly daily), updated by snapshot */
+let centreChartData = null;
 
 const STALLS_PER_PAGE = 3;
 const stallVisibleCounts = { today: STALLS_PER_PAGE, monthly: STALLS_PER_PAGE };
@@ -152,6 +161,79 @@ function computeRevenue(orders) {
 }
 
 /**
+ * Aggregate completed orders into chart-ready time-series arrays.
+ * Returns { today: { labels, values }, monthly: { labels, values } }
+ */
+function aggregateCentreChartData(orders) {
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentDay = now.getDate();
+  const startOfToday = getStartOfToday();
+  const startOfMonth = getStartOfMonth();
+
+  // Today: 24 hourly slots
+  const hourLabels = [
+    "12am",
+    "1am",
+    "2am",
+    "3am",
+    "4am",
+    "5am",
+    "6am",
+    "7am",
+    "8am",
+    "9am",
+    "10am",
+    "11am",
+    "12pm",
+    "1pm",
+    "2pm",
+    "3pm",
+    "4pm",
+    "5pm",
+    "6pm",
+    "7pm",
+    "8pm",
+    "9pm",
+    "10pm",
+    "11pm",
+  ];
+  const hourRevenue = new Array(24).fill(0);
+
+  // Monthly: days 1..lastDay
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const dayLabels = Array.from({ length: lastDay }, (_, i) => String(i + 1));
+  const dayRevenue = new Array(lastDay).fill(0);
+
+  for (const order of orders) {
+    if (order.status !== "completed") continue;
+    const d = toDate(order.createdAt);
+    if (!d) continue;
+    const total = typeof order.total === "number" ? order.total : 0;
+
+    if (d >= startOfToday) {
+      hourRevenue[d.getHours()] += total;
+    }
+    if (d >= startOfMonth) {
+      dayRevenue[d.getDate() - 1] += total;
+    }
+  }
+
+  // Null-out future slots so the line stops at the current point
+  const todayValues = hourLabels.map((_, i) =>
+    i > currentHour ? null : Math.round(hourRevenue[i] * 100) / 100,
+  );
+  const monthlyValues = dayLabels.map((_, i) =>
+    i + 1 > currentDay ? null : Math.round(dayRevenue[i] * 100) / 100,
+  );
+
+  return {
+    today: { labels: hourLabels, values: todayValues },
+    monthly: { labels: dayLabels, values: monthlyValues },
+  };
+}
+
+/**
  * Enrich the raw stall objects with revenue numbers and a normalised `tags`
  * array.  Returns a new array (does not mutate the input).
  */
@@ -205,11 +287,17 @@ function subscribeToOrders(stallIds) {
     todayRevenueByStall = result.todayByStall;
     monthlyRevenueByStall = result.monthByStall;
 
+    // Compute chart time-series data
+    centreChartData = aggregateCentreChartData(allOrders);
+
     // Re-enrich stall data with updated revenue
     stallData = enrichStalls(rawStallCache);
 
     // Re-render whichever tab is showing
     renderDashboard(activeTab);
+
+    // Notify disruptor so future chart subscribers auto-update
+    disruptor.emit("operator:charts:invalidated");
   }
 
   batches.forEach((batch, idx) => {
@@ -347,6 +435,68 @@ async function initDashboard(user) {
 }
 
 // ============================================
+// CHARTS (Google Charts — same pattern as operatorChildrenDetail.js)
+// ============================================
+
+function getChartOptions(color) {
+  return {
+    curveType: "function",
+    legend: { position: "none" },
+    chartArea: {
+      left: 60,
+      top: 20,
+      right: 20,
+      bottom: 40,
+      width: "100%",
+      height: "100%",
+    },
+    hAxis: {
+      textStyle: { fontName: "Aptos", fontSize: 12, color: "#808080" },
+      gridlines: { color: "transparent" },
+    },
+    vAxis: {
+      textStyle: { fontName: "Aptos", fontSize: 12, color: "#808080" },
+      gridlines: { color: "#e0e0e0" },
+      minorGridlines: { count: 0 },
+    },
+    colors: [color],
+    lineWidth: 2,
+    pointSize: 5,
+    backgroundColor: "transparent",
+    fontName: "Aptos",
+    tooltip: { textStyle: { fontName: "Aptos", fontSize: 13 } },
+  };
+}
+
+function drawSingleChart(labels, values, color, elementId) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+
+  const header = ["Label", "Value"];
+  const rows = labels.map((label, i) => [label, values[i]]);
+  const data = google.visualization.arrayToDataTable([header, ...rows]);
+
+  const chart = new google.visualization.LineChart(el);
+  chart.draw(data, getChartOptions(color));
+}
+
+function drawCentreCharts() {
+  if (!centreChartData) return;
+  drawSingleChart(
+    centreChartData.today.labels,
+    centreChartData.today.values,
+    "#913b9f",
+    "chartTodayRevenue",
+  );
+  drawSingleChart(
+    centreChartData.monthly.labels,
+    centreChartData.monthly.values,
+    "#913b9f",
+    "chartMonthlyRevenue",
+  );
+}
+
+// ============================================
 // RENDER FUNCTIONS
 // ============================================
 
@@ -381,9 +531,37 @@ function renderStallRow(stall) {
     `;
 }
 
+function renderStarRating(rating) {
+  if (rating <= 0) return "";
+  const stars = [];
+  for (let i = 1; i <= 5; i++) {
+    if (rating >= i) {
+      // Full star
+      stars.push(
+        `<svg class="starIcon" width="24" height="24" viewBox="0 0 24 24" fill="#913b9f" xmlns="http://www.w3.org/2000/svg"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>`,
+      );
+    } else if (rating >= i - 0.5) {
+      // Half star — left half filled, right half empty
+      stars.push(`<svg class="starIcon" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <defs><clipPath id="halfStar${i}"><rect x="0" y="0" width="12" height="24"/></clipPath></defs>
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" fill="#e0e0e0"/>
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" fill="#913b9f" clip-path="url(#halfStar${i})"/>
+      </svg>`);
+    } else {
+      // Empty star
+      stars.push(
+        `<svg class="starIcon" width="24" height="24" viewBox="0 0 24 24" fill="#e0e0e0" xmlns="http://www.w3.org/2000/svg"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>`,
+      );
+    }
+  }
+  return `<div class="starRating">${stars.join("")}</div>`;
+}
+
 function renderCentreContent() {
   const satisfactionDisplay =
-    customerSatisfaction > 0 ? `${customerSatisfaction}/10` : "N/A";
+    customerSatisfaction > 0 ? `${customerSatisfaction}/5` : "N/A";
+
+  const starRating = renderStarRating(customerSatisfaction);
 
   return `
         <div class="quickStatsSection">
@@ -395,17 +573,17 @@ function renderCentreContent() {
                 <div class="statBlock">
                     <span class="statBlockLabel">Today</span>
                     <span class="statBlockValue">S${formatCurrency(todayRevenue)}</span>
-                    <span class="statBlockPlaceholder">Imagine A Bar Graph Here</span>
+                    <div class="chartContainer" id="chartTodayRevenue"></div>
                 </div>
                 <div class="statBlock">
                     <span class="statBlockLabel">Monthly</span>
                     <span class="statBlockValue">S${formatCurrency(monthlyRevenue)}</span>
-                    <span class="statBlockPlaceholder">Imagine Another Certain Graph Here</span>
+                    <div class="chartContainer" id="chartMonthlyRevenue"></div>
                 </div>
                 <div class="statBlock">
                     <span class="statBlockLabel">Customer Satisfaction</span>
                     <span class="statBlockValue">${satisfactionDisplay}</span>
-                    <span class="statBlockPlaceholder">Imagine A Donut Graph Here</span>
+                    ${starRating}
                 </div>
             </div>
         </div>
@@ -437,7 +615,7 @@ function renderStallList(period) {
 
 function renderStallContent() {
   const satisfactionDisplay =
-    customerSatisfaction > 0 ? `${customerSatisfaction}/10` : "N/A";
+    customerSatisfaction > 0 ? `${customerSatisfaction}/5` : "N/A";
 
   // Top 3 by today's revenue
   const topToday = [...stallData]
@@ -517,6 +695,15 @@ function renderDashboard(tab) {
   if (tab === "stall") {
     bindLoadMoreButtons();
   }
+
+  if (
+    tab === "centre" &&
+    centreChartData &&
+    typeof google !== "undefined" &&
+    google.visualization
+  ) {
+    requestAnimationFrame(drawCentreCharts);
+  }
 }
 
 // ============================================
@@ -524,6 +711,9 @@ function renderDashboard(tab) {
 // ============================================
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Load Google Charts
+  google.charts.load("current", { packages: ["corechart"] });
+
   // Tab switching via segmented control
   document.querySelectorAll('input[name="dashboardTab"]').forEach((radio) => {
     radio.addEventListener("change", () => {
@@ -531,26 +721,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Keyboard shortcut hint (Cmd/Ctrl + K)
-  const isMac = window.navigator.userAgentData
-    ? window.navigator.userAgentData.platform === "macOS"
-    : /Mac/i.test(window.navigator.userAgent);
-
-  const keyModEl = document.getElementById("searchKeyMod");
-  if (keyModEl) keyModEl.textContent = isMac ? "\u2318" : "CTRL";
-
-  document.addEventListener("keydown", (e) => {
-    const modifier = isMac ? e.metaKey : e.ctrlKey;
-    if (modifier && e.key === "k") {
-      e.preventDefault();
-      const input = document.getElementById("searchInput");
-      if (input) input.focus();
-    }
-  });
-
   // Auth gate — wait for Firebase auth to resolve, then load data
   onAuthStateChanged(auth, (user) => {
     if (user) {
+      initNotificationBadge(`operators/${user.uid}/notifications`);
+      initToastContainer();
+      subscribeToNewNotifications(`operators/${user.uid}/notifications`);
       initDashboard(user);
     } else {
       // Not logged in — redirect to login (or show message)
@@ -563,4 +739,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   });
+});
+
+// Cleanup subscriptions and disruptor on page unload
+window.addEventListener("beforeunload", () => {
+  if (ordersUnsubscribe) ordersUnsubscribe();
+  disruptor.destroy();
 });

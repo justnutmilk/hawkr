@@ -239,7 +239,7 @@ body {
     border-radius: 8px;
     cursor: pointer;
     font-family: Aptos, sans-serif;
-    font-size: 13px;
+    font-size: 14px;
     font-style: normal;
     font-weight: 400;
     line-height: 24px;
@@ -249,9 +249,9 @@ body {
 .actionButton.addCard {
     border: 1px solid #cee6cc;
     background: #eaf5e9;
-    font-family: "Source Serif", Georgia, serif;
-    font-size: 16px;
-    font-weight: 600;
+    font-family: Aptos, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
     transition:
         background 0.2s ease,
         border-color 0.2s ease;
@@ -1547,8 +1547,8 @@ body {
 .addCardCtaBtn {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 12px;
-    margin-top: 16px;
     padding: 14px 20px;
     width: 100%;
     border-radius: 48px;
