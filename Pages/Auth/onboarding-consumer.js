@@ -35,9 +35,10 @@ const consumerData = {
   phone: "",
   preferences: {
     browserNotifications: false,
-    telegramConnected: false,
-    telegramChatId: null,
   },
+  telegramConnected: false,
+  telegramChatId: null,
+  telegramUsername: null,
 };
 
 let isOAuthUser = false;
@@ -137,10 +138,8 @@ function updateReviewPage() {
     .preferences.browserNotifications
     ? "Enabled"
     : "Disabled";
-  document.getElementById("reviewTelegram").textContent = consumerData
-    .preferences.telegramConnected
-    ? "Connected"
-    : "Not connected";
+  document.getElementById("reviewTelegram").textContent =
+    consumerData.telegramConnected ? "Connected" : "Not connected";
 }
 
 // ============================================
@@ -155,7 +154,8 @@ async function saveProgress() {
       displayName: consumerData.displayName,
       email: consumerData.email,
       phone: consumerData.phone,
-      preferences: consumerData.preferences,
+      "preferences.browserNotifications":
+        consumerData.preferences.browserNotifications,
       updatedAt: serverTimestamp(),
     });
   } catch (error) {
@@ -180,7 +180,8 @@ async function completeOnboarding() {
       displayName: consumerData.displayName,
       email: consumerData.email,
       phone: consumerData.phone,
-      preferences: consumerData.preferences,
+      "preferences.browserNotifications":
+        consumerData.preferences.browserNotifications,
       onboardingComplete: true,
       updatedAt: serverTimestamp(),
     });
@@ -244,47 +245,106 @@ function initBrowserNotifications() {
     if (thumb) thumb.classList.add("glass");
   }
 
-  initLiquidGlassToggle(toggleLabel, async (isChecked) => {
-    if (isChecked && "Notification" in window) {
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        const cb = toggleLabel.querySelector("input");
-        const th = toggleLabel.querySelector(".toggleThumb");
-        if (cb) cb.checked = false;
-        if (th) th.classList.remove("glass");
-        alert(
-          "Please enable notifications in your browser settings to receive updates.",
-        );
-        return;
-      }
-    }
+  initLiquidGlassToggle(toggleLabel, (isChecked) => {
     consumerData.preferences.browserNotifications = isChecked;
   });
 }
 
 function initTelegram() {
-  const connectBtn = document.getElementById("connectTelegram");
+  const container = document.getElementById("telegramLoginWidget");
   const connectedState = document.getElementById("telegramConnectedState");
 
-  if (!connectBtn) return;
+  // If already connected
+  if (consumerData.telegramConnected) {
+    const handle = consumerData.telegramUsername
+      ? `@${consumerData.telegramUsername}`
+      : "Linked";
+    showTelegramConnected(handle);
+    return;
+  }
 
-  connectBtn.addEventListener("click", () => {
-    const botUsername = "hawkrOrgBot";
-    const startParam = currentUser?.uid || "";
-    window.open(`https://t.me/${botUsername}?start=${startParam}`, "_blank");
+  if (!container) return;
 
-    // Show connected state after delay — actual telegramChatId is set by the bot webhook
-    setTimeout(() => {
-      connectBtn.parentElement.style.display = "none";
-      if (connectedState) connectedState.style.display = "flex";
-      consumerData.preferences.telegramConnected = true;
-    }, 3000);
-  });
+  container.innerHTML = "";
 
-  // Check if already connected
-  if (consumerData.preferences.telegramConnected && connectedState) {
-    connectBtn.parentElement.style.display = "none";
-    connectedState.style.display = "flex";
+  const script = document.createElement("script");
+  script.async = true;
+  script.src = "https://telegram.org/js/telegram-widget.js?22";
+  script.setAttribute("data-telegram-login", "hawkrOrgBot");
+  script.setAttribute("data-size", "large");
+  script.setAttribute("data-onauth", "onTelegramAuth(user)");
+  script.setAttribute("data-request-access", "write");
+
+  container.appendChild(script);
+}
+
+window.onTelegramAuth = async function (user) {
+  if (!currentUser) return;
+
+  try {
+    await updateDoc(doc(db, "customers", currentUser.uid), {
+      telegramChatId: user.id.toString(),
+      telegramLinked: true,
+      telegramUsername: user.username || null,
+      telegramFirstName: user.first_name || null,
+      telegramPhotoUrl: user.photo_url || null,
+      telegramAuthDate: user.auth_date,
+    });
+
+    consumerData.telegramConnected = true;
+    consumerData.telegramChatId = user.id.toString();
+    consumerData.telegramUsername = user.username || null;
+
+    const handle = user.username
+      ? `@${user.username}`
+      : user.first_name || "Linked";
+    showTelegramConnected(handle);
+  } catch (error) {
+    console.error("Error linking Telegram:", error);
+    alert("Failed to link Telegram account. Please try again.");
+  }
+};
+
+function showTelegramConnected(handle) {
+  const widget = document.getElementById("telegramLoginWidget");
+  const connectedState = document.getElementById("telegramConnectedState");
+  const handleEl = document.getElementById("telegramHandle");
+  if (widget) widget.style.display = "none";
+  if (handleEl) handleEl.textContent = handle;
+  if (connectedState) connectedState.style.display = "flex";
+
+  const disconnectBtn = document.getElementById("telegramDisconnect");
+  if (disconnectBtn) {
+    disconnectBtn.addEventListener("click", handleTelegramDisconnect);
+  }
+}
+
+async function handleTelegramDisconnect() {
+  if (!currentUser) return;
+
+  try {
+    await updateDoc(doc(db, "customers", currentUser.uid), {
+      telegramChatId: null,
+      telegramLinked: false,
+      telegramUsername: null,
+      telegramFirstName: null,
+      telegramPhotoUrl: null,
+      telegramAuthDate: null,
+    });
+
+    consumerData.telegramConnected = false;
+    consumerData.telegramChatId = null;
+    consumerData.telegramUsername = null;
+
+    const widget = document.getElementById("telegramLoginWidget");
+    const connectedState = document.getElementById("telegramConnectedState");
+    if (connectedState) connectedState.style.display = "none";
+    if (widget) widget.style.display = "flex";
+
+    initTelegram();
+  } catch (error) {
+    console.error("Error unlinking Telegram:", error);
+    alert("Failed to unlink Telegram. Please try again.");
   }
 }
 
@@ -554,8 +614,15 @@ onAuthStateChanged(auth, async (user) => {
     // Load existing data
     if (data.displayName) consumerData.displayName = data.displayName;
     if (data.phone) consumerData.phone = data.phone;
-    if (data.preferences) {
-      Object.assign(consumerData.preferences, data.preferences);
+    if (data.preferences?.browserNotifications) {
+      consumerData.preferences.browserNotifications =
+        data.preferences.browserNotifications;
+    }
+    // Telegram fields are top-level (matching vendor pattern)
+    if (data.telegramLinked) {
+      consumerData.telegramConnected = true;
+      consumerData.telegramChatId = data.telegramChatId || null;
+      consumerData.telegramUsername = data.telegramUsername || null;
     }
   } else {
     window.location.href = "select-role.html";

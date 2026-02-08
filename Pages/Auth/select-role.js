@@ -106,9 +106,10 @@ async function selectRole(role) {
         onboardingComplete: false,
         preferences: {
           browserNotifications: false,
-          telegramConnected: false,
-          telegramChatId: null,
         },
+        telegramLinked: false,
+        telegramChatId: null,
+        telegramUsername: null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -138,9 +139,10 @@ async function selectRole(role) {
         contactNumber: "",
         preferences: {
           browserNotifications: false,
-          telegramConnected: false,
-          telegramChatId: null,
         },
+        telegramLinked: false,
+        telegramChatId: null,
+        telegramUsername: null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -165,9 +167,10 @@ async function selectRole(role) {
         managedLocations: [],
         preferences: {
           browserNotifications: false,
-          telegramConnected: false,
-          telegramChatId: null,
         },
+        telegramLinked: false,
+        telegramChatId: null,
+        telegramUsername: null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });

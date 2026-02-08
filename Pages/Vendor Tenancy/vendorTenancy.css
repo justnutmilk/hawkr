@@ -1005,36 +1005,6 @@ body {
    ============================================ */
 
 @media (max-width: 768px) {
-    .sidebar {
-        position: fixed;
-        left: -260px;
-        width: 240px;
-        margin-left: 0;
-        padding: 32px 24px;
-        transition: left 0.3s ease;
-    }
-
-    .sidebar.open {
-        left: 0;
-    }
-
-    .mainContent {
-        margin-left: 0;
-    }
-
-    .topBar {
-        padding: 24px 24px 0 24px;
-    }
-
-    .topBarActions {
-        right: 24px;
-        gap: 1.5em;
-    }
-
-    .hamburger {
-        display: block;
-    }
-
     .tenancyContent {
         padding: 0 24px 24px 24px;
     }

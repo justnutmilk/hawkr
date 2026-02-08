@@ -225,5 +225,13 @@
         </div>
 
         <script type="module" src="./login.js"></script>
+        <script>
+            (function () {
+                var e = new URLSearchParams(window.location.search).get(
+                    "email",
+                );
+                if (e) document.getElementById("email").value = e;
+            })();
+        </script>
     </body>
 </html>

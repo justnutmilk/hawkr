@@ -1734,23 +1734,6 @@ nav.sidebarNav {
    ============================================ */
 
 @media (max-width: 768px) {
-    .sidebar {
-        display: none;
-    }
-
-    .mainContent {
-        margin-left: 0;
-    }
-
-    .topBar {
-        padding: 24px 5% 0 5%;
-    }
-
-    .topBarActions {
-        right: 5%;
-        gap: 1.5em;
-    }
-
     .settingsContent {
         padding: 0 5% 48px 5%;
     }
@@ -1783,15 +1766,6 @@ nav.sidebarNav {
 }
 
 @media (max-width: 480px) {
-    .topBar {
-        padding: 16px 4% 0 4%;
-    }
-
-    .topBarActions {
-        right: 4%;
-        gap: 1em;
-    }
-
     .settingsContent {
         padding: 0 4% 48px 4%;
     }

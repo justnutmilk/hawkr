@@ -18,24 +18,24 @@
                     width=""
                     height="auto"
                 />
-                <div class="withinNav">
+                <a href="#products" class="withinNav">
                     <div>Products</div>
                     <img src="images/Chevron down.svg" alt="Chevron down" />
-                </div>
+                </a>
 
-                <div class="withinNav">
+                <a href="#solutions" class="withinNav">
                     <div>Solutions</div>
                     <img src="images/Chevron down.svg" alt="Chevron down" />
-                </div>
+                </a>
 
                 <div class="withinNav">
                     <div>Resources</div>
                     <img src="images/Chevron down.svg" alt="Chevron down" />
                 </div>
 
-                <div class="withinNav">
+                <a href="#pricing" class="withinNav">
                     <div>Pricing</div>
-                </div>
+                </a>
 
                 <div class="navActions">
                     <a href="#" class="contactSupportButton"
@@ -67,7 +67,7 @@
             />
 
             <!--Get Started-->
-            <form class="ctaEmail" action="#">
+            <form class="ctaEmail" action="Pages/Auth/login.html">
                 <div class="pillInput">
                     <input
                         id="email_input"
@@ -178,7 +178,7 @@
             <!-- ============================================
          SECTION: Product Suite
          ============================================ -->
-            <section class="productSuiteSection">
+            <section class="productSuiteSection" id="products">
                 <div class="productSuiteHeader">
                     <h2 class="sectionHeading">Feature packed, future proof</h2>
                     <p class="productSuiteSubheading">
@@ -217,22 +217,65 @@
                                         >
                                     </div>
                                     <div class="animCartItemRight">
-                                        <span class="animItemPrice">$5.50</span>
-                                        <div class="animQtyGroup">
-                                            <span
-                                                class="animQtyBtn"
-                                                data-action="decrease"
-                                                >&minus;</span
+                                        <button class="animEditBtn">
+                                            Edit
+                                        </button>
+                                        <div class="animCartItemFooter">
+                                            <span class="animItemPrice"
+                                                >$5.50</span
                                             >
-                                            <span class="animQtyCount">1</span>
-                                            <span
-                                                class="animQtyBtn"
-                                                data-action="increase"
-                                                >+</span
-                                            >
+                                            <div class="animQtyControls">
+                                                <div class="animQtyBtnGroup">
+                                                    <button
+                                                        class="animQtyBtn"
+                                                        data-action="decrease"
+                                                        aria-label="Decrease quantity"
+                                                    >
+                                                        <svg
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            width="12"
+                                                            height="2"
+                                                            viewBox="0 0 14 2"
+                                                            fill="none"
+                                                        >
+                                                            <path
+                                                                d="M1 1H13"
+                                                                stroke="#1d1d1f"
+                                                                stroke-width="2"
+                                                                stroke-linecap="round"
+                                                            />
+                                                        </svg>
+                                                    </button>
+                                                    <span
+                                                        class="animQtyDivider"
+                                                    ></span>
+                                                    <button
+                                                        class="animQtyBtn"
+                                                        data-action="increase"
+                                                        aria-label="Increase quantity"
+                                                    >
+                                                        <svg
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            width="12"
+                                                            height="12"
+                                                            viewBox="0 0 14 14"
+                                                            fill="none"
+                                                        >
+                                                            <path
+                                                                d="M7 1V13M1 7H13"
+                                                                stroke="#1d1d1f"
+                                                                stroke-width="2"
+                                                                stroke-linecap="round"
+                                                            />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                                <span class="animQtyCount"
+                                                    >1</span
+                                                >
+                                            </div>
                                         </div>
                                     </div>
-                                    <button class="animEditBtn">Edit</button>
                                 </div>
                                 <div
                                     class="animCartItem animCartItem2"
@@ -248,22 +291,65 @@
                                         >
                                     </div>
                                     <div class="animCartItemRight">
-                                        <span class="animItemPrice">$1.80</span>
-                                        <div class="animQtyGroup">
-                                            <span
-                                                class="animQtyBtn"
-                                                data-action="decrease"
-                                                >&minus;</span
+                                        <button class="animEditBtn">
+                                            Edit
+                                        </button>
+                                        <div class="animCartItemFooter">
+                                            <span class="animItemPrice"
+                                                >$1.80</span
                                             >
-                                            <span class="animQtyCount">1</span>
-                                            <span
-                                                class="animQtyBtn"
-                                                data-action="increase"
-                                                >+</span
-                                            >
+                                            <div class="animQtyControls">
+                                                <div class="animQtyBtnGroup">
+                                                    <button
+                                                        class="animQtyBtn"
+                                                        data-action="decrease"
+                                                        aria-label="Decrease quantity"
+                                                    >
+                                                        <svg
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            width="12"
+                                                            height="2"
+                                                            viewBox="0 0 14 2"
+                                                            fill="none"
+                                                        >
+                                                            <path
+                                                                d="M1 1H13"
+                                                                stroke="#1d1d1f"
+                                                                stroke-width="2"
+                                                                stroke-linecap="round"
+                                                            />
+                                                        </svg>
+                                                    </button>
+                                                    <span
+                                                        class="animQtyDivider"
+                                                    ></span>
+                                                    <button
+                                                        class="animQtyBtn"
+                                                        data-action="increase"
+                                                        aria-label="Increase quantity"
+                                                    >
+                                                        <svg
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            width="12"
+                                                            height="12"
+                                                            viewBox="0 0 14 14"
+                                                            fill="none"
+                                                        >
+                                                            <path
+                                                                d="M7 1V13M1 7H13"
+                                                                stroke="#1d1d1f"
+                                                                stroke-width="2"
+                                                                stroke-linecap="round"
+                                                            />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                                <span class="animQtyCount"
+                                                    >1</span
+                                                >
+                                            </div>
                                         </div>
                                     </div>
-                                    <button class="animEditBtn">Edit</button>
                                 </div>
                                 <div
                                     class="animCartItem animCartItem3"
@@ -279,22 +365,65 @@
                                         >
                                     </div>
                                     <div class="animCartItemRight">
-                                        <span class="animItemPrice">$4.00</span>
-                                        <div class="animQtyGroup">
-                                            <span
-                                                class="animQtyBtn"
-                                                data-action="decrease"
-                                                >&minus;</span
+                                        <button class="animEditBtn">
+                                            Edit
+                                        </button>
+                                        <div class="animCartItemFooter">
+                                            <span class="animItemPrice"
+                                                >$4.00</span
                                             >
-                                            <span class="animQtyCount">2</span>
-                                            <span
-                                                class="animQtyBtn"
-                                                data-action="increase"
-                                                >+</span
-                                            >
+                                            <div class="animQtyControls">
+                                                <div class="animQtyBtnGroup">
+                                                    <button
+                                                        class="animQtyBtn"
+                                                        data-action="decrease"
+                                                        aria-label="Decrease quantity"
+                                                    >
+                                                        <svg
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            width="12"
+                                                            height="2"
+                                                            viewBox="0 0 14 2"
+                                                            fill="none"
+                                                        >
+                                                            <path
+                                                                d="M1 1H13"
+                                                                stroke="#1d1d1f"
+                                                                stroke-width="2"
+                                                                stroke-linecap="round"
+                                                            />
+                                                        </svg>
+                                                    </button>
+                                                    <span
+                                                        class="animQtyDivider"
+                                                    ></span>
+                                                    <button
+                                                        class="animQtyBtn"
+                                                        data-action="increase"
+                                                        aria-label="Increase quantity"
+                                                    >
+                                                        <svg
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            width="12"
+                                                            height="12"
+                                                            viewBox="0 0 14 14"
+                                                            fill="none"
+                                                        >
+                                                            <path
+                                                                d="M7 1V13M1 7H13"
+                                                                stroke="#1d1d1f"
+                                                                stroke-width="2"
+                                                                stroke-linecap="round"
+                                                            />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                                <span class="animQtyCount"
+                                                    >2</span
+                                                >
+                                            </div>
                                         </div>
                                     </div>
-                                    <button class="animEditBtn">Edit</button>
                                 </div>
                                 <div class="animCartDivider"></div>
                                 <div class="animCartFooter">
@@ -679,14 +808,12 @@
                                         <div
                                             class="animReviewSentiment animReviewPositive"
                                         >
-                                            Positive
+                                            <img
+                                                src="assets/icons/hawkrAi.svg"
+                                                alt="AI"
+                                                class="animHawkrAiIcon"
+                                            />Positive
                                         </div>
-                                        <img
-                                            src="assets/icons/hawkrAi.svg"
-                                            alt="AI"
-                                            class="animHawkrAiIcon"
-                                            title="AI-analysed sentiment"
-                                        />
                                     </div>
                                 </div>
                                 <div
@@ -767,14 +894,12 @@
                                         <div
                                             class="animReviewSentiment animReviewNeutral"
                                         >
-                                            Neutral
+                                            <img
+                                                src="assets/icons/hawkrAi.svg"
+                                                alt="AI"
+                                                class="animHawkrAiIcon"
+                                            />Neutral
                                         </div>
-                                        <img
-                                            src="assets/icons/hawkrAi.svg"
-                                            alt="AI"
-                                            class="animHawkrAiIcon"
-                                            title="AI-analysed sentiment"
-                                        />
                                     </div>
                                 </div>
                             </div>
@@ -786,12 +911,10 @@
                                 <div class="animPaymentsFilters">
                                     <div
                                         class="animPaymentsFilter animPaymentsFilterActive"
-                                        data-filter="successful"
+                                        data-filter="all"
                                     >
-                                        <span class="animFilterLabel"
-                                            >Successful</span
-                                        >
-                                        <span class="animFilterCount">24</span>
+                                        <span class="animFilterLabel">All</span>
+                                        <span class="animFilterCount">26</span>
                                     </div>
                                     <div
                                         class="animPaymentsFilter"
@@ -904,7 +1027,7 @@
                                     data-droppable
                                 >
                                     <span
-                                        class="animAllergenTag"
+                                        class="animAllergenTag halal"
                                         data-tag="Halal"
                                         ><img
                                             src="assets/icons/halal.png"
@@ -982,16 +1105,6 @@
                                             alt=""
                                             class="animDietaryIcon"
                                         />Kosher</span
-                                    >
-                                    <span
-                                        class="animSuggestionPill"
-                                        data-draggable
-                                        data-tag="Gluten"
-                                        ><img
-                                            src="assets/icons/gluten.svg"
-                                            alt=""
-                                            class="animDietaryIcon"
-                                        />Gluten</span
                                     >
                                 </div>
                             </div>
@@ -1071,7 +1184,7 @@
                         </button>
                         <button class="moduleTab" data-module="pulse">
                             <img
-                                src="assets/icons/home.svg"
+                                src="assets/icons/pulse.svg"
                                 alt=""
                                 class="moduleTabIcon"
                             />
@@ -1124,7 +1237,7 @@
             <!-- ============================================
          SECTION: Problem → Outcome
          ============================================ -->
-            <section class="problemOutcomeSection">
+            <section class="problemOutcomeSection" id="solutions">
                 <div class="problemOutcomeGrid">
                     <div class="problemOutcomeCard">
                         <div class="problemSide">
@@ -1227,19 +1340,23 @@
                 <h2 class="sectionHeading">
                     Built for every seat at the table
                 </h2>
-                <div class="solutionsTabs">
-                    <button class="solutionTab active" data-role="consumer">
+                <div class="solutionsSegmented" style="--btn-count: 4">
+                    <label class="solutionsSegBtn" data-role="consumer">
+                        <input type="radio" name="solutionRole" checked />
                         Consumer
-                    </button>
-                    <button class="solutionTab" data-role="vendor">
+                    </label>
+                    <label class="solutionsSegBtn" data-role="vendor">
+                        <input type="radio" name="solutionRole" />
                         Vendor
-                    </button>
-                    <button class="solutionTab" data-role="operator">
+                    </label>
+                    <label class="solutionsSegBtn" data-role="operator">
+                        <input type="radio" name="solutionRole" />
                         Operator
-                    </button>
-                    <button class="solutionTab" data-role="authority">
+                    </label>
+                    <label class="solutionsSegBtn" data-role="authority">
+                        <input type="radio" name="solutionRole" />
                         Authority
-                    </button>
+                    </label>
                 </div>
                 <div class="solutionsContent">
                     <div class="solutionPanel active" data-role="consumer">
@@ -1249,7 +1366,7 @@
                             <li>Telegram ping when your food is ready</li>
                         </ul>
                         <a href="Pages/Auth/login.html" class="solutionCta"
-                            >Browse centres
+                            >Start ordering
                             <svg
                                 width="7"
                                 height="11"
@@ -1350,48 +1467,117 @@
             <!-- ============================================
          SECTION: Product Screenshots
          ============================================ -->
-            <section class="screenshotsSection">
-                <h2 class="sectionHeading">See it in action</h2>
-                <div class="screenshotsGrid">
-                    <div class="screenshotCard">
-                        <div class="screenshotPlaceholder"></div>
-                        <span class="screenshotLabel">Consumer order flow</span>
-                    </div>
-                    <div class="screenshotCard">
-                        <div class="screenshotPlaceholder"></div>
-                        <span class="screenshotLabel">Vendor Line queue</span>
-                    </div>
-                    <div class="screenshotCard">
-                        <div class="screenshotPlaceholder"></div>
-                        <span class="screenshotLabel"
-                            >Operator Pulse dashboard</span
-                        >
-                    </div>
-                    <div class="screenshotCard">
-                        <div class="screenshotPlaceholder"></div>
-                        <span class="screenshotLabel"
-                            >Aegis compliance view</span
-                        >
-                    </div>
-                </div>
-            </section>
 
             <!-- ============================================
          SECTION: Onboarding
          ============================================ -->
             <section class="onboardingSection">
                 <div class="onboardingContent">
-                    <img
-                        src="images/onboardingSquirrel.svg"
-                        alt=""
-                        class="onboardingIllustration"
-                    />
+                    <div class="onboardingDemo">
+                        <div class="onboardingDemoCard">
+                            <div class="demoField">
+                                <span class="demoLabel">Stall name</span>
+                                <div
+                                    class="demoInput demoTypewriter"
+                                    id="demoStallName"
+                                >
+                                    <span class="demoTypedText"></span
+                                    ><span class="demoCursor">|</span>
+                                </div>
+                            </div>
+                            <div
+                                class="demoField demoAutoField"
+                                id="demoCentre"
+                            >
+                                <span class="demoLabel">Hawker centre</span>
+                                <div class="demoSkeleton"></div>
+                                <span class="demoValue"></span>
+                            </div>
+                            <div
+                                class="demoField demoAutoField"
+                                id="demoAddress"
+                            >
+                                <span class="demoLabel">Address</span>
+                                <div
+                                    class="demoSkeleton demoSkeletonWide"
+                                ></div>
+                                <span class="demoValue"></span>
+                            </div>
+                            <div
+                                class="demoField demoAutoField"
+                                id="demoCuisines"
+                            >
+                                <span class="demoLabel">Cuisines</span>
+                                <div class="demoSkeletonTags">
+                                    <div
+                                        class="demoSkeleton demoSkeletonTag"
+                                    ></div>
+                                    <div
+                                        class="demoSkeleton demoSkeletonTag"
+                                    ></div>
+                                    <div
+                                        class="demoSkeleton demoSkeletonTag"
+                                    ></div>
+                                </div>
+                                <div class="demoCuisineTags"></div>
+                            </div>
+                            <div class="demoField demoAutoField" id="demoHours">
+                                <span class="demoLabel">Hours</span>
+                                <div class="demoSkeletonHours">
+                                    <div
+                                        class="demoSkeleton demoSkeletonHoursRow"
+                                    ></div>
+                                    <div
+                                        class="demoSkeleton demoSkeletonHoursRow"
+                                    ></div>
+                                    <div
+                                        class="demoSkeleton demoSkeletonHoursRow"
+                                    ></div>
+                                    <div
+                                        class="demoSkeleton demoSkeletonHoursRow"
+                                    ></div>
+                                    <div
+                                        class="demoSkeleton demoSkeletonHoursRow"
+                                    ></div>
+                                    <div
+                                        class="demoSkeleton demoSkeletonHoursRow"
+                                    ></div>
+                                    <div
+                                        class="demoSkeleton demoSkeletonHoursRow"
+                                    ></div>
+                                </div>
+                                <div class="demoHoursTable"></div>
+                            </div>
+                            <div class="demoSuccess" id="demoSuccess">
+                                <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                >
+                                    <path
+                                        d="M20 6L9 17l-5-5"
+                                        stroke="#2e7d32"
+                                        stroke-width="2.5"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                </svg>
+                                Ready to go live
+                            </div>
+                        </div>
+                    </div>
                     <div class="onboardingText">
+                        <img
+                            src="images/onboardingSquirrel.svg"
+                            alt=""
+                            class="onboardingSquirrelTop"
+                        />
                         <h2 class="sectionHeading">Go live in 3, 2, 1</h2>
                         <p class="onboardingDesc">
                             This takes 30 seconds. Enter your stall name, and we
-                            auto-populate your details from the registry. Menu,
-                            hours, location — done.
+                            auto-populate your details during vendor onboarding.
+                            Location, cuisines, hours — done.
                         </p>
                         <a href="Pages/Auth/login.html" class="onboardingCta"
                             >Get started
@@ -1413,30 +1599,143 @@
             <!-- ============================================
          SECTION: Pricing
          ============================================ -->
-            <section class="pricingSection">
-                <h2 class="sectionHeading">Simple, honest pricing</h2>
+            <section class="pricingSection" id="pricing">
+                <h2 class="sectionHeading">Built for adoption, not margins</h2>
                 <div class="pricingGrid">
                     <div class="pricingCard">
+                        <span class="pricingTier">Consumers</span>
+                        <span class="pricingPrice">Free</span>
+                        <ul class="pricingFeatures">
+                            <li>Browse hawker centres</li>
+                            <li>Order from any stall</li>
+                            <li>No service fees</li>
+                        </ul>
+                        <a href="Pages/Auth/login.html" class="pricingCta"
+                            >Start ordering</a
+                        >
+                    </div>
+                    <div class="pricingCard">
                         <span class="pricingTier">Vendors</span>
-                        <span class="pricingPrice">Free. Forever.</span>
-                        <span class="pricingDetail">0% platform fee</span>
+                        <span class="pricingPrice">Free</span>
+                        <ul class="pricingFeatures">
+                            <li>Full POS system</li>
+                            <li>Manage menu & orders</li>
+                            <li>Telegram notifications</li>
+                            <li class="pricingFeatureNote">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="10"
+                                    height="13"
+                                    viewBox="0 0 10 13"
+                                    fill="none"
+                                    class="pricingHumidIcon"
+                                >
+                                    <path
+                                        fill-rule="evenodd"
+                                        clip-rule="evenodd"
+                                        d="M7.99429 1.05605C7.99422 1.05587 7.99437 1.05621 7.99429 1.05605C7.99132 1.04951 7.99089 1.0499 7.99429 1.05605ZM8.0437 1.24518C8.07104 1.39354 8.09245 1.59783 8.10349 1.8547C8.12863 2.43914 8.0972 3.2172 8.00784 4.04855C7.91863 4.87861 7.77361 5.74342 7.57799 6.50191C7.37847 7.27546 7.14058 7.88056 6.89285 8.23434C5.9513 9.57903 4.31488 10.0373 3.01285 9.49907L5.59232 5.81521C5.78659 5.5378 5.71916 5.15541 5.44173 4.96117C5.16432 4.7669 4.78192 4.83433 4.58769 5.11176L2.00822 8.79562C1.05711 7.7562 0.928073 6.06173 1.86964 4.71705C2.11735 4.36326 2.6046 3.93276 3.26326 3.4807C3.9091 3.03746 4.67216 2.60541 5.42165 2.23767C6.1723 1.86937 6.89269 1.57372 7.45048 1.39745C7.69563 1.31998 7.89493 1.27022 8.0437 1.24518ZM1.29228 9.81809C-0.252853 8.34859-0.431865 5.86571 0.865009 4.01359C1.24165 3.47567 1.87676 2.94477 2.56926 2.46951C3.27452 1.98545 4.09136 1.52428 4.88143 1.13663C5.67031 0.74956 6.44908 0.427678 7.08092 0.228015C7.3945 0.128918 7.69105 0.0537575 7.94396 0.0200339C8.0699 0.00323951 8.20396-0.00595398 8.33384 0.00419631C8.45239 0.0134559 8.63532 0.043401 8.80298 0.160802C8.97065 0.278203 9.06135 0.439854 9.1106 0.548085C9.16456 0.666662 9.20177 0.795788 9.22906 0.919871C9.28387 1.16907 9.31467 1.47344 9.3288 1.802C9.35728 2.46402 9.32117 3.30592 9.22725 4.1796C9.1332 5.05462 8.97922 5.97992 8.76557 6.80821C8.55581 7.62149 8.27415 8.39988 7.89749 8.93779C6.60063 10.7899 4.20626 11.4709 2.29691 10.5215L1.11554 12.2087C0.921299 12.4861 0.538907 12.5535 0.2615 12.3593C-0.0159072 12.1651-0.0833333 11.7827 0.110909 11.5053L1.29228 9.81809ZM8.23774 1.22687C8.23756 1.22685 8.23794 1.22688 8.23774 1.22687C8.24469 1.22797 8.2449 1.22743 8.23774 1.22687Z"
+                                        fill="#34C759"
+                                    />
+                                </svg>
+                                Optional: 0.67% hawkr humid
+                            </li>
+                        </ul>
                         <a href="Pages/Auth/login.html" class="pricingCta"
                             >Sign up free</a
                         >
                     </div>
                     <div class="pricingCard pricingCardHighlight">
                         <span class="pricingTier">Operators</span>
-                        <span class="pricingPrice">From $X / centre</span>
-                        <span class="pricingDetail">per month</span>
+                        <div class="pricingTieredPrices">
+                            <div class="pricingTierRow">
+                                <span class="pricingStalls"
+                                    >Up to 20 stalls</span
+                                >
+                                <span class="pricingAmount"
+                                    >$299<span class="pricingPeriod"
+                                        >/mo</span
+                                    ></span
+                                >
+                            </div>
+                            <div class="pricingTierRow">
+                                <span class="pricingStalls"
+                                    >21 – 40 stalls</span
+                                >
+                                <span class="pricingAmount"
+                                    >$499<span class="pricingPeriod"
+                                        >/mo</span
+                                    ></span
+                                >
+                            </div>
+                            <div class="pricingTierRow">
+                                <span class="pricingStalls"
+                                    >41 – 60 stalls</span
+                                >
+                                <span class="pricingAmount"
+                                    >$699<span class="pricingPeriod"
+                                        >/mo</span
+                                    ></span
+                                >
+                            </div>
+                            <div class="pricingTierRow">
+                                <span class="pricingStalls">60+ stalls</span>
+                                <span class="pricingAmount">Custom</span>
+                            </div>
+                        </div>
+                        <ul class="pricingFeatures">
+                            <li>Pulse analytics dashboard</li>
+                            <li>Aegis hygiene compliance</li>
+                            <li>Vendor & tenancy management</li>
+                            <li class="pricingFeatureNote">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="10"
+                                    height="13"
+                                    viewBox="0 0 10 13"
+                                    fill="none"
+                                    class="pricingHumidIcon"
+                                >
+                                    <path
+                                        fill-rule="evenodd"
+                                        clip-rule="evenodd"
+                                        d="M7.99429 1.05605C7.99422 1.05587 7.99437 1.05621 7.99429 1.05605C7.99132 1.04951 7.99089 1.0499 7.99429 1.05605ZM8.0437 1.24518C8.07104 1.39354 8.09245 1.59783 8.10349 1.8547C8.12863 2.43914 8.0972 3.2172 8.00784 4.04855C7.91863 4.87861 7.77361 5.74342 7.57799 6.50191C7.37847 7.27546 7.14058 7.88056 6.89285 8.23434C5.9513 9.57903 4.31488 10.0373 3.01285 9.49907L5.59232 5.81521C5.78659 5.5378 5.71916 5.15541 5.44173 4.96117C5.16432 4.7669 4.78192 4.83433 4.58769 5.11176L2.00822 8.79562C1.05711 7.7562 0.928073 6.06173 1.86964 4.71705C2.11735 4.36326 2.6046 3.93276 3.26326 3.4807C3.9091 3.03746 4.67216 2.60541 5.42165 2.23767C6.1723 1.86937 6.89269 1.57372 7.45048 1.39745C7.69563 1.31998 7.89493 1.27022 8.0437 1.24518ZM1.29228 9.81809C-0.252853 8.34859-0.431865 5.86571 0.865009 4.01359C1.24165 3.47567 1.87676 2.94477 2.56926 2.46951C3.27452 1.98545 4.09136 1.52428 4.88143 1.13663C5.67031 0.74956 6.44908 0.427678 7.08092 0.228015C7.3945 0.128918 7.69105 0.0537575 7.94396 0.0200339C8.0699 0.00323951 8.20396-0.00595398 8.33384 0.00419631C8.45239 0.0134559 8.63532 0.043401 8.80298 0.160802C8.97065 0.278203 9.06135 0.439854 9.1106 0.548085C9.16456 0.666662 9.20177 0.795788 9.22906 0.919871C9.28387 1.16907 9.31467 1.47344 9.3288 1.802C9.35728 2.46402 9.32117 3.30592 9.22725 4.1796C9.1332 5.05462 8.97922 5.97992 8.76557 6.80821C8.55581 7.62149 8.27415 8.39988 7.89749 8.93779C6.60063 10.7899 4.20626 11.4709 2.29691 10.5215L1.11554 12.2087C0.921299 12.4861 0.538907 12.5535 0.2615 12.3593C-0.0159072 12.1651-0.0833333 11.7827 0.110909 11.5053L1.29228 9.81809ZM8.23774 1.22687C8.23756 1.22685 8.23794 1.22688 8.23774 1.22687C8.24469 1.22797 8.2449 1.22743 8.23774 1.22687Z"
+                                        fill="#34C759"
+                                    />
+                                </svg>
+                                + 1% Stripe + 0.67% humid per txn
+                            </li>
+                        </ul>
                         <a href="Pages/Auth/login.html" class="pricingCta"
                             >Talk to us</a
                         >
                     </div>
                 </div>
-                <p class="pricingFootnote">
-                    Billed via Stripe. Hawkr doesn't touch consumer &rarr;
-                    vendor payments.
-                </p>
+                <div class="pricingHumid">
+                    <span class="pricingHumidLabel"
+                        ><svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="10"
+                            height="13"
+                            viewBox="0 0 10 13"
+                            fill="none"
+                            class="pricingHumidIcon"
+                        >
+                            <path
+                                fill-rule="evenodd"
+                                clip-rule="evenodd"
+                                d="M7.99429 1.05605C7.99422 1.05587 7.99437 1.05621 7.99429 1.05605C7.99132 1.04951 7.99089 1.0499 7.99429 1.05605ZM8.0437 1.24518C8.07104 1.39354 8.09245 1.59783 8.10349 1.8547C8.12863 2.43914 8.0972 3.2172 8.00784 4.04855C7.91863 4.87861 7.77361 5.74342 7.57799 6.50191C7.37847 7.27546 7.14058 7.88056 6.89285 8.23434C5.9513 9.57903 4.31488 10.0373 3.01285 9.49907L5.59232 5.81521C5.78659 5.5378 5.71916 5.15541 5.44173 4.96117C5.16432 4.7669 4.78192 4.83433 4.58769 5.11176L2.00822 8.79562C1.05711 7.7562 0.928073 6.06173 1.86964 4.71705C2.11735 4.36326 2.6046 3.93276 3.26326 3.4807C3.9091 3.03746 4.67216 2.60541 5.42165 2.23767C6.1723 1.86937 6.89269 1.57372 7.45048 1.39745C7.69563 1.31998 7.89493 1.27022 8.0437 1.24518ZM1.29228 9.81809C-0.252853 8.34859 -0.431865 5.86571 0.865009 4.01359C1.24165 3.47567 1.87676 2.94477 2.56926 2.46951C3.27452 1.98545 4.09136 1.52428 4.88143 1.13663C5.67031 0.74956 6.44908 0.427678 7.08092 0.228015C7.3945 0.128918 7.69105 0.0537575 7.94396 0.0200339C8.0699 0.00323951 8.20396 -0.00595398 8.33384 0.00419631C8.45239 0.0134559 8.63532 0.043401 8.80298 0.160802C8.97065 0.278203 9.06135 0.439854 9.1106 0.548085C9.16456 0.666662 9.20177 0.795788 9.22906 0.919871C9.28387 1.16907 9.31467 1.47344 9.3288 1.802C9.35728 2.46402 9.32117 3.30592 9.22725 4.1796C9.1332 5.05462 8.97922 5.97992 8.76557 6.80821C8.55581 7.62149 8.27415 8.39988 7.89749 8.93779C6.60063 10.7899 4.20626 11.4709 2.29691 10.5215L1.11554 12.2087C0.921299 12.4861 0.538907 12.5535 0.2615 12.3593C-0.0159072 12.1651 -0.0833333 11.7827 0.110909 11.5053L1.29228 9.81809ZM8.23774 1.22687C8.23756 1.22685 8.23794 1.22688 8.23774 1.22687C8.24469 1.22797 8.2449 1.22743 8.23774 1.22687Z"
+                                fill="#34C759"
+                            />
+                        </svg>
+                        hawkr humid</span
+                    >
+                    <p class="pricingHumidDesc">
+                        0.67% of every operator transaction funds sustainability
+                        initiatives — carbon offsets, reducing single-use
+                        packaging, and supporting green practices across the
+                        hawker ecosystem. Vendors can opt in too.
+                    </p>
+                </div>
             </section>
 
             <!-- ============================================
@@ -1525,10 +1824,10 @@
                 <div class="footerLinks">
                     <div class="footerLinkGroup">
                         <span class="footerLinkLabel">Product</span>
-                        <a href="#">Products</a>
-                        <a href="#">Solutions</a>
+                        <a href="#products">Products</a>
+                        <a href="#solutions">Solutions</a>
                         <a href="#">Resources</a>
-                        <a href="#">Pricing</a>
+                        <a href="#pricing">Pricing</a>
                     </div>
                     <div class="footerLinkGroup">
                         <span class="footerLinkLabel">Account</span>
