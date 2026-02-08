@@ -157,6 +157,36 @@ h1 {
 
     margin-left: 8%;
     margin-right: 8%;
+    overflow: visible;
+}
+
+.heroRow {
+    display: flex;
+    align-items: center;
+    gap: 48px;
+}
+
+.heroLeft {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.heroRight {
+    flex: 1;
+    position: relative;
+    min-width: 0;
+    margin-right: calc(-8vw - 48px);
+}
+
+.heroImage {
+    width: 110%;
+    max-width: none;
+    height: auto;
+    border-radius: 24px 0 0 24px;
+    display: block;
 }
 
 .anotherHeroContainer {
