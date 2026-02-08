@@ -685,13 +685,8 @@ body {
     background: #dceeda;
 }
 
-.stallRowGraphPlaceholder {
-    color: #808080;
-    font-family: "Geist Mono", "Courier New", Courier, monospace;
-    font-size: 16px;
-    font-weight: 400;
-    font-style: italic;
-    line-height: normal;
-    white-space: nowrap;
+.stallRowChart {
+    width: 200px;
+    height: 60px;
     flex-shrink: 0;
 }

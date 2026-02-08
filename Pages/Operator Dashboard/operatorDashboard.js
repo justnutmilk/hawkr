@@ -57,6 +57,9 @@ let monthlyRevenueByStall = {};
 /** Centre-level chart data (today hourly + monthly daily), updated by snapshot */
 let centreChartData = null;
 
+/** All raw order docs (flattened from batches), used for per-stall chart data */
+let allOrdersCache = [];
+
 /** Whether Google Charts corechart package has finished loading */
 let chartsReady = false;
 
@@ -237,6 +240,83 @@ function aggregateCentreChartData(orders) {
 }
 
 /**
+ * Aggregate orders for a single stall into chart-ready time-series data.
+ * @param {string} stallId
+ * @param {Array} orders — all order docs
+ * @param {"today"|"monthly"} period
+ * @returns {{ labels: string[], values: (number|null)[] }}
+ */
+function aggregateStallChartData(stallId, orders, period) {
+  const now = new Date();
+  const stallOrders = orders.filter(
+    (o) => o.stallId === stallId && o.status === "completed",
+  );
+
+  if (period === "today") {
+    const startOfToday = getStartOfToday();
+    const currentHour = now.getHours();
+    const hourLabels = [
+      "12am",
+      "1am",
+      "2am",
+      "3am",
+      "4am",
+      "5am",
+      "6am",
+      "7am",
+      "8am",
+      "9am",
+      "10am",
+      "11am",
+      "12pm",
+      "1pm",
+      "2pm",
+      "3pm",
+      "4pm",
+      "5pm",
+      "6pm",
+      "7pm",
+      "8pm",
+      "9pm",
+      "10pm",
+      "11pm",
+    ];
+    const hourRevenue = new Array(24).fill(0);
+
+    for (const order of stallOrders) {
+      const d = toDate(order.createdAt);
+      if (!d || d < startOfToday) continue;
+      hourRevenue[d.getHours()] +=
+        typeof order.total === "number" ? order.total : 0;
+    }
+
+    const values = hourLabels.map((_, i) =>
+      i > currentHour ? null : Math.round(hourRevenue[i] * 100) / 100,
+    );
+    return { labels: hourLabels, values };
+  }
+
+  // monthly — days of current month
+  const startOfMonth = getStartOfMonth();
+  const currentDay = now.getDate();
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const dayLabels = Array.from({ length: lastDay }, (_, i) => String(i + 1));
+  const dayRevenue = new Array(lastDay).fill(0);
+
+  for (const order of stallOrders) {
+    const d = toDate(order.createdAt);
+    if (!d || d < startOfMonth) continue;
+    dayRevenue[d.getDate() - 1] +=
+      typeof order.total === "number" ? order.total : 0;
+  }
+
+  const values = dayLabels.map((_, i) =>
+    i + 1 > currentDay ? null : Math.round(dayRevenue[i] * 100) / 100,
+  );
+  return { labels: dayLabels, values };
+}
+
+/**
  * Enrich the raw stall objects with revenue numbers and a normalised `tags`
  * array.  Returns a new array (does not mutate the input).
  */
@@ -284,6 +364,7 @@ function subscribeToOrders(stallIds) {
 
   function aggregate() {
     const allOrders = ordersByBatch.flat();
+    allOrdersCache = allOrders;
     const result = computeRevenue(allOrders);
     todayRevenue = result.todayTotal;
     monthlyRevenue = result.monthTotal;
@@ -499,6 +580,64 @@ function drawCentreCharts() {
   );
 }
 
+function getMiniChartOptions(color) {
+  return {
+    curveType: "function",
+    legend: { position: "none" },
+    chartArea: {
+      left: 0,
+      top: 5,
+      right: 0,
+      bottom: 5,
+      width: "100%",
+      height: "100%",
+    },
+    hAxis: { textPosition: "none", gridlines: { color: "transparent" } },
+    vAxis: {
+      textPosition: "none",
+      gridlines: { color: "transparent" },
+      minorGridlines: { count: 0 },
+      baselineColor: "transparent",
+    },
+    colors: [color],
+    lineWidth: 2,
+    pointSize: 0,
+    backgroundColor: "transparent",
+    fontName: "Aptos",
+    tooltip: { textStyle: { fontName: "Aptos", fontSize: 13 } },
+  };
+}
+
+function drawMiniChart(labels, values, color, elementId) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+
+  const header = ["Label", "Value"];
+  const rows = labels.map((label, i) => [label, values[i]]);
+  const data = google.visualization.arrayToDataTable([header, ...rows]);
+
+  const chart = new google.visualization.LineChart(el);
+  chart.draw(data, getMiniChartOptions(color));
+}
+
+function drawStallCharts(period) {
+  if (!chartsReady || allOrdersCache.length === 0) return;
+
+  const revenueKey = period === "today" ? "todayRevenue" : "monthlyRevenue";
+  const sorted = [...stallData].sort((a, b) => b[revenueKey] - a[revenueKey]);
+  const visible = sorted.slice(0, stallVisibleCounts[period]);
+
+  for (const stall of visible) {
+    const chartData = aggregateStallChartData(stall.id, allOrdersCache, period);
+    drawMiniChart(
+      chartData.labels,
+      chartData.values,
+      "#913b9f",
+      `stallChart_${stall.id}_${period}`,
+    );
+  }
+}
+
 // ============================================
 // RENDER FUNCTIONS
 // ============================================
@@ -521,7 +660,7 @@ function renderTopStoreCard(stall, revenueKey) {
     `;
 }
 
-function renderStallRow(stall) {
+function renderStallRow(stall, period) {
   const tags = stall.tags.map(renderTag).join("");
   return `
         <button class="stallRow" onclick="window.location.href='../Operator Children/operatorChildren.html?stall=${encodeURIComponent(stall.id)}'">
@@ -529,7 +668,7 @@ function renderStallRow(stall) {
                 <span class="stallRowName">${stall.name}</span>
                 <div class="stallRowTags">${tags}</div>
             </div>
-            <span class="stallRowGraphPlaceholder">Imagine a 4 data point line graph here</span>
+            <div class="stallRowChart" id="stallChart_${stall.id}_${period}"></div>
         </button>
     `;
 }
@@ -601,7 +740,7 @@ function renderStallList(period) {
   const visible = sorted.slice(0, stallVisibleCounts[period]);
   const hasMore = stallVisibleCounts[period] < sorted.length;
   const loadMoreButton = hasMore
-    ? `<button class="loadMoreButton" data-period="${period}">${loadingIcon} Load next 10</button>`
+    ? `<button class="loadMoreButton" data-period="${period}">${loadingIcon} Load more</button>`
     : "";
 
   if (sorted.length === 0) {
@@ -610,7 +749,7 @@ function renderStallList(period) {
 
   return `
         <div class="stallListSection">
-            ${visible.map(renderStallRow).join("")}
+            ${visible.map((s) => renderStallRow(s, period)).join("")}
             ${loadMoreButton}
         </div>
     `;
@@ -662,7 +801,7 @@ function renderStallContent() {
                 <div class="statBlock">
                     <span class="statBlockLabel">Customer Satisfaction</span>
                     <span class="statBlockValue">${satisfactionDisplay}</span>
-                    <span class="statBlockPlaceholder">Imagine A Donut Graph Here</span>
+                    ${renderStarRating(customerSatisfaction)}
                 </div>
             </div>
         </div>
@@ -677,7 +816,7 @@ function bindLoadMoreButtons() {
   document.querySelectorAll(".loadMoreButton").forEach((button) => {
     button.addEventListener("click", () => {
       const period = button.dataset.period;
-      stallVisibleCounts[period] += 10;
+      stallVisibleCounts[period] += 3;
       renderDashboard("stall");
     });
   });
@@ -697,6 +836,12 @@ function renderDashboard(tab) {
 
   if (tab === "stall") {
     bindLoadMoreButtons();
+    if (chartsReady) {
+      requestAnimationFrame(() => {
+        drawStallCharts("today");
+        drawStallCharts("monthly");
+      });
+    }
   }
 
   if (tab === "centre" && centreChartData && chartsReady) {
