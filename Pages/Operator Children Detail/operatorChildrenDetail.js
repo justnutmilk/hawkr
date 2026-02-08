@@ -947,10 +947,11 @@ function renderHygieneGrade(hygiene) {
     ? typeof hygiene.lastUpdated === "string"
       ? hygiene.lastUpdated
       : hygiene.lastUpdated.toDate
-        ? hygiene.lastUpdated.toDate().toLocaleDateString("en-GB", {
+        ? hygiene.lastUpdated.toDate().toLocaleDateString("en-SG", {
             day: "numeric",
             month: "short",
             year: "numeric",
+            timeZone: "Asia/Singapore",
           })
         : ""
     : "";
@@ -990,17 +991,19 @@ function getStallDocuments() {
     archived: (rental?.archived || []).map((a) => ({
       filename: a.filename || "rental_agreement.pdf",
       uploaded: a.uploadedAt?.toDate
-        ? a.uploadedAt.toDate().toLocaleDateString("en-GB", {
+        ? a.uploadedAt.toDate().toLocaleDateString("en-SG", {
             day: "numeric",
             month: "short",
             year: "numeric",
+            timeZone: "Asia/Singapore",
           })
         : a.uploaded || "",
       replaced: a.replacedAt?.toDate
-        ? a.replacedAt.toDate().toLocaleDateString("en-GB", {
+        ? a.replacedAt.toDate().toLocaleDateString("en-SG", {
             day: "numeric",
             month: "short",
             year: "numeric",
+            timeZone: "Asia/Singapore",
           })
         : a.replaced || "",
       url: a.url || "#",
@@ -1021,17 +1024,19 @@ function getStallDocuments() {
     archived: (halal?.archived || []).map((a) => ({
       filename: a.filename || "halal_cert.pdf",
       uploaded: a.uploadedAt?.toDate
-        ? a.uploadedAt.toDate().toLocaleDateString("en-GB", {
+        ? a.uploadedAt.toDate().toLocaleDateString("en-SG", {
             day: "numeric",
             month: "short",
             year: "numeric",
+            timeZone: "Asia/Singapore",
           })
         : a.uploaded || "",
       replaced: a.replacedAt?.toDate
-        ? a.replacedAt.toDate().toLocaleDateString("en-GB", {
+        ? a.replacedAt.toDate().toLocaleDateString("en-SG", {
             day: "numeric",
             month: "short",
             year: "numeric",
+            timeZone: "Asia/Singapore",
           })
         : a.replaced || "",
       url: a.url || "#",
