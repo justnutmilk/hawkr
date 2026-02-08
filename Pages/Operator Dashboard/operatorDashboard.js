@@ -57,6 +57,9 @@ let monthlyRevenueByStall = {};
 /** Centre-level chart data (today hourly + monthly daily), updated by snapshot */
 let centreChartData = null;
 
+/** Whether Google Charts corechart package has finished loading */
+let chartsReady = false;
+
 const STALLS_PER_PAGE = 3;
 const stallVisibleCounts = { today: STALLS_PER_PAGE, monthly: STALLS_PER_PAGE };
 
@@ -696,12 +699,7 @@ function renderDashboard(tab) {
     bindLoadMoreButtons();
   }
 
-  if (
-    tab === "centre" &&
-    centreChartData &&
-    typeof google !== "undefined" &&
-    google.visualization
-  ) {
+  if (tab === "centre" && centreChartData && chartsReady) {
     requestAnimationFrame(drawCentreCharts);
   }
 }
@@ -711,8 +709,14 @@ function renderDashboard(tab) {
 // ============================================
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Load Google Charts
+  // Load Google Charts — draw pending charts once the package is ready
   google.charts.load("current", { packages: ["corechart"] });
+  google.charts.setOnLoadCallback(() => {
+    chartsReady = true;
+    if (activeTab === "centre" && centreChartData) {
+      drawCentreCharts();
+    }
+  });
 
   // Tab switching via segmented control
   document.querySelectorAll('input[name="dashboardTab"]').forEach((radio) => {
