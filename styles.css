@@ -1226,60 +1226,33 @@ body.mobileMenuOpen {
    PRODUCT SUITE — ANIMATIONS
    ============================================ */
 
-/* --- Ordering --- */
+/* --- Ordering (matches real consumer cart) --- */
 .animOrdering {
     width: 100%;
-    max-width: 320px;
+    max-width: 380px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    background: #fff;
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-}
-
-.animCartHeader {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: "Geist Mono", monospace;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #341539;
-}
-
-.animCartIcon {
-    width: 20px;
-    height: 20px;
-}
-
-.animCartItems {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    gap: 0;
 }
 
 .animCartItem {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 12px;
-    border-radius: 10px;
-    background: #f9f7fa;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 16px 0;
+    border-bottom: 1px solid #f0f0f0;
     opacity: 0;
     transform: translateY(-12px);
     animation: cartItemDrop 0.5s ease forwards;
 }
-
 .animCartItem1 {
     animation-delay: 0.3s;
 }
 .animCartItem2 {
-    animation-delay: 0.9s;
+    animation-delay: 0.7s;
 }
 .animCartItem3 {
-    animation-delay: 1.5s;
+    animation-delay: 1.1s;
 }
 
 @keyframes cartItemDrop {
@@ -1289,9 +1262,25 @@ body.mobileMenuOpen {
     }
 }
 
+.animCartItemImg {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    background: #f0f0f0;
+    flex-shrink: 0;
+}
+
+.animCartItemDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
 .animItemName {
-    font-family: Aptos, sans-serif;
-    font-size: 0.85rem;
+    font-family: "Source Serif", serif;
+    font-size: 0.95rem;
     font-weight: 600;
     color: #341539;
 }
@@ -1302,41 +1291,99 @@ body.mobileMenuOpen {
     color: #808080;
 }
 
+.animItemSpecial {
+    font-family: Aptos, sans-serif;
+    font-size: 0.75rem;
+    color: #913b9f;
+}
+
+.animCartItemRight {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
 .animItemPrice {
     font-family: "Geist Mono", monospace;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-weight: 600;
-    color: #913b9f;
+    color: #341539;
+}
+
+.animQtyGroup {
+    display: flex;
+    align-items: center;
+    background: #f4f4f5;
+    border-radius: 100px;
+    gap: 0;
+}
+
+.animQtyBtn {
+    width: 28px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    color: #595959;
+}
+
+.animQtyCount {
+    width: 28px;
+    height: 28px;
+    border: 1.5px solid #913b9f;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Geist Mono", monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #341539;
+    background: #fff;
+}
+
+.animCartDivider {
+    height: 1px;
+    background: #e0e0e0;
+    margin: 8px 0;
 }
 
 .animCartFooter {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-top: 8px;
-    border-top: 1px solid #f0f0f0;
+    padding: 8px 0;
 }
 
 .animCartTotal {
-    font-family: "Geist Mono", monospace;
-    font-size: 0.85rem;
-    color: #595959;
+    font-family: "Source Serif", serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #341539;
 }
 
 .animTotalValue {
+    font-family: "Geist Mono", monospace;
+    font-size: 1.1rem;
+    font-weight: 600;
     color: #341539;
 }
 
 .animCheckoutBtn {
-    padding: 8px 16px;
-    border-radius: 999px;
+    width: 100%;
+    padding: 14px;
+    border-radius: 48px;
     background: #913b9f;
-    color: #fff;
-    font-family: Aptos, sans-serif;
-    font-size: 0.8rem;
-    font-weight: 500;
+    color: #fffafa;
+    font-family: "Source Serif", serif;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
     animation: checkoutPulse 2s ease-in-out infinite;
-    animation-delay: 2.2s;
+    animation-delay: 2s;
 }
 
 @keyframes checkoutPulse {
@@ -1346,131 +1393,218 @@ body.mobileMenuOpen {
         box-shadow: 0 0 0 0 rgba(145, 59, 159, 0.3);
     }
     50% {
-        transform: scale(1.05);
+        transform: scale(1.02);
         box-shadow: 0 0 0 8px rgba(145, 59, 159, 0);
     }
 }
 
-/* --- Line --- */
+/* --- Line (matches real vendor order line) --- */
 .animLine {
     width: 100%;
-    max-width: 320px;
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
-.animLineHeader {
+.animLineLabel {
     font-family: "Geist Mono", monospace;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
     letter-spacing: 0.08em;
     color: #913b9f;
 }
 
-.animLineCard {
+.animLineCards {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 14px 16px;
-    border-radius: 12px;
-    background: #fff;
-    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
-    animation: lineSlideIn 0.5s ease forwards;
-    opacity: 0;
-    transform: translateX(40px);
+    gap: 16px;
+    overflow: hidden;
 }
 
+.animLineCard {
+    width: 180px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid #595959;
+    border-radius: 8px;
+    text-align: center;
+    opacity: 0;
+    animation: lineSlideIn 0.5s ease forwards;
+}
 .animLineCard1 {
     animation-delay: 0.2s;
 }
 .animLineCard2 {
-    animation-delay: 0.6s;
+    animation-delay: 0.5s;
 }
 .animLineCard3 {
-    animation-delay: 1s;
+    animation-delay: 0.8s;
+}
+
+.animLineCardReady {
+    opacity: 0;
+    border-color: #cee6cc;
 }
 
 @keyframes lineSlideIn {
     to {
         opacity: 1;
-        transform: translateX(0);
     }
+}
+
+.animLineReadyBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: #eaf5e9;
+    color: #2e7d32;
+    font-family: Aptos, sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border: 1px solid #cee6cc;
+}
+
+.animLineReadyTag {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: #eaf5e9;
+    color: #2e7d32;
+    font-family: Aptos, sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
 }
 
 .animLineOrderNum {
     font-family: "Geist Mono", monospace;
-    font-size: 0.9rem;
-    font-weight: 700;
+    font-size: 1.5rem;
+    font-weight: 400;
     color: #341539;
 }
 
-.animLineItems {
+.animLineCustomer {
+    padding: 3px 12px;
+    border-radius: 8px;
+    background: #913b9f;
+    color: #fffafa;
     font-family: Aptos, sans-serif;
-    font-size: 0.8rem;
-    color: #595959;
-    flex: 1;
-    margin: 0 12px;
-}
-
-.animLineStatus {
-    font-family: "Geist Mono", monospace;
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    padding: 4px 10px;
-    border-radius: 999px;
-    background: #fff7e6;
-    color: #b8860b;
+    align-self: stretch;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.animLineReady {
-    background: #eaf5e9;
-    color: #2d8a2d;
+.animLineDateTime {
+    padding: 3px 12px;
+    border-radius: 8px;
+    background: #f0f0f0;
+    font-family: Aptos, sans-serif;
+    font-size: 0.75rem;
+    color: #341539;
 }
 
-/* --- Pulse --- */
-.animPulse {
-    width: 100%;
-    max-width: 360px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+.animLineType {
+    padding: 3px 12px;
+    border-radius: 8px;
+    border: 1px solid #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 0.75rem;
+    color: #341539;
 }
 
-.animPulseHeader {
+.animLineItemCount {
+    padding: 3px 12px;
+    border-radius: 8px;
+    border: 1px solid #808080;
+    font-family: Aptos, sans-serif;
+    font-size: 0.75rem;
+    color: #913b9f;
+}
+
+.animLineTotalRow {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
+    font-family: "Geist Mono", monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #341539;
 }
 
-.animPulseLabel {
+.animLineTotalVal {
+    font-weight: 600;
+}
+
+/* --- Pulse (matches real operator dashboard) --- */
+.animPulse {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.animPulseStats {
+    display: flex;
+    gap: 24px;
+}
+
+.animPulseStat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.animPulseStatLabel {
     font-family: "Geist Mono", monospace;
-    font-size: 0.85rem;
+    font-size: 0.7rem;
     font-weight: 600;
     color: #913b9f;
 }
 
-.animPulseValue {
+.animPulseStatValue {
     font-family: "Geist Mono", monospace;
-    font-size: 1.8rem;
+    font-size: 1.4rem;
     font-weight: 700;
     color: #341539;
 }
 
+.animPulseChartWrap {
+    width: 100%;
+    height: 140px;
+}
+
 .animPulseChart {
     width: 100%;
-    height: 120px;
+    height: 100%;
 }
 
 .animPulseLine {
-    stroke-dasharray: 500;
-    stroke-dashoffset: 500;
+    stroke-dasharray: 600;
+    stroke-dashoffset: 600;
     animation: pulseDraw 2.5s ease forwards;
 }
 
 .animPulseArea {
     opacity: 0;
     animation: pulseFadeIn 0.5s ease forwards;
+    animation-delay: 2.5s;
+}
+
+.animPulseDot {
+    opacity: 0;
+    animation: pulseFadeIn 0.3s ease forwards;
     animation-delay: 2.5s;
 }
 
@@ -1486,91 +1620,222 @@ body.mobileMenuOpen {
     }
 }
 
-/* --- Aegis --- */
+/* --- Aegis (matches real authority dashboard) --- */
 .animAegis {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    max-width: 420px;
+}
+
+.animAegisInspection {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .animAegisCard {
     display: flex;
-    flex-direction: column;
     align-items: center;
     gap: 12px;
-    padding: 32px 40px;
+    padding: 12px 16px;
+    border-radius: 12px;
     background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-    text-align: center;
+    border: 1px solid #e0e0e0;
+    opacity: 0;
+    animation: aegisFadeIn 0.4s ease forwards;
+}
+.animAegisCard2 {
+    animation-delay: 0.3s;
+}
+.animAegisCard3 {
+    animation-delay: 0.6s;
+}
+
+@keyframes aegisFadeIn {
+    to {
+        opacity: 1;
+    }
+}
+
+.animAegisStallImg {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #f0f0f0;
+    flex-shrink: 0;
+}
+
+.animAegisInfo {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
 }
 
 .animAegisStall {
+    font-family: Aptos, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #341539;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.animAegisCentre {
+    font-family: Aptos, sans-serif;
+    font-size: 0.7rem;
+    color: #808080;
+}
+
+.animAegisBadge {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    font-family: "Geist Mono", monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.animAegisBadgeA {
+    background: #eaf5e9;
+    color: #2e7d32;
+}
+
+.animAegisBadgeB {
+    background: #fff8e1;
+    color: #f57f17;
+}
+
+.animAegisDays {
+    font-family: Aptos, sans-serif;
+    font-size: 0.7rem;
+    color: #808080;
+    flex-shrink: 0;
+}
+
+.animAegisGradeModal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    transform: scale(0.95);
+    animation: aegisModalPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    animation-delay: 1s;
+}
+
+@keyframes aegisModalPop {
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.animAegisModalTitle {
+    font-family: Aptos, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #341539;
+}
+
+.animAegisGradeCards {
+    display: flex;
+    gap: 8px;
+}
+
+.animAegisGradeOption {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    border: 2px solid #e0e0e0;
+    font-family: "Geist Mono", monospace;
+    font-size: 0.9rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #341539;
+}
+
+.animAegisGradeSelected {
+    border-color: #913b9f;
+    background: #913b9f;
+    color: #fff;
+}
+
+/* --- Feedback (matches real vendor reviews) --- */
+.animFeedback {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.animReviewCard {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
+    border-radius: 16px;
+    background: #f4f1f6;
+    opacity: 0;
+    transform: translateY(12px);
+    animation: reviewSlideIn 0.4s ease forwards;
+}
+.animReviewCard1 {
+    animation-delay: 0.3s;
+}
+.animReviewCard2 {
+    animation-delay: 0.8s;
+}
+
+@keyframes reviewSlideIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animReviewHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.animReviewTitle {
     font-family: Aptos, sans-serif;
     font-size: 0.95rem;
     font-weight: 600;
     color: #341539;
 }
 
-.animAegisDate {
-    font-family: Aptos, sans-serif;
-    font-size: 0.8rem;
-    color: #808080;
-}
-
-.animAegisBadge {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background: #eaf5e9;
-    color: #2d8a2d;
-    font-family: "Geist Mono", monospace;
-    font-size: 2.5rem;
-    font-weight: 700;
+.animReviewStars {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: aegisStamp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-    animation-delay: 0.5s;
-    transform: scale(0);
-}
-
-@keyframes aegisStamp {
-    0% {
-        transform: scale(0) rotate(-20deg);
-    }
-    60% {
-        transform: scale(1.2) rotate(5deg);
-    }
-    100% {
-        transform: scale(1) rotate(0deg);
-    }
-}
-
-/* --- Feedback --- */
-.animFeedback {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-}
-
-.animFeedbackStars {
-    display: flex;
-    gap: 6px;
+    gap: 2px;
 }
 
 .animStar path {
     transition: fill 0.3s ease;
 }
-
 .animStar1 {
     animation: starFill 0.3s ease forwards;
-    animation-delay: 0.3s;
+    animation-delay: 0.5s;
 }
 .animStar2 {
     animation: starFill 0.3s ease forwards;
-    animation-delay: 0.6s;
+    animation-delay: 0.7s;
 }
 .animStar3 {
     animation: starFill 0.3s ease forwards;
@@ -1578,11 +1843,11 @@ body.mobileMenuOpen {
 }
 .animStar4 {
     animation: starFill 0.3s ease forwards;
-    animation-delay: 1.2s;
+    animation-delay: 1.1s;
 }
 .animStar5 {
     animation: starFill 0.3s ease forwards;
-    animation-delay: 1.5s;
+    animation-delay: 1.3s;
 }
 
 @keyframes starFill {
@@ -1596,150 +1861,226 @@ body.mobileMenuOpen {
     }
 }
 
-.animFeedbackText {
+.animReviewText {
     font-family: Aptos, sans-serif;
-    font-size: 1rem;
-    font-style: italic;
-    color: #595959;
-    opacity: 0;
-    animation: feedbackType 0.5s ease forwards;
-    animation-delay: 2s;
+    font-size: 0.85rem;
+    color: #341539;
+    line-height: 1.5;
+    margin: 0;
 }
 
-@keyframes feedbackType {
-    to {
-        opacity: 1;
-    }
+.animReviewSentiment {
+    display: inline-flex;
+    align-self: flex-start;
+    padding: 3px 10px;
+    border-radius: 16px;
+    font-family: Aptos, sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
 }
 
-/* --- Payments --- */
+.animReviewPositive {
+    background: rgba(46, 125, 50, 0.1);
+    color: #2e7d32;
+}
+
+.animReviewNeutral {
+    background: rgba(128, 128, 128, 0.1);
+    color: #666;
+}
+
+/* --- Payments (matches real vendor payments) --- */
 .animPayments {
     display: flex;
     flex-direction: column;
-    align-items: center;
     gap: 16px;
+    width: 100%;
+    max-width: 460px;
 }
 
-.animPaymentsPill {
+.animPaymentsFilters {
     display: flex;
-    align-items: center;
     gap: 16px;
-    padding: 16px 28px;
-    border-radius: 999px;
-    background: #fff;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
-.animPaymentsAmount {
+.animPaymentsFilter {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 12px;
+}
+
+.animPaymentsFilterActive {
+    border-color: #913b9f;
+}
+
+.animFilterLabel {
+    font-family: Aptos, sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #341539;
+}
+
+.animFilterCount {
     font-family: "Geist Mono", monospace;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     font-weight: 700;
     color: #341539;
 }
 
-.animPaymentsSpinner {
-    width: 24px;
-    height: 24px;
-    border: 2.5px solid #e0e0e0;
-    border-top-color: #913b9f;
-    border-radius: 50%;
-    animation:
-        paymentSpin 0.8s linear infinite,
-        paymentSpinHide 0s ease forwards;
-    animation-delay: 0s, 2s;
+.animPaymentsTable {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
-@keyframes paymentSpin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-@keyframes paymentSpinHide {
-    to {
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
-}
-
-.animPaymentsCheck {
+.animPaymentsRow {
+    display: grid;
+    grid-template-columns: 0.8fr 1.2fr 0.8fr 0.8fr;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-family: Aptos, sans-serif;
+    font-size: 0.75rem;
+    color: #341539;
     opacity: 0;
-    transform: scale(0);
-    animation: paymentCheckPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-    animation-delay: 2s;
+    animation: payRowFade 0.3s ease forwards;
+}
+.animPaymentsRowHeader {
+    opacity: 1;
+    font-weight: 700;
+    font-size: 0.7rem;
+    color: #808080;
+    font-family: "Geist Mono", monospace;
+    animation: none;
+}
+.animPaymentsRow1 {
+    animation-delay: 0.3s;
+    background: #f9f7fa;
+}
+.animPaymentsRow2 {
+    animation-delay: 0.6s;
+}
+.animPaymentsRow3 {
+    animation-delay: 0.9s;
+    background: #f9f7fa;
 }
 
-@keyframes paymentCheckPop {
+@keyframes payRowFade {
     to {
         opacity: 1;
-        transform: scale(1);
     }
 }
 
-.animPaymentsPowered {
-    font-family: Aptos, sans-serif;
-    font-size: 0.8rem;
-    color: #808080;
+.animPayAmount {
+    font-family: "Geist Mono", monospace;
+    font-weight: 600;
 }
 
-/* --- Dietary --- */
+.animPayMethod {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.animPayLogo {
+    height: 16px;
+    width: auto;
+}
+
+.animPayBadge {
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-size: 0.65rem;
+    font-weight: 600;
+}
+
+.animPaySuccess {
+    background: #eaf5e9;
+    color: #2e7d32;
+    border: 1px solid #cee6cc;
+}
+
+/* --- Dietary (matches real allergen tags) --- */
 .animDietary {
     display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.animDietaryItem {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid #f0f0f0;
+    opacity: 0;
+    transform: translateY(8px);
+    animation: dietaryItemFade 0.4s ease forwards;
+}
+.animDietaryItem1 {
+    animation-delay: 0.2s;
+}
+.animDietaryItem2 {
+    animation-delay: 0.5s;
+}
+.animDietaryItem3 {
+    animation-delay: 0.8s;
+}
+
+@keyframes dietaryItemFade {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animDietaryItemName {
+    font-family: "Source Serif", serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #341539;
+}
+
+.animDietaryTags {
+    display: flex;
+    gap: 8px;
     flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
-    max-width: 320px;
 }
 
 .animDietaryTag {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 16px;
-    border-radius: 999px;
-    background: #f2f2ff;
-    font-family: "Geist Mono", monospace;
-    font-size: 0.8rem;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-family: "Source Serif", serif;
+    font-size: 0.75rem;
     font-weight: 600;
     color: #341539;
-    transform: scale(0);
-    animation: dietaryPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-.animDietaryTag1 {
-    animation-delay: 0.1s;
+.animDietaryTagHalal {
     background: #eaf5e9;
 }
-.animDietaryTag2 {
-    animation-delay: 0.25s;
+.animDietaryTagKosher {
     background: #eeeade;
 }
-.animDietaryTag3 {
-    animation-delay: 0.4s;
-}
-.animDietaryTag4 {
-    animation-delay: 0.55s;
-}
-.animDietaryTag5 {
-    animation-delay: 0.7s;
-}
-.animDietaryTag6 {
-    animation-delay: 0.85s;
-}
-.animDietaryTag7 {
-    animation-delay: 1s;
-}
-
-@keyframes dietaryPop {
-    to {
-        transform: scale(1);
-    }
+.animDietaryTagAllergen {
+    background: #ffebeb;
 }
 
 .animDietaryIcon {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     object-fit: contain;
 }
 
