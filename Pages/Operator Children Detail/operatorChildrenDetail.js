@@ -1241,7 +1241,7 @@ function renderPage() {
 
     ${renderDocumentsSection(getStallDocuments())}
 
-    ${renderHygieneGrade(currentStallData?.hygieneGrade ? { grade: currentStallData.hygieneGrade, lastUpdated: currentStallData.hygieneUpdatedAt || null } : null)}
+    ${renderHygieneGrade(currentStallData?.hygieneGrade ? { grade: currentStallData.hygieneGrade, lastUpdated: currentStallData.hygieneUpdatedAt || currentStallData.lastInspectionDate || currentStallData.updatedAt || null } : null)}
   `;
 
   // Draw all 3 charts with the default timeframe

@@ -59,7 +59,9 @@ async function fetchStallAndHygieneData(stallId) {
   };
 
   const currentGrade = data.hygieneGrade || null;
-  const currentUpdatedStr = formatDate(data.hygieneUpdatedAt);
+  const currentUpdatedStr = formatDate(
+    data.hygieneUpdatedAt || data.lastInspectionDate || data.updatedAt,
+  );
 
   let archived = [];
   try {
