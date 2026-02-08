@@ -193,13 +193,16 @@
                 <div class="productSuiteLayout">
                     <!-- Left: animation preview -->
                     <div class="productSuitePreview">
-                        <!-- Ordering: matches real consumer cart page -->
+                        <!-- Ordering: interactive cart -->
                         <div
                             class="moduleAnimation active"
                             data-module="ordering"
                         >
                             <div class="animOrdering">
-                                <div class="animCartItem animCartItem1">
+                                <div
+                                    class="animCartItem animCartItem1"
+                                    data-price="5.50"
+                                >
                                     <div class="animCartItemImg"></div>
                                     <div class="animCartItemDetails">
                                         <span class="animItemName"
@@ -216,15 +219,25 @@
                                     <div class="animCartItemRight">
                                         <span class="animItemPrice">$5.50</span>
                                         <div class="animQtyGroup">
-                                            <span class="animQtyBtn"
+                                            <span
+                                                class="animQtyBtn"
+                                                data-action="decrease"
                                                 >&minus;</span
                                             >
                                             <span class="animQtyCount">1</span>
-                                            <span class="animQtyBtn">+</span>
+                                            <span
+                                                class="animQtyBtn"
+                                                data-action="increase"
+                                                >+</span
+                                            >
                                         </div>
                                     </div>
+                                    <button class="animEditBtn">Edit</button>
                                 </div>
-                                <div class="animCartItem animCartItem2">
+                                <div
+                                    class="animCartItem animCartItem2"
+                                    data-price="1.80"
+                                >
                                     <div class="animCartItemImg"></div>
                                     <div class="animCartItemDetails">
                                         <span class="animItemName"
@@ -237,15 +250,25 @@
                                     <div class="animCartItemRight">
                                         <span class="animItemPrice">$1.80</span>
                                         <div class="animQtyGroup">
-                                            <span class="animQtyBtn"
+                                            <span
+                                                class="animQtyBtn"
+                                                data-action="decrease"
                                                 >&minus;</span
                                             >
                                             <span class="animQtyCount">1</span>
-                                            <span class="animQtyBtn">+</span>
+                                            <span
+                                                class="animQtyBtn"
+                                                data-action="increase"
+                                                >+</span
+                                            >
                                         </div>
                                     </div>
+                                    <button class="animEditBtn">Edit</button>
                                 </div>
-                                <div class="animCartItem animCartItem3">
+                                <div
+                                    class="animCartItem animCartItem3"
+                                    data-price="4.00"
+                                >
                                     <div class="animCartItemImg"></div>
                                     <div class="animCartItemDetails">
                                         <span class="animItemName"
@@ -258,13 +281,20 @@
                                     <div class="animCartItemRight">
                                         <span class="animItemPrice">$4.00</span>
                                         <div class="animQtyGroup">
-                                            <span class="animQtyBtn"
+                                            <span
+                                                class="animQtyBtn"
+                                                data-action="decrease"
                                                 >&minus;</span
                                             >
                                             <span class="animQtyCount">2</span>
-                                            <span class="animQtyBtn">+</span>
+                                            <span
+                                                class="animQtyBtn"
+                                                data-action="increase"
+                                                >+</span
+                                            >
                                         </div>
                                     </div>
+                                    <button class="animEditBtn">Edit</button>
                                 </div>
                                 <div class="animCartDivider"></div>
                                 <div class="animCartFooter">
@@ -568,90 +598,109 @@
                             </div>
                         </div>
 
-                        <!-- Feedback: matches real vendor reviews page -->
+                        <!-- Feedback: interactive resolve + review stream -->
                         <div class="moduleAnimation" data-module="feedback">
                             <div class="animFeedback">
-                                <div class="animReviewCard animReviewCard1">
+                                <div
+                                    class="animReviewCard animReviewCard1"
+                                    data-stars="5"
+                                    data-name="Sarah L."
+                                    data-text="Best chicken rice in Maxwell! The chilli sauce is perfection."
+                                    data-sentiment="Positive"
+                                >
                                     <div class="animReviewHeader">
                                         <span class="animReviewTitle"
                                             >Sarah L.</span
                                         >
                                         <div class="animReviewStars">
                                             <svg
-                                                class="animStar animStar1"
                                                 viewBox="0 0 24 24"
                                                 width="16"
                                                 height="16"
                                             >
                                                 <path
                                                     d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"
-                                                    fill="#e0e0e0"
+                                                    fill="#913b9f"
                                                 />
                                             </svg>
                                             <svg
-                                                class="animStar animStar2"
                                                 viewBox="0 0 24 24"
                                                 width="16"
                                                 height="16"
                                             >
                                                 <path
                                                     d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"
-                                                    fill="#e0e0e0"
+                                                    fill="#913b9f"
                                                 />
                                             </svg>
                                             <svg
-                                                class="animStar animStar3"
                                                 viewBox="0 0 24 24"
                                                 width="16"
                                                 height="16"
                                             >
                                                 <path
                                                     d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"
-                                                    fill="#e0e0e0"
+                                                    fill="#913b9f"
                                                 />
                                             </svg>
                                             <svg
-                                                class="animStar animStar4"
                                                 viewBox="0 0 24 24"
                                                 width="16"
                                                 height="16"
                                             >
                                                 <path
                                                     d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"
-                                                    fill="#e0e0e0"
+                                                    fill="#913b9f"
                                                 />
                                             </svg>
                                             <svg
-                                                class="animStar animStar5"
                                                 viewBox="0 0 24 24"
                                                 width="16"
                                                 height="16"
                                             >
                                                 <path
                                                     d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"
-                                                    fill="#e0e0e0"
+                                                    fill="#913b9f"
                                                 />
                                             </svg>
                                         </div>
+                                        <button class="animResolveBtn">
+                                            <img
+                                                src="assets/icons/resolveReview.svg"
+                                                alt="Resolve"
+                                            />
+                                        </button>
                                     </div>
                                     <p class="animReviewText">
                                         "Best chicken rice in Maxwell! The
                                         chilli sauce is perfection."
                                     </p>
-                                    <div
-                                        class="animReviewSentiment animReviewPositive"
-                                    >
-                                        Positive
+                                    <div class="animReviewSentimentWrap">
+                                        <div
+                                            class="animReviewSentiment animReviewPositive"
+                                        >
+                                            Positive
+                                        </div>
+                                        <img
+                                            src="assets/icons/hawkrAi.svg"
+                                            alt="AI"
+                                            class="animHawkrAiIcon"
+                                            title="AI-analysed sentiment"
+                                        />
                                     </div>
                                 </div>
-                                <div class="animReviewCard animReviewCard2">
+                                <div
+                                    class="animReviewCard animReviewCard2"
+                                    data-stars="4"
+                                    data-name="Wei Ming"
+                                    data-text="Portions could be bigger but taste is great."
+                                    data-sentiment="Neutral"
+                                >
                                     <div class="animReviewHeader">
                                         <span class="animReviewTitle"
                                             >Wei Ming</span
                                         >
-                                        <div
-                                            class="animReviewStars animReviewStars4"
-                                        >
+                                        <div class="animReviewStars">
                                             <svg
                                                 viewBox="0 0 24 24"
                                                 width="16"
@@ -703,33 +752,51 @@
                                                 />
                                             </svg>
                                         </div>
+                                        <button class="animResolveBtn">
+                                            <img
+                                                src="assets/icons/resolveReview.svg"
+                                                alt="Resolve"
+                                            />
+                                        </button>
                                     </div>
                                     <p class="animReviewText">
                                         "Portions could be bigger but taste is
                                         great."
                                     </p>
-                                    <div
-                                        class="animReviewSentiment animReviewNeutral"
-                                    >
-                                        Neutral
+                                    <div class="animReviewSentimentWrap">
+                                        <div
+                                            class="animReviewSentiment animReviewNeutral"
+                                        >
+                                            Neutral
+                                        </div>
+                                        <img
+                                            src="assets/icons/hawkrAi.svg"
+                                            alt="AI"
+                                            class="animHawkrAiIcon"
+                                            title="AI-analysed sentiment"
+                                        />
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Payments: matches real vendor payments page -->
+                        <!-- Payments: interactive filter + refund row -->
                         <div class="moduleAnimation" data-module="payments">
                             <div class="animPayments">
                                 <div class="animPaymentsFilters">
                                     <div
                                         class="animPaymentsFilter animPaymentsFilterActive"
+                                        data-filter="successful"
                                     >
                                         <span class="animFilterLabel"
                                             >Successful</span
                                         >
                                         <span class="animFilterCount">24</span>
                                     </div>
-                                    <div class="animPaymentsFilter">
+                                    <div
+                                        class="animPaymentsFilter"
+                                        data-filter="refunded"
+                                    >
                                         <span class="animFilterLabel"
                                             >Refunded</span
                                         >
@@ -747,11 +814,12 @@
                                     </div>
                                     <div
                                         class="animPaymentsRow animPaymentsRow1"
+                                        data-status="successful"
                                     >
                                         <span class="animPayAmount">$7.30</span>
                                         <span class="animPayMethod">
                                             <img
-                                                src="images/Visa logo.svg"
+                                                src="Payment Methods/Visa.svg"
                                                 alt=""
                                                 class="animPayLogo"
                                             />
@@ -765,11 +833,12 @@
                                     </div>
                                     <div
                                         class="animPaymentsRow animPaymentsRow2"
+                                        data-status="successful"
                                     >
                                         <span class="animPayAmount">$5.50</span>
                                         <span class="animPayMethod">
                                             <img
-                                                src="images/Apple Pay Logo.svg"
+                                                src="Payment Methods/Apple Pay.svg"
                                                 alt=""
                                                 class="animPayLogo"
                                             />
@@ -783,19 +852,38 @@
                                     </div>
                                     <div
                                         class="animPaymentsRow animPaymentsRow3"
+                                        data-status="refunded"
                                     >
-                                        <span class="animPayAmount"
-                                            >$12.80</span
-                                        >
+                                        <span class="animPayAmount">$4.00</span>
                                         <span class="animPayMethod">
                                             <img
-                                                src="images/Google Pay logo.svg"
+                                                src="Payment Methods/Google Pay.svg"
                                                 alt=""
                                                 class="animPayLogo"
                                             />
                                             Google Pay
                                         </span>
                                         <span>Wei Ming</span>
+                                        <span class="animPayBadge animPayRefund"
+                                            >Refunded</span
+                                        >
+                                    </div>
+                                    <div
+                                        class="animPaymentsRow animPaymentsRow4"
+                                        data-status="successful"
+                                    >
+                                        <span class="animPayAmount"
+                                            >$12.80</span
+                                        >
+                                        <span class="animPayMethod">
+                                            <img
+                                                src="Payment Methods/GrabPay.svg"
+                                                alt=""
+                                                class="animPayLogo"
+                                            />
+                                            GrabPay
+                                        </span>
+                                        <span>Aisha R.</span>
                                         <span
                                             class="animPayBadge animPaySuccess"
                                             >Successful</span
@@ -805,105 +893,161 @@
                             </div>
                         </div>
 
-                        <!-- Dietary: matches real allergen tag display -->
+                        <!-- Dietary: interactive drag & drop + type to add -->
                         <div class="moduleAnimation" data-module="dietary">
-                            <div class="animDietary">
-                                <div class="animDietaryItem animDietaryItem1">
-                                    <span class="animDietaryItemName"
-                                        >Chicken Rice</span
-                                    >
-                                    <div class="animDietaryTags">
-                                        <span
-                                            class="animDietaryTag animDietaryTagHalal"
-                                            ><img
-                                                src="assets/icons/halal.png"
-                                                alt=""
-                                                class="animDietaryIcon"
-                                            />Halal</span
-                                        >
-                                        <span
-                                            class="animDietaryTag animDietaryTagAllergen"
-                                            ><img
-                                                src="assets/icons/soy.svg"
-                                                alt=""
-                                                class="animDietaryIcon"
-                                            />Soy</span
-                                        >
-                                        <span
-                                            class="animDietaryTag animDietaryTagAllergen"
-                                            ><img
-                                                src="assets/icons/egg.svg"
-                                                alt=""
-                                                class="animDietaryIcon"
-                                            />Egg</span
-                                        >
-                                    </div>
+                            <div class="animDietary" id="animDietaryPanel">
+                                <div class="animDietaryLabel">
+                                    Allergen & dietary tags
                                 </div>
-                                <div class="animDietaryItem animDietaryItem2">
-                                    <span class="animDietaryItemName"
-                                        >Laksa</span
+                                <div
+                                    class="animAllergenContainer"
+                                    data-droppable
+                                >
+                                    <span
+                                        class="animAllergenTag"
+                                        data-tag="Halal"
+                                        ><img
+                                            src="assets/icons/halal.png"
+                                            alt=""
+                                            class="animDietaryIcon"
+                                        />Halal<span class="animTagRemove"
+                                            >&times;</span
+                                        ></span
                                     >
-                                    <div class="animDietaryTags">
-                                        <span
-                                            class="animDietaryTag animDietaryTagAllergen"
-                                            ><img
-                                                src="assets/icons/seafood.svg"
-                                                alt=""
-                                                class="animDietaryIcon"
-                                            />Seafood</span
-                                        >
-                                        <span
-                                            class="animDietaryTag animDietaryTagAllergen"
-                                            ><img
-                                                src="assets/icons/nuts.svg"
-                                                alt=""
-                                                class="animDietaryIcon"
-                                            />Nuts</span
-                                        >
-                                        <span
-                                            class="animDietaryTag animDietaryTagAllergen"
-                                            ><img
-                                                src="assets/icons/dairy.svg"
-                                                alt=""
-                                                class="animDietaryIcon"
-                                            />Dairy</span
-                                        >
-                                    </div>
+                                    <span class="animAllergenTag" data-tag="Soy"
+                                        ><img
+                                            src="assets/icons/soy.svg"
+                                            alt=""
+                                            class="animDietaryIcon"
+                                        />Soy<span class="animTagRemove"
+                                            >&times;</span
+                                        ></span
+                                    >
+                                    <input
+                                        type="text"
+                                        class="animAllergenInput"
+                                        placeholder="Type to add..."
+                                    />
                                 </div>
-                                <div class="animDietaryItem animDietaryItem3">
-                                    <span class="animDietaryItemName"
-                                        >Falafel Wrap</span
+                                <div
+                                    class="animAllergenSuggestions"
+                                    id="animSuggestions"
+                                >
+                                    <span
+                                        class="animSuggestionPill"
+                                        data-draggable
+                                        data-tag="Egg"
+                                        ><img
+                                            src="assets/icons/egg.svg"
+                                            alt=""
+                                            class="animDietaryIcon"
+                                        />Egg</span
                                     >
-                                    <div class="animDietaryTags">
-                                        <span
-                                            class="animDietaryTag animDietaryTagHalal"
-                                            ><img
-                                                src="assets/icons/halal.png"
-                                                alt=""
-                                                class="animDietaryIcon"
-                                            />Halal</span
-                                        >
-                                        <span
-                                            class="animDietaryTag animDietaryTagKosher"
-                                            ><img
-                                                src="assets/icons/kosher.svg"
-                                                alt=""
-                                                class="animDietaryIcon"
-                                            />Kosher</span
-                                        >
-                                    </div>
+                                    <span
+                                        class="animSuggestionPill"
+                                        data-draggable
+                                        data-tag="Seafood"
+                                        ><img
+                                            src="assets/icons/seafood.svg"
+                                            alt=""
+                                            class="animDietaryIcon"
+                                        />Seafood</span
+                                    >
+                                    <span
+                                        class="animSuggestionPill"
+                                        data-draggable
+                                        data-tag="Nuts"
+                                        ><img
+                                            src="assets/icons/nuts.svg"
+                                            alt=""
+                                            class="animDietaryIcon"
+                                        />Nuts</span
+                                    >
+                                    <span
+                                        class="animSuggestionPill"
+                                        data-draggable
+                                        data-tag="Dairy"
+                                        ><img
+                                            src="assets/icons/dairy.svg"
+                                            alt=""
+                                            class="animDietaryIcon"
+                                        />Dairy</span
+                                    >
+                                    <span
+                                        class="animSuggestionPill"
+                                        data-draggable
+                                        data-tag="Kosher"
+                                        ><img
+                                            src="assets/icons/kosher.svg"
+                                            alt=""
+                                            class="animDietaryIcon"
+                                        />Kosher</span
+                                    >
+                                    <span
+                                        class="animSuggestionPill"
+                                        data-draggable
+                                        data-tag="Gluten"
+                                        ><img
+                                            src="assets/icons/gluten.svg"
+                                            alt=""
+                                            class="animDietaryIcon"
+                                        />Gluten</span
+                                    >
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Telegram -->
+                        <!-- Telegram: phone mockup + chat bubbles -->
                         <div class="moduleAnimation" data-module="telegram">
                             <div class="animTelegram">
-                                <img
-                                    src="images/hawkr experience.png"
-                                    alt="Hawkr Telegram notifications"
-                                    class="animTelegramImage"
-                                />
+                                <div class="animPhoneMockup">
+                                    <div class="animPhoneTopBar">
+                                        <img
+                                            src="images/telegramLogo.svg"
+                                            alt=""
+                                            class="animTgLogo"
+                                        />
+                                        <span class="animTgBotName"
+                                            >Hawkr Bot</span
+                                        >
+                                    </div>
+                                    <div class="animPhoneChat">
+                                        <div
+                                            class="animChatBubble animChatBubble1"
+                                        >
+                                            <span class="animChatText"
+                                                >Your order
+                                                <strong>#0042</strong> is ready
+                                                for collection!</span
+                                            >
+                                            <span class="animChatTime"
+                                                >12:36 PM</span
+                                            >
+                                        </div>
+                                        <div
+                                            class="animChatBubble animChatBubble2"
+                                        >
+                                            <span class="animChatText"
+                                                >Tian Tian Hainanese @ Maxwell
+                                                Food Centre</span
+                                            >
+                                            <span class="animChatTime"
+                                                >12:36 PM</span
+                                            >
+                                        </div>
+                                        <div
+                                            class="animChatBubble animChatBubble3"
+                                        >
+                                            <span class="animChatText"
+                                                >Please collect within 15
+                                                minutes. Enjoy your meal!</span
+                                            >
+                                            <span class="animChatTime"
+                                                >12:36 PM</span
+                                            >
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1415,5 +1559,9 @@
         </script>
 
         <script src="script.js" defer></script>
+        <script type="module">
+            import Snap from "./drag and drop/snap.esm.js";
+            window.Snap = Snap;
+        </script>
     </body>
 </html>

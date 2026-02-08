@@ -1627,6 +1627,7 @@ body.mobileMenuOpen {
     gap: 16px;
     width: 100%;
     max-width: 420px;
+    position: relative;
 }
 
 .animAegisInspection {
@@ -1889,6 +1890,11 @@ body.mobileMenuOpen {
     color: #666;
 }
 
+.animReviewNegative {
+    background: rgba(235, 0, 27, 0.1);
+    color: #eb001b;
+}
+
 /* --- Payments (matches real vendor payments) --- */
 .animPayments {
     display: flex;
@@ -2005,58 +2011,350 @@ body.mobileMenuOpen {
     border: 1px solid #cee6cc;
 }
 
-/* --- Dietary (matches real allergen tags) --- */
-.animDietary {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    width: 100%;
-    max-width: 400px;
+.animPayRefund {
+    background: #fff0f2;
+    color: #eb001b;
+    border: 1px solid #ffdde1;
+    font-weight: 600;
+    animation: refundPulse 2s ease-in-out infinite;
 }
 
-.animDietaryItem {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 16px;
+@keyframes refundPulse {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(235, 0, 27, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(235, 0, 27, 0);
+    }
+}
+
+.animPaymentsRow4 {
+    animation-delay: 1.2s;
+    background: #f9f7fa;
+}
+
+/* --- Edit Button (liquid glass glow) --- */
+.animEditBtn {
+    position: relative;
+    display: none;
+    padding: 6px 16px;
     border-radius: 12px;
-    background: #fff;
-    border: 1px solid #f0f0f0;
-    opacity: 0;
-    transform: translateY(8px);
-    animation: dietaryItemFade 0.4s ease forwards;
-}
-.animDietaryItem1 {
-    animation-delay: 0.2s;
-}
-.animDietaryItem2 {
-    animation-delay: 0.5s;
-}
-.animDietaryItem3 {
-    animation-delay: 0.8s;
+    border: 1px solid #e0e0e0;
+    background: rgba(255, 255, 255, 0.6);
+    font-family: Aptos, sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #341539;
+    cursor: pointer;
+    overflow: hidden;
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease;
+    align-self: flex-end;
+    margin-top: 4px;
 }
 
-@keyframes dietaryItemFade {
+.animEditBtn::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: inherit;
+    background: radial-gradient(
+        circle 60px at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(145, 59, 159, 0.15),
+        transparent 70%
+    );
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+
+.animEditBtn:hover {
+    border-color: #913b9f;
+    transform: scale(1.05);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+.animEditBtn:hover::before {
+    opacity: 1;
+}
+
+/* --- Resolve Button --- */
+.animResolveBtn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    margin-left: auto;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.animResolveBtn img {
+    width: 20px;
+    height: 20px;
+}
+
+.animResolveBtn:hover {
+    background: rgba(145, 59, 159, 0.1);
+}
+
+/* --- HawkrAi Icon next to sentiment --- */
+.animReviewSentimentWrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.animHawkrAiIcon {
+    width: 16px;
+    height: 16px;
+}
+
+/* --- Review swipe-away animation --- */
+.animReviewSwipeUp {
+    animation: reviewSwipeUp 0.45s ease forwards;
+}
+
+@keyframes reviewSwipeUp {
+    to {
+        transform: translateY(-120%);
+        opacity: 0;
+    }
+}
+
+.animReviewFadeIn {
+    animation: reviewFadeIn 0.4s ease forwards;
+}
+
+@keyframes reviewFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
     to {
         opacity: 1;
         transform: translateY(0);
     }
 }
 
-.animDietaryItemName {
+/* --- Line: swipeUp / collapseWidth / slideIn keyframes --- */
+@keyframes lineSwipeUp {
+    to {
+        transform: translateY(-120%);
+        opacity: 0;
+    }
+}
+
+@keyframes lineCollapseWidth {
+    to {
+        width: 0;
+        padding: 0;
+        margin: 0;
+        border-width: 0;
+        overflow: hidden;
+        opacity: 0;
+    }
+}
+
+@keyframes lineSlideInExpand {
+    from {
+        width: 0;
+        padding: 0;
+        overflow: hidden;
+        opacity: 0;
+    }
+    to {
+        width: 180px;
+        padding: 16px;
+        opacity: 1;
+    }
+}
+
+@keyframes lineSlideInReveal {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.animLineCard.swipe-up {
+    animation: lineSwipeUp 0.45s ease forwards;
+}
+
+.animLineCard.collapse-width {
+    animation: lineCollapseWidth 0.4s ease forwards;
+}
+
+.animLineCard.slide-in {
+    animation:
+        lineSlideInExpand 0.5s ease forwards,
+        lineSlideInReveal 0.4s ease forwards;
+}
+
+/* --- Aegis: stamp animation + toast --- */
+@keyframes aegisStamp {
+    0% {
+        transform: scale(1.6);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(0.9);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.animAegisBadge.stamp {
+    animation: aegisStamp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animAegisBadgeC {
+    background: #fff0f2;
+    color: #eb001b;
+}
+
+.animAegisBadgeNEW {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.animAegisToast {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 20px;
+    border-radius: 12px;
+    background: #341539;
+    color: #fff;
+    font-family: Aptos, sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    opacity: 0;
+    animation: toastIn 0.3s ease forwards;
+    z-index: 10;
+    white-space: nowrap;
+}
+
+@keyframes toastIn {
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-4px);
+    }
+}
+
+/* --- Dietary: drag & drop container + suggestions --- */
+.animDietary {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.animDietaryLabel {
+    font-family: "Geist Mono", monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: #913b9f;
+}
+
+.animAllergenContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 2px dashed #d9d9d9;
+    background: #fff;
+    min-height: 52px;
+    align-items: center;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+.animAllergenContainer.snap-drop-active {
+    border-color: #913b9f;
+    background: rgba(145, 59, 159, 0.04);
+}
+
+.animAllergenTag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 100px;
     font-family: "Source Serif", serif;
-    font-size: 0.95rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: #341539;
+    background: #eaf5e9;
+    animation: tagPopIn 0.3s ease;
 }
 
-.animDietaryTags {
+@keyframes tagPopIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.animTagRemove {
+    display: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #808080;
+    margin-left: 2px;
+    line-height: 1;
+}
+
+.animAllergenInput {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: Aptos, sans-serif;
+    font-size: 0.8rem;
+    color: #341539;
+    min-width: 100px;
+    flex: 1;
+}
+
+.animAllergenInput::placeholder {
+    color: #b0b0b0;
+}
+
+.animAllergenSuggestions {
     display: flex;
-    gap: 8px;
     flex-wrap: wrap;
+    gap: 8px;
 }
 
-.animDietaryTag {
+.animSuggestionPill {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -2066,16 +2364,26 @@ body.mobileMenuOpen {
     font-size: 0.75rem;
     font-weight: 600;
     color: #341539;
+    background: #f4f4f5;
+    cursor: grab;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+    user-select: none;
 }
 
-.animDietaryTagHalal {
-    background: #eaf5e9;
+.animSuggestionPill:hover {
+    transform: scale(1.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
-.animDietaryTagKosher {
-    background: #eeeade;
+
+.animSuggestionPill.snap-dragging {
+    opacity: 0.6;
+    cursor: grabbing;
 }
-.animDietaryTagAllergen {
-    background: #ffebeb;
+
+.animSuggestionPill.added {
+    display: none;
 }
 
 .animDietaryIcon {
@@ -2084,28 +2392,155 @@ body.mobileMenuOpen {
     object-fit: contain;
 }
 
-/* --- Telegram --- */
+/* --- Telegram: phone mockup + chat --- */
 .animTelegram {
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.animTelegramImage {
-    width: 100%;
-    max-width: 420px;
-    height: auto;
-    border-radius: 16px;
-    opacity: 0;
-    transform: scale(0.95);
-    animation: telegramFadeIn 0.6s ease forwards;
-    animation-delay: 0.3s;
+.animPhoneMockup {
+    width: 280px;
+    border-radius: 24px;
+    border: 2px solid #e0e0e0;
+    background: #fff;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
-@keyframes telegramFadeIn {
+.animPhoneTopBar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    background: #2aabee;
+    color: #fff;
+}
+
+.animTgLogo {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+}
+
+.animTgBotName {
+    font-family: Aptos, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.animPhoneChat {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    background: #e5ddd5;
+    min-height: 200px;
+}
+
+.animChatBubble {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 12px 12px 12px 4px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    opacity: 0;
+    transform: translateY(8px);
+    animation: chatBubbleIn 0.4s ease forwards;
+}
+
+.animChatBubble1 {
+    animation-delay: 0.4s;
+}
+.animChatBubble2 {
+    animation-delay: 1s;
+}
+.animChatBubble3 {
+    animation-delay: 1.6s;
+}
+
+@keyframes chatBubbleIn {
     to {
         opacity: 1;
-        transform: scale(1);
+        transform: translateY(0);
+    }
+}
+
+.animChatText {
+    font-family: Aptos, sans-serif;
+    font-size: 0.8rem;
+    color: #341539;
+    line-height: 1.5;
+    display: block;
+}
+
+.animChatText strong {
+    font-weight: 700;
+    color: #913b9f;
+}
+
+.animChatTime {
+    font-family: Aptos, sans-serif;
+    font-size: 0.6rem;
+    color: #808080;
+    text-align: right;
+    display: block;
+    margin-top: 4px;
+}
+
+/* ============================================
+   DESKTOP INTERACTIVE OVERRIDES (>=1024px)
+   ============================================ */
+@media (min-width: 1024px) {
+    .animQtyBtn {
+        cursor: pointer;
+        transition: background 0.15s ease;
+        border-radius: 50%;
+    }
+    .animQtyBtn:hover {
+        background: rgba(145, 59, 159, 0.1);
+    }
+    .animEditBtn {
+        display: inline-flex;
+    }
+    .animLineReadyBtn {
+        cursor: pointer;
+        transition:
+            background 0.15s ease,
+            transform 0.15s ease;
+    }
+    .animLineReadyBtn:hover {
+        background: #d4edda;
+        transform: scale(1.05);
+    }
+    .animAegisBadge {
+        cursor: pointer;
+        transition: transform 0.15s ease;
+    }
+    .animAegisBadge:hover {
+        transform: scale(1.12);
+    }
+    .animAegisGradeOption {
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .animAegisGradeOption:hover {
+        border-color: #913b9f;
+        background: rgba(145, 59, 159, 0.05);
+    }
+    .animResolveBtn {
+        display: flex;
+    }
+    .animTagRemove {
+        display: inline;
+    }
+    .animPaymentsFilter {
+        cursor: pointer;
+        transition: border-color 0.2s ease;
+    }
+    .animPaymentsFilter:hover {
+        border-color: #913b9f;
     }
 }
 
