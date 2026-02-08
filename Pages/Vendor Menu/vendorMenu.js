@@ -5,6 +5,11 @@
 import { auth, db, storage } from "../../firebase/config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { initVendorNavbar } from "../../assets/js/vendorNavbar.js";
+import { initNotificationBadge } from "../../assets/js/notificationBadge.js";
+import {
+  initToastContainer,
+  subscribeToNewNotifications,
+} from "../../assets/js/toastNotifications.js";
 import {
   doc,
   getDoc,
@@ -61,6 +66,9 @@ onAuthStateChanged(auth, async (user) => {
     window.location.href = "../Auth/login.html";
     return;
   }
+  initNotificationBadge(`vendors/${user.uid}/notifications`);
+  initToastContainer();
+  subscribeToNewNotifications(`vendors/${user.uid}/notifications`);
   currentUser = user;
   await loadVendorData();
 });

@@ -1,4 +1,9 @@
 import { initVendorNavbar } from "../../assets/js/vendorNavbar.js";
+import { initNotificationBadge } from "../../assets/js/notificationBadge.js";
+import {
+  initToastContainer,
+  subscribeToNewNotifications,
+} from "../../assets/js/toastNotifications.js";
 import { auth, db } from "../../firebase/config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
@@ -6,8 +11,10 @@ import {
   getDoc,
   collection,
   getDocs,
+  addDoc,
   query,
   orderBy,
+  serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // State
@@ -27,6 +34,9 @@ onAuthStateChanged(auth, async (user) => {
     window.location.href = "../Auth/login.html";
     return;
   }
+  initNotificationBadge(`vendors/${user.uid}/notifications`);
+  initToastContainer();
+  subscribeToNewNotifications(`vendors/${user.uid}/notifications`);
   currentUser = user;
   await loadVendorData();
 });
@@ -923,11 +933,17 @@ function addVariantItemToOrder() {
   showToast(`Added ${currentVariantItem.name} to order`);
 }
 
-function placeOrder() {
+async function placeOrder() {
   const hasItems = Object.values(orderQuantities).some((qty) => qty > 0);
   if (!hasItems) {
     showToast("Please add at least one item to the order.", true);
     return;
+  }
+
+  const placeBtn = document.getElementById("placeOrderBtn");
+  if (placeBtn) {
+    placeBtn.disabled = true;
+    placeBtn.textContent = "Placing order...";
   }
 
   const customerName =
@@ -938,16 +954,16 @@ function placeOrder() {
   // Add items with variants from orderItems
   Object.values(orderItems).forEach((orderItem) => {
     items.push({
-      qty: orderItem.quantity,
+      quantity: orderItem.quantity,
       name: orderItem.name,
-      price: orderItem.totalPrice,
-      basePrice: orderItem.basePrice,
+      unitPrice: orderItem.basePrice,
+      totalPrice: orderItem.totalPrice,
       customizations: orderItem.variants.map((v) => ({
         name: v.optionName,
         price: v.price,
         groupName: v.groupName,
       })),
-      note: orderNotes[orderItem.itemId] || null,
+      notes: orderNotes[orderItem.itemId] || "",
     });
   });
 
@@ -963,39 +979,43 @@ function placeOrder() {
       !itemIdsWithVariants.has(item.id)
     ) {
       items.push({
-        qty,
+        quantity: qty,
         name: item.name,
-        price: item.price,
+        unitPrice: item.price,
+        totalPrice: qty * item.price,
         customizations: [],
-        note: orderNotes[item.id] || null,
+        notes: orderNotes[item.id] || "",
       });
     }
   });
 
-  const total = items.reduce((sum, i) => sum + i.qty * i.price, 0);
+  const total = items.reduce((sum, i) => sum + i.totalPrice, 0);
 
-  const newOrder = {
-    orderNumber: orderNumber.replace("#", ""),
-    customerName,
-    date: new Date().toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }),
-    time: new Date().toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    }),
-    type: orderType,
-    status: "preparing",
-    items,
-    total,
-    transactionId: `pos-${Date.now().toString(36)}-FOOD`,
-  };
+  try {
+    await addDoc(collection(db, "orders"), {
+      orderNumber: orderNumber.replace("#", ""),
+      hawkrTransactionId: `pos-${Date.now().toString(36)}-FOOD`,
+      customerName,
+      stallId: currentStallId,
+      orderType: orderType,
+      status: "preparing",
+      items,
+      total,
+      archived: false,
+      source: "pos",
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
 
-  sessionStorage.setItem("newOrder", JSON.stringify(newOrder));
-  window.location.href = "vendorOrder.html";
+    window.location.href = "vendorOrder.html";
+  } catch (error) {
+    console.error("Error placing order:", error);
+    showToast("Failed to place order. Please try again.", true);
+    if (placeBtn) {
+      placeBtn.disabled = false;
+      placeBtn.textContent = "Place Order";
+    }
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {

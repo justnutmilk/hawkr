@@ -1009,3 +1009,23 @@ body {
 .orderLineItemCollapse {
     animation: collapseWidth 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
+
+/* ============================================
+   MOBILE RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    .orderContent {
+        padding: 0 20px 20px 20px;
+    }
+
+    .orderLineCards {
+        flex-direction: column;
+        overflow-x: visible;
+    }
+
+    .orderLineItem {
+        width: 100%;
+        flex-shrink: 1;
+    }
+}

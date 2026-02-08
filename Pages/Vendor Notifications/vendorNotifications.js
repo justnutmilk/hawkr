@@ -1,4 +1,9 @@
 import { initVendorNavbar } from "../../assets/js/vendorNavbar.js";
+import { initNotificationBadge } from "../../assets/js/notificationBadge.js";
+import {
+  initToastContainer,
+  subscribeToNewNotifications,
+} from "../../assets/js/toastNotifications.js";
 import { auth } from "../../firebase/config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
@@ -152,6 +157,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Wait for auth then initialize
   onAuthStateChanged(auth, (user) => {
     if (user) {
+      initNotificationBadge(`vendors/${user.uid}/notifications`);
+      initToastContainer();
+      subscribeToNewNotifications(`vendors/${user.uid}/notifications`);
       initializeNotifications(user);
     }
   });

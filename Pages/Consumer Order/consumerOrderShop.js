@@ -87,6 +87,7 @@ const api = {
           allergens: item.allergens || [],
           description: item.description || "",
           isAvailable: item.isAvailable !== false,
+          category: item.category || "Uncategorised",
         })),
       };
     } catch (error) {
@@ -287,15 +288,30 @@ function renderProductsSection(products) {
     `;
   }
 
-  const productCardsHTML = products
-    .map((product) => renderProductCard(product))
+  // Group products by category
+  const grouped = {};
+  products.forEach((product) => {
+    const cat = product.category || "Uncategorised";
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(product);
+  });
+
+  const sectionsHTML = Object.entries(grouped)
+    .map(
+      ([category, items]) => `
+        <div class="productCategorySection">
+            <h3 class="productCategoryTitle">${category}</h3>
+            <div class="productCardsGrid">
+                ${items.map((product) => renderProductCard(product)).join("")}
+            </div>
+        </div>
+    `,
+    )
     .join("");
 
   return `
         <section class="productsSection">
-            <div class="productCardsGrid">
-                ${productCardsHTML}
-            </div>
+            ${sectionsHTML}
         </section>
     `;
 }

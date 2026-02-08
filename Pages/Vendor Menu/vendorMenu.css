@@ -2277,3 +2277,74 @@ body {
     padding-top: 8px;
     border-top: 1px solid #f0f0f0;
 }
+
+/* ============================================
+   MOBILE RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    .topBar {
+        padding: 16px 20px 0 20px;
+    }
+
+    .topBarActions {
+        right: 20px;
+        gap: 1.5em;
+    }
+
+    .menuContent {
+        padding: 0 20px 20px 20px;
+    }
+
+    .menuItem {
+        width: 100%;
+    }
+
+    /* Add/Edit side panel — full-screen on mobile */
+    .addPanel {
+        width: 100%;
+    }
+
+    .addPanelFooter {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .addPanelFooterRight {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .addPanelFooterRight > button {
+        flex: 1;
+    }
+
+    .addPanelDeleteBtn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Edit popup overlay */
+    .editPopup {
+        max-width: calc(100vw - 40px);
+    }
+
+    /* Variant builder inputs */
+    .variantOption {
+        flex-wrap: wrap;
+    }
+
+    .variantPriceWrapper {
+        width: 100%;
+    }
+
+    /* Delete modal */
+    .deleteModal {
+        max-width: calc(100vw - 40px);
+    }
+
+    /* Vouchers view */
+    .vouchersView {
+        padding: 0 20px 20px 20px;
+    }
+}

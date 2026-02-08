@@ -1,4 +1,9 @@
 import { initVendorNavbar } from "../../assets/js/vendorNavbar.js";
+import { initNotificationBadge } from "../../assets/js/notificationBadge.js";
+import {
+  initToastContainer,
+  subscribeToNewNotifications,
+} from "../../assets/js/toastNotifications.js";
 import { initLiquidGlassToggle } from "../../assets/js/liquidGlassToggle.js";
 import { auth, db } from "../../firebase/config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -447,6 +452,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Check auth state and load reviews
   onAuthStateChanged(auth, async (user) => {
     if (user) {
+      initNotificationBadge(`vendors/${user.uid}/notifications`);
+      initToastContainer();
+      subscribeToNewNotifications(`vendors/${user.uid}/notifications`);
       await loadVendorData(user.uid);
     } else {
       isLoading = false;

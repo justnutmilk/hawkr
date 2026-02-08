@@ -3,6 +3,11 @@
 // ============================================
 
 import { initVendorNavbar } from "../../assets/js/vendorNavbar.js";
+import { initNotificationBadge } from "../../assets/js/notificationBadge.js";
+import {
+  initToastContainer,
+  subscribeToNewNotifications,
+} from "../../assets/js/toastNotifications.js";
 import {
   initLiquidGlassToggle,
   initMiniLiquidGlassToggle,
@@ -1582,6 +1587,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   onAuthStateChanged(auth, (user) => {
     if (user) {
+      initNotificationBadge(`vendors/${user.uid}/notifications`);
+      initToastContainer();
+      subscribeToNewNotifications(`vendors/${user.uid}/notifications`);
       currentUserId = user.uid;
       vendorData.email = user.email || "";
       initializeSettingsPage();

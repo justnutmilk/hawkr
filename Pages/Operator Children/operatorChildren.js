@@ -431,6 +431,7 @@ function renderCurrentContent() {
       <button class="onboardButton" id="onboardBtn">
         Onboard child
         <kbd id="onboardKeyMod"></kbd>
+        <kbd id="onboardKeyShift" style="display:none">Shift</kbd>
         <kbd>O</kbd>
       </button>
     </div>
@@ -459,6 +460,7 @@ function renderArchivedContent() {
       <button class="onboardButton" id="onboardBtn">
         Onboard child
         <kbd id="onboardKeyMod"></kbd>
+        <kbd id="onboardKeyShift" style="display:none">Shift</kbd>
         <kbd>O</kbd>
       </button>
     </div>
@@ -479,6 +481,10 @@ function renderPage(tab) {
   const modKey = document.getElementById("onboardKeyMod");
   if (modKey) {
     modKey.textContent = isMacLocal ? "\u2318" : "CTRL";
+  }
+  const shiftKey = document.getElementById("onboardKeyShift");
+  if (shiftKey && isMacLocal) {
+    shiftKey.style.display = "";
   }
   const onboardBtn = document.getElementById("onboardBtn");
   if (onboardBtn) {
@@ -1663,10 +1669,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Keyboard shortcuts (Ctrl+O for onboard, Escape to close)
+  // Keyboard shortcuts (Cmd+Shift+O on Mac, Ctrl+O on Windows)
   document.addEventListener("keydown", (e) => {
-    const modifier = e.metaKey || e.ctrlKey;
-    if (modifier && e.key === "o") {
+    const isMac = /Mac/i.test(navigator.userAgent);
+    const triggered = isMac
+      ? e.metaKey && e.shiftKey && (e.key === "o" || e.key === "O")
+      : e.ctrlKey && (e.key === "o" || e.key === "O");
+    if (triggered) {
       e.preventDefault();
       openOnboardPanel();
     }

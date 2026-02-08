@@ -13,6 +13,11 @@ import {
   httpsCallable,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 import { initVendorNavbar } from "../../assets/js/vendorNavbar.js";
+import { initNotificationBadge } from "../../assets/js/notificationBadge.js";
+import {
+  initToastContainer,
+  subscribeToNewNotifications,
+} from "../../assets/js/toastNotifications.js";
 import { updateOrderStatus } from "../../firebase/services/orders.js";
 import {
   doc,
@@ -47,6 +52,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Check auth state for loading orders
   onAuthStateChanged(auth, async (user) => {
     if (user) {
+      initNotificationBadge(`vendors/${user.uid}/notifications`);
+      initToastContainer();
+      subscribeToNewNotifications(`vendors/${user.uid}/notifications`);
       await loadVendorData(user.uid);
     }
   });

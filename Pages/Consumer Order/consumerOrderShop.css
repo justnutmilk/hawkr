@@ -256,6 +256,21 @@ body {
     padding-right: 15%;
 }
 
+/* Product Category Section */
+.productCategorySection {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.productCategoryTitle {
+    font-family: "Source Serif 4", serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #341539;
+    margin: 0;
+}
+
 /* Product Cards Grid */
 .productCardsGrid {
     display: grid;

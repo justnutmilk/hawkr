@@ -181,7 +181,13 @@ const mockData = {
   ],
 
   // User Vouchers
-  userVouchers: [],
+  userVouchers: [
+    {
+      id: "welcome2off",
+      title: "$2 off your next order",
+      expiry: "28 Feb 2026",
+    },
+  ],
 };
 
 // ============================================

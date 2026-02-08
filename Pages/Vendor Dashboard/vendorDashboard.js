@@ -15,6 +15,11 @@ import {
 import { initVendorNavbar } from "../../assets/js/vendorNavbar.js";
 import { updateOrderStatus } from "../../firebase/services/orders.js";
 import { disruptor } from "../../firebase/services/disruptor.js";
+import { initNotificationBadge } from "../../assets/js/notificationBadge.js";
+import {
+  initToastContainer,
+  subscribeToNewNotifications,
+} from "../../assets/js/toastNotifications.js";
 import {
   doc,
   getDoc,
@@ -160,6 +165,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Check auth state for loading orders
   onAuthStateChanged(auth, async (user) => {
     if (user) {
+      initNotificationBadge(`vendors/${user.uid}/notifications`);
+      initToastContainer();
+      subscribeToNewNotifications(`vendors/${user.uid}/notifications`);
       await loadVendorData(user.uid);
     }
   });

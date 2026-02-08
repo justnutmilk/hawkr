@@ -25,6 +25,11 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 import { app } from "../../firebase/config.js";
 import { initVendorNavbar } from "../../assets/js/vendorNavbar.js";
+import { initNotificationBadge } from "../../assets/js/notificationBadge.js";
+import {
+  initToastContainer,
+  subscribeToNewNotifications,
+} from "../../assets/js/toastNotifications.js";
 import { showToast, showConfirm } from "../../assets/js/toast.js";
 import { getHawkerCentreById } from "../../firebase/services/hawkerCentres.js";
 
@@ -72,6 +77,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (user) {
+      initNotificationBadge(`vendors/${user.uid}/notifications`);
+      initToastContainer();
+      subscribeToNewNotifications(`vendors/${user.uid}/notifications`);
       listenToVendorStatus(user.uid);
     }
   });
